@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 import asyncio
-# from path_planning_3d.rrt_star_3d import rrt
-# from path_planning_3d.common import Simulation, set_log
-
 from mavsdk import System
 from mavsdk import (OffboardError, PositionNedYaw)
 
@@ -20,7 +17,7 @@ async def run(path):
         try:
             await drone.action.arm()
         except:
-            print('Error arming !')
+            print('Error arming, can\'t connect to the UAV !')
             await asyncio.sleep(1)
             continue
         else:
@@ -55,20 +52,9 @@ async def run(path):
     await drone.action.land()
 
 
-if __name__ == '__main__':
-    # start, goal, obstacles = getWorld()
+def start(planning):
     world_dim = [-10,10,-10,10,0,10]
-    # set_log(True)
-    # path, nodes, iteration, path_len = rrt(start, goal, obstacles, world_dim=world_dim)
-    # print('Start', start)
-    # print('Goal', goal)
-    # print('Obstacles', obstacles)
-    # print('Path', path)
-    # Simulation(*world_dim)
-    # Simulation.draw(obstacles, goal, start, nodes=nodes, path=path)
-    # Simulation.show(True)
 
-    path = dummyPath(None)
-
+    path = planning(None)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(path))
