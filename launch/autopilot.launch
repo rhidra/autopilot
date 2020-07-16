@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="x" default="0"/>
+  <arg name="y" default="0"/>
+  <arg name="z" default="0"/>
+  <arg name="R" default="0"/>
+  <arg name="P" default="0"/>
+  <arg name="Y" default="0"/>
+
+  <arg name="world" default="warehouse"/>
+  <arg name="vehicle" default="iris"/>
+
+  <arg name="octomap" default="$(find test_pkg)/warehouse.bt"/>
+
+  <!-- Launch ROS, MAVROS, PX4, Gazebo -->
+  <include file="$(find px4)/launch/mavros_posix_sitl.launch">
+    <arg name="x" default="$(arg x)"/>
+    <arg name="y" default="$(arg x)"/>
+    <arg name="z" default="$(arg x)"/>
+    <arg name="R" default="$(arg x)"/>
+    <arg name="P" default="$(arg x)"/>
+    <arg name="Y" default="$(arg x)"/>
+    <arg name="vehicle" default="$(arg vehicle)"/>
+    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/$(arg world).world"/>
+    <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/$(arg vehicle)/$(arg vehicle).sdf"/>
+  </include>
+
+  <!-- Octomap server -->
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg octomap)"></node>
+</launch>

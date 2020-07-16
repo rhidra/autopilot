@@ -53,8 +53,7 @@ async def run(path):
 
 
 def start(planning):
-    world_dim = [-10,10,-10,10,0,10]
-
     path = planning(None)
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(path))

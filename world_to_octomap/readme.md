@@ -3,6 +3,8 @@ Generate an Octomap from a Gazebo world
 
 [Reference](https://github.com/OctoMap/octomap/wiki/Importing-Data-into-OctoMap)
 
+Scripts to convert a Gazebo world to an Octomap usable by the Octomap ROS node.
+
 ## Installation
 
 Download [binvox](https://www.patrickmin.com/binvox/)
