@@ -39,7 +39,7 @@ export GAZEBO_MODEL_DATABASE_URI=""
 export SITL_GAZEBO_PATH=$gw_path
 ```
 
-### Run a basic simulation
+### Compile and run a vanilla simulation
 
 First, you need to compile the PX4 toolchain once.
 ```shell script
@@ -93,7 +93,7 @@ To visualize the octomap, you can use `rosrun rviz rviz`.
 **TODO**: The launch file should start the autopilot node.
 The autopilot will communicate with the MAVROS topics to move the UAV.
 
-## Autopilot commands
+## How to use the autopilot
 
 ```shell script
 python main.py -p <planning_algorithm>
@@ -105,6 +105,10 @@ python main.py -p <planning_algorithm>
 - ~~`rrt*`: RRT*~~
 - `dummy`: Dummy planning algorithm, for testing purposes
 
+The autopilot path planning compute a list of waypoints to local coordinate system,
+which it converts to GPS coordinates and builds a MAVLink mission. The mission
+is published to a MAVROS topic and the flight mode is set to `AUTO.MISSION`, so
+the FCU execute the mission loaded.
 
 ## DEPRECATED
 
