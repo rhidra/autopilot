@@ -37,6 +37,7 @@ class BaseNode(object):
         self.imu_data_sub = rospy.Subscriber('mavros/imu/data', Imu, self.imu_data_cb)
         self.global_pos_sub = rospy.Subscriber('mavros/global_position/global', NavSatFix, self.global_position_cb)
         self.mission_wp_sub = rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.mission_wp_cb)
+        self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
 
         # Publishers
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10)
@@ -75,8 +76,9 @@ class BaseNode(object):
 
         if self.state.mode != data.mode:
             rospy.loginfo("mode changed from {0} to {1}".format(self.state.mode, data.mode))
-
         self.state = data
+    def octomap_cb(self, data):
+        self.octomap = data
 
 
     """ Helper methods """
