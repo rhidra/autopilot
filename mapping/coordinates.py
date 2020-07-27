@@ -29,10 +29,3 @@ def localToGlobal(ref_lat, ref_lon, waypoints):
         new_wps.append([new_lat, new_lon, dz])
 
     return new_wps
-
-def f(ref_lat, ref_lon, x, y):
-    r_earth = 6378137. # WGS-84 ellipsoid parameters (in meters)
-    new_lat = ref_lat + (y / r_earth) * (180. / pi)
-    new_lon = ref_lon + (x / r_earth) * (180. / pi) / cos(ref_lat * pi / 180.)
-
-    return new_lat, new_lon
