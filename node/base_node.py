@@ -6,7 +6,7 @@ from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, Waypo
 from sensor_msgs.msg import NavSatFix, Imu
 
 
-class MavrosNodeBase(object):
+class BaseNode(object):
     def __init__(self, node_name):
         self.node_name = node_name
         self.state = State()

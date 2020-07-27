@@ -1,6 +1,14 @@
 import xml.etree.ElementTree as ET
 
 """
+Origin of the world as set by the Gazebo simulation
+Corresponds to the (0, 0, 0) coordinates for a newly spawned UAV
+"""
+ORIGIN_LAT = 47.397742
+ORIGIN_LON = 8.5455934
+
+
+"""
 getWorld()
 Return the world as parsed in the iris.world file
 @return (start, goal, obstacles) Variable as they should be used in the RRT algorithm

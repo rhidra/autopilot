@@ -1,8 +1,5 @@
-#!/usr/bin/python3
-
-import sys, getopt
-
-import autopilot
+#!/usr/bin/env python
+import sys, getopt, autopilot
 from planning import dummyPath
 
 help = """
