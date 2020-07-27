@@ -222,6 +222,3 @@ class BaseNode(object):
         rospy.loginfo("========================")
         rospy.loginfo("state:\n{}".format(self.state))
         rospy.loginfo("========================")
-
-    def main(self):
-        self.setup()

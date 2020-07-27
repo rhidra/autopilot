@@ -52,9 +52,7 @@ class MissionNode(BaseNode):
 
         self.waypoints = waypoints
 
-    def main(self):
-        super(MissionNode, self).main()
-
+    def exec_mission(self):
         self.clear_wps()
         self.send_wps(self.waypoints)
 
@@ -63,8 +61,3 @@ class MissionNode(BaseNode):
 
         while not rospy.is_shutdown():
             self.rate.sleep()
-
-
-if __name__ == '__main__':
-    node = NodeBasic(node_name='node')
-    node.main()
