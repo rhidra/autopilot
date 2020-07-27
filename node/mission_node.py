@@ -47,10 +47,8 @@ class MissionNode(BaseNode):
         wp.y_long = lon
         wp.z_alt = alt
         waypoints.append(wp)
-
         waypoints[0].command = CommandCode.NAV_TAKEOFF
         waypoints[0].is_current = True
-        # waypoints[-1].command = CommandCode.NAV_LAND
 
         self.waypoints = waypoints
 
