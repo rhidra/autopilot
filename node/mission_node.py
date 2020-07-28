@@ -16,21 +16,6 @@ class MissionNode(BaseNode):
         super(MissionNode, self).setup()
         self.clear_wps()
 
-    def octomap_cb(self, *args, **kwargs):
-        super(MissionNode, self).octomap_cb(*args, **kwargs)
-
-        # Read the octomap binary data and load it in the octomap wrapper class
-        data = np.array(self.octomap.data, dtype=np.int8).tostring()
-        s = '# Octomap OcTree binary file\nid {}\n'.format(self.octomap.id)
-        s += 'size 42\nres {}\ndata\n'.format(self.octomap.resolution)
-        s += data
-
-        # An error is triggered because a wrong tree size has been specified in the
-        # header. We did not find a way to extract the tree size from the octomap msg
-        tree = octomap.OcTree(self.octomap.resolution)
-        tree.readBinary(s)
-        self.octree = tree
-
     def check_point(self, point):
         node = self.octree.search(point)
         return self.octree.isNodeOccupied(node)
