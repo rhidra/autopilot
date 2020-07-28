@@ -9,8 +9,6 @@ def start(planning_algo):
     node = MissionNode(node_name='autopilot')
     node.setup()
 
-    # rospy.loginfo(node.octomap)
-
     # Path planning
     path = planning_algo(None)
 

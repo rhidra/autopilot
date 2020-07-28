@@ -78,6 +78,7 @@ class BaseNode(object):
         if self.state.mode != data.mode:
             rospy.loginfo("mode changed from {0} to {1}".format(self.state.mode, data.mode))
         self.state = data
+
     def octomap_cb(self, data):
         self.octomap = data
 
