@@ -109,7 +109,7 @@ The autopilot will communicate with the MAVROS topics to move the UAV.
 ## How to use the autopilot
 
 ```shell script
-python main.py -p <planning_algorithm>
+rosrun autopilot main.py -p <planning_algorithm>
 ```
 
 `<planning_algorithm>` can be:
