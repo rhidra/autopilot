@@ -103,6 +103,15 @@ class BaseNode(object):
         node = self.octree.search(point)
         return self.octree.isNodeOccupied(node)
 
+    def cast_ray(self, origin, dest):
+        origin = np.array(origin, dtype=np.double)
+        dest = np.array(dest, dtype=np.double)
+        direction = dest - origin
+        end = np.array([0.0, 0.0, 0.0])
+
+        hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True)
+        return hit, end
+
     """ Helper methods """
     def set_mode(self, mode, timeout=5, loop_freq=1):
         """mode: PX4 mode string, timeout(int): seconds, loop_freq(int): seconds"""
