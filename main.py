@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 import sys, getopt, autopilot
-from planning import dummyPath
+from planning import dummy_path, rrt_star
 
 help = """
 Usage: python main.py -p <algo>
 
 You need to specify the path planning algorithm with --planning:
-rrt, rrt*, a*, dummy (Only for testing purposes)
+RRT, RRT*, A*, dummy (Only for testing purposes)
 """
 
 planning_map = {
-    'dummy': dummyPath,
+    'dummy': dummy_path,
+    'rrt*': rrt_star,
+    'rrt_star': rrt_star,
 }
 
 def main(argv):

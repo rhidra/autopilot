@@ -101,7 +101,12 @@ class BaseNode(object):
 
     def is_point_occupied(self, point):
         node = self.octree.search(point)
-        return self.octree.isNodeOccupied(node)
+        try:
+            res = self.octree.isNodeOccupied(node)
+        except octomap.NullPointerException:
+            # The point is unknown
+            return False
+        return res
 
     def cast_ray(self, origin, dest):
         origin = np.array(origin, dtype=np.double)
@@ -109,7 +114,7 @@ class BaseNode(object):
         direction = dest - origin
         end = np.array([0.0, 0.0, 0.0])
 
-        hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True)
+        hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=np.linalg.norm(direction))
         return hit, end
 
     """ Helper methods """

@@ -115,7 +115,7 @@ rosrun autopilot main.py -p <planning_algorithm>
 `<planning_algorithm>` can be:
 - ~~`a*`: A*~~
 - ~~`rrt`: RRT~~
-- ~~`rrt*`: RRT*~~
+- `rrt*`: RRT*
 - `dummy`: Dummy planning algorithm, for testing purposes
 
 The autopilot path planning compute a list of waypoints to local coordinate system,

@@ -21,22 +21,13 @@ class MissionNode(BaseNode):
     def load_local_path(self, path):
         # Visualize the path in Rviz
         self.visualize_local_path(path)
+        self.path = path
 
         # Convert the path to global GPS coordinates
         path_global = local_to_global(path)
 
-        # Send the path as a mission to MAVROS
-        self.load_waypoints(path_global)
-
-    """
-    load_waypoints()
-    Convert a list of 3D points to a list of MAVLink waypoint.
-    Store the mission in self.mission
-
-    @param points: [[lat, lon, alt]] 3D points in the global coordinate system
-    """
-    def load_waypoints(self, path):
-        waypoints = build_waypoints(path)
+        # Convert the path as a MAVROS mission
+        waypoints = build_waypoints(path_global)
         self.waypoints = waypoints
 
     """
@@ -64,6 +55,7 @@ class MissionNode(BaseNode):
 
         self.vis_path_pub.publish(msg)
         rospy.loginfo('Local path published for visualization')
+        rospy.loginfo(path)
 
     def exec_mission(self):
         self.clear_wps()
@@ -73,4 +65,5 @@ class MissionNode(BaseNode):
         self.set_arm(True)
 
         while not rospy.is_shutdown():
+            self.visualize_local_path(self.path)
             self.rate.sleep()

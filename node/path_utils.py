@@ -72,3 +72,5 @@ def build_waypoints(path):
     waypoints.append(wp)
     waypoints[0].command = CommandCode.NAV_TAKEOFF
     waypoints[0].is_current = True
+
+    return waypoints
