@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import rospy, math
+import rospy, math, octomap, numpy as np
 from geometry_msgs.msg import PoseStamped
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
@@ -12,6 +12,7 @@ class BaseNode(object):
         self.node_name = node_name
         self.state = State()
         self.mission_wp = WaypointList()
+        self.octree = octomap.OcTree(0.1)
 
     def setup(self):
         rospy.init_node(self.node_name, anonymous=True)
@@ -43,8 +44,9 @@ class BaseNode(object):
         # Publishers
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10)
 
-        # 20Hz loop publishing rate
+        # 20Hz loop rate
         self.rate = rospy.Rate(20)
+        self.rate.sleep()
 
 
     """ Callback functions """
@@ -80,6 +82,7 @@ class BaseNode(object):
         self.state = data
 
     def octomap_cb(self, data):
+        rospy.loginfo('Octomap updated !')
         self.octomap = data
 
         # Read the octomap binary data and load it in the octomap wrapper class
@@ -93,6 +96,10 @@ class BaseNode(object):
         tree = octomap.OcTree(self.octomap.resolution)
         tree.readBinary(s)
         self.octree = tree
+
+    def is_point_occupied(self, point):
+        node = self.octree.search(point)
+        return self.octree.isNodeOccupied(node)
 
     """ Helper methods """
     def set_mode(self, mode, timeout=5, loop_freq=1):

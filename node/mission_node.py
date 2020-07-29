@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import rospy, math, octomap, numpy as np
+import rospy, math
 from geometry_msgs.msg import PoseStamped
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from base_node import BaseNode
+from path_utils import local_to_global, build_waypoints
 
 
 class MissionNode(BaseNode):
@@ -16,9 +17,16 @@ class MissionNode(BaseNode):
         super(MissionNode, self).setup()
         self.clear_wps()
 
-    def check_point(self, point):
-        node = self.octree.search(point)
-        return self.octree.isNodeOccupied(node)
+    def load_local_path(self, path):
+        # Visualize the path in Rviz
+        self.visualize_local_path(path)
+
+        # Convert the path to global GPS coordinates
+        path_global = local_to_global(path)
+        rospy.loginfo(path_global)
+
+        # Send the path as a mission to MAVROS
+        self.load_waypoints(path_global)
 
     """
     load_waypoints()
@@ -28,33 +36,16 @@ class MissionNode(BaseNode):
     @param points: [[lat, lon, alt]] 3D points in the global coordinate system
     """
     def load_waypoints(self, path):
-        assert len(path) > 0, 'The path is empty !'
-
-        waypoints = []
-        for lat, lon, alt in path:
-            wp = Waypoint()
-            wp.frame = Waypoint.FRAME_GLOBAL_REL_ALT
-            wp.command = CommandCode.NAV_WAYPOINT
-            wp.is_current = False
-            wp.autocontinue = True
-            wp.x_lat = lat
-            wp.y_long = lon
-            wp.z_alt = alt
-            waypoints.append(wp)
-
-        wp = Waypoint()
-        wp.frame = Waypoint.FRAME_GLOBAL_REL_ALT
-        wp.command = CommandCode.NAV_LAND
-        wp.is_current = False
-        wp.autocontinue = True
-        wp.x_lat = lat
-        wp.y_long = lon
-        wp.z_alt = alt
-        waypoints.append(wp)
-        waypoints[0].command = CommandCode.NAV_TAKEOFF
-        waypoints[0].is_current = True
-
+        waypoints = build_waypoints(path)
         self.waypoints = waypoints
+
+    """
+    visualize_local_path()
+    Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
+    @param path: [[x, y, z]] 3D path in local coordinates.
+    """
+    def visualize_local_path(self, path):
+        rospy.loginfo(path)
 
     def exec_mission(self):
         self.clear_wps()
