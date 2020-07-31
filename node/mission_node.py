@@ -7,6 +7,7 @@ from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, Waypo
 from sensor_msgs.msg import NavSatFix, Imu
 from base_node import BaseNode
 from path_utils import local_to_global, build_waypoints
+from visualization_msgs.msg import Marker
 
 
 class MissionNode(BaseNode):
@@ -50,7 +51,7 @@ class MissionNode(BaseNode):
 
         msg = Path()
         msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = 'map'
+        msg.header.frame_id = '/map'
         msg.poses = poses
 
         self.vis_path_pub.publish(msg)
