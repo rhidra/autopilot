@@ -21,7 +21,7 @@
     <arg name="P" default="$(arg x)"/>
     <arg name="Y" default="$(arg x)"/>
     <arg name="vehicle" default="$(arg vehicle)"/>
-    <arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/$(arg world).world"/>
+    <arg name="world" default="$(find autopilot)/worlds/$(arg world).world"/>
     <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/$(arg vehicle)/$(arg vehicle).sdf"/>
   </include>
 

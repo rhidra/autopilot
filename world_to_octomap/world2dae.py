@@ -3,7 +3,7 @@ import collada, time, numpy as np, uuid, sys
 from math import pi
 
 # world_path = '/home/rhidra/Firmware/Tools/sitl_gazebo/worlds/'
-models_path = '/home/rhidra/Firmware/Tools/sitl_gazebo/models/'
+models_path = ['/home/rhidra/Firmware/Tools/sitl_gazebo/models/', '/home/rhidra/.gazebo/models/']
 output = collada.Collada()
 
 
@@ -49,16 +49,30 @@ def generate_ground_plane():
     mesh.scene = scene
     return [mesh]
 
-def parse_sdf(sdf_path):
-    meshes = []
-    try:
-        root_sdf = ET.parse(sdf_path).getroot()
-    except FileNotFoundError:
-        return meshes
+def parse_sdf(model_name):
+    for model_path in models_path:
+        try:
+            sdf_path = model_path + model_name + '/model.sdf'
+            root_sdf = ET.parse(sdf_path).getroot()
+            break
+        except FileNotFoundError:
+            continue
 
+    if not root_sdf:
+        return []
+
+    if model_path == models_path[1]:
+        print(sdf_path)
+
+    root_pose = root_sdf.find('model/link/pose').text if root_sdf.find('model/link/pose') is not None else '0 0 0 0 0 0'
+    root_pose = [float(a) for a in filter(lambda a: bool(a), root_pose.split(' '))]
+
+    meshes = []
     for node in root_sdf.findall('model/link/collision'):
         pose = node.find('pose').text if node.find('pose') is not None else '0 0 0 0 0 0'
-        pose = [float(a) for a in filter(lambda a: bool(a), pose.split(' '))]
+        pose = [float(a) + b for a, b in zip(filter(lambda a: bool(a), pose.split(' ')), root_pose)]
+        print(pose)
+
 
         if node.find('geometry/mesh') is None: # No DAE collision mesh
             box = node.find('geometry/box/size').text
@@ -75,7 +89,7 @@ def parse_sdf(sdf_path):
             mesh.scene = scene
             meshes.append(mesh)
         else: # Importing DAE collision mesh
-            uri = models_path + node.find('geometry/mesh/uri').text[8:]
+            uri = model_path + node.find('geometry/mesh/uri').text[8:]
             scale = node.find('geometry/mesh/scale').text if node.find('geometry/mesh/scale') is not None else '1 1 1'
             scale = [float(a) for a in filter(lambda a: bool(a), scale.split(' '))]
 
@@ -110,9 +124,7 @@ def parse_world(world_path):
             continue
 
         model_name = uri[8:]
-        sdf_path = models_path + model_name + '/model.sdf'
-
-        extracted_meshes = parse_sdf(sdf_path)
+        extracted_meshes = parse_sdf(model_name)
 
         for mesh in extracted_meshes:
             for i, node in enumerate(mesh.scene.nodes):
