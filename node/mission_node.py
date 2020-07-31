@@ -7,7 +7,8 @@ from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, Waypo
 from sensor_msgs.msg import NavSatFix, Imu
 from base_node import BaseNode
 from path_utils import local_to_global, build_waypoints
-from visualization_msgs.msg import Marker
+from visualization import viz_path, viz_nodes, viz_point
+from visualization_msgs.msg import MarkerArray
 
 
 class MissionNode(BaseNode):
@@ -21,7 +22,7 @@ class MissionNode(BaseNode):
 
     def load_local_path(self, path):
         # Visualize the path in Rviz
-        self.visualize_local_path(path)
+        self.visualize_path(path)
         self.path = path
 
         # Convert the path to global GPS coordinates
@@ -36,27 +37,21 @@ class MissionNode(BaseNode):
     Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
     @param path: [[x, y, z]] 3D path in local coordinates.
     """
-    def visualize_local_path(self, path):
-        poses = []
-        for x, y, z in path:
-            p = PoseStamped()
-            p.pose.position.x = x
-            p.pose.position.y = y
-            p.pose.position.z = z
-            p.pose.orientation.x = 0
-            p.pose.orientation.y = 0
-            p.pose.orientation.z = 0
-            p.pose.orientation.w = 1
-            poses.append(p)
+    def visualize_path(self, path=[], nodes=[], start=None, goal=None, point=None):
+        marker_array = MarkerArray()
+        if len(path) > 0:
+            marker_array.markers.append(viz_path(path))
+        if len(nodes) > 0:
+            marker_array.markers.append(viz_nodes(nodes))
+        if start is not None:
+            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0))
+        if goal is not None:
+            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1))
+        if point is not None:
+            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2))
 
-        msg = Path()
-        msg.header.stamp = rospy.Time.now()
-        msg.header.frame_id = '/map'
-        msg.poses = poses
+        self.path_viz_pub.publish(marker_array)
 
-        self.vis_path_pub.publish(msg)
-        rospy.loginfo('Local path published for visualization')
-        rospy.loginfo(path)
 
     def exec_mission(self):
         self.clear_wps()
@@ -66,5 +61,5 @@ class MissionNode(BaseNode):
         self.set_arm(True)
 
         while not rospy.is_shutdown():
-            self.visualize_local_path(self.path)
+            self.visualize_path(path=self.path)
             self.rate.sleep()

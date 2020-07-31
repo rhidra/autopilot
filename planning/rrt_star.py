@@ -22,6 +22,7 @@ def line_in_obstacle(ros_node, origin, dest):
 
 
 def build_path(current):
+    rospy.loginfo('Found a path !')
     path = []
     path_len = 0
     while current:
@@ -34,6 +35,7 @@ def build_path(current):
 
 
 def rrt_star(ros_node, start, goal, world_dim):
+    rospy.loginfo('Computing RRT* algorithm...')
     nodes = []
     nodes.append(Node(start, None))
 
@@ -41,7 +43,7 @@ def rrt_star(ros_node, start, goal, world_dim):
     while i < MAX_ITERATIONS:
         i = i+1
 
-        if i%100 == 0:
+        if i%20 == 0:
             x_rand = goal
         else:
             x_rand = random_position(world_dim)
@@ -85,5 +87,11 @@ def rrt_star(ros_node, start, goal, world_dim):
         if dist(new, goal, sqrt=True) < EPSILON:
             path, path_len = build_path(Node(goal, new))
             return (path, nodes, i, path_len)
+
+        print('start:', start)
+        print('goal:', goal)
+        print('point:', new.pos)
+        ros_node.visualize_path(nodes=nodes, start=start, goal=goal, point=new.pos)
+        ros_node.rate.sleep()
 
     raise ValueError('No Path Found')

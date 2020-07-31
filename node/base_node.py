@@ -6,6 +6,8 @@ from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, Waypo
 from sensor_msgs.msg import NavSatFix, Imu
 from nav_msgs.msg import Path
 from octomap_msgs.msg import Octomap
+from visualization_msgs.msg import MarkerArray
+
 
 
 class BaseNode(object):
@@ -44,7 +46,7 @@ class BaseNode(object):
 
         # Publishers
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10) # Offboard control
-        self.vis_path_pub = rospy.Publisher('/path_local', Path, queue_size=10) # Custom topic used with Rviz
+        self.path_viz_pub = rospy.Publisher('/path_viz', MarkerArray, queue_size=10) # Custom topic used with Rviz
 
         # 20Hz loop rate
         self.rate = rospy.Rate(20)
