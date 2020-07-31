@@ -10,7 +10,7 @@
   <arg name="world" default="warehouse"/>
   <arg name="vehicle" default="iris"/>
 
-  <arg name="octomap" default="$(find test_pkg)/warehouse.bt"/>
+  <arg name="octomap" default="$(find autopilot)/octomaps/$(arg world).bt"/>
 
   <!-- Launch ROS, MAVROS, PX4, Gazebo -->
   <include file="$(find px4)/launch/mavros_posix_sitl.launch">
