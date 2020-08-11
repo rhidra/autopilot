@@ -15,11 +15,11 @@
   <!-- Launch ROS, MAVROS, PX4, Gazebo -->
   <include file="$(find px4)/launch/mavros_posix_sitl.launch">
     <arg name="x" default="$(arg x)"/>
-    <arg name="y" default="$(arg x)"/>
-    <arg name="z" default="$(arg x)"/>
-    <arg name="R" default="$(arg x)"/>
-    <arg name="P" default="$(arg x)"/>
-    <arg name="Y" default="$(arg x)"/>
+    <arg name="y" default="$(arg y)"/>
+    <arg name="z" default="$(arg z)"/>
+    <arg name="R" default="$(arg R)"/>
+    <arg name="P" default="$(arg P)"/>
+    <arg name="Y" default="$(arg Y)"/>
     <arg name="vehicle" default="$(arg vehicle)"/>
     <arg name="world" default="$(find autopilot)/worlds/$(arg world).world"/>
     <arg name="sdf" default="$(find mavlink_sitl_gazebo)/models/$(arg vehicle)/$(arg vehicle).sdf"/>
