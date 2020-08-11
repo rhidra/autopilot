@@ -6,7 +6,7 @@ NEIGHBOR_RADIUS = 1
 INCREMENT_DISTANCE = .1
 
 EPSILON = .5
-MAX_ITERATIONS = 1000
+MAX_ITERATIONS = 10000
 
 
 def project(ros_node, origin, dest, distance=INCREMENT_DISTANCE):

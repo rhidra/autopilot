@@ -33,8 +33,8 @@ def local_to_global(waypoints, ref_lat=ORIGIN_LAT, ref_lon=ORIGIN_LON):
     for dx, dy, dz in waypoints:
         # Fix wrong TF when using mission system
         # The reference axis are rotated clock wise (-Z)
-        dx, dy, dz = dy, -dx, dz
-        
+        # dx, dy, dz = dy, -dx, dz
+
         new_lat = ref_lat + (dy / r_earth) * (180. / pi)
         new_lon = ref_lon + (dx / r_earth) * (180. / pi) / cos(ref_lat * pi / 180.)
         new_wps.append([new_lat, new_lon, dz])
@@ -78,3 +78,15 @@ def build_waypoints(path):
     waypoints[0].is_current = True
 
     return waypoints
+
+"""
+fix_path_orientation()
+Fix wrong TF when using mission and offboard system
+The reference axis are rotated clock wise (-Z)
+"""
+def fix_path_orientation(path):
+    new_path = []
+    for x, y, z in path:
+        x, y, z = y, -x, z
+        new_path.append([x, y, z])
+    return new_path
