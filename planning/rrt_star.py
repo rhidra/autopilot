@@ -88,9 +88,6 @@ def rrt_star(ros_node, start, goal, world_dim):
             path, path_len = build_path(Node(goal, new))
             return (path, nodes, i, path_len)
 
-        print('start:', start)
-        print('goal:', goal)
-        print('point:', new.pos)
         ros_node.visualize_path(nodes=nodes, start=start, goal=goal, point=new.pos)
         ros_node.rate.sleep()
 
