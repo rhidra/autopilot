@@ -9,6 +9,7 @@ def start(planning_algo):
 
     # Path planning
     path, _, _, _ = planning_algo(node, [0, 0, 4], [0, -10.5, 4], world_dim=[-20, 20, -10, 10, 0, 5.5])
+    # path, _, _, _ = planning_algo(node, [0, -10.5, 4], [0, 0, 4], world_dim=[-20, 20, -10, 10, 0, 5.5])
 
     # path, _, _, _ = planning_algo(node, [0, 0, 4], [0, 10, 4], world_dim=[-20, 20, -10, 10, 0, 2.8*2])
     # path, _, _, _ = planning_algo(node, [0, -10.5, 4], [0, 0, 4], world_dim=[-20, 20, -10, 10, 0, 2.8*2])
