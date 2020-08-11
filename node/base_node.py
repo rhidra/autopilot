@@ -101,14 +101,22 @@ class BaseNode(object):
         tree.readBinary(s)
         self.octree = tree
 
-    def is_point_occupied(self, point):
+    def is_point_occupied(self, point, radius=.5):
         node = self.octree.search(point)
         try:
             res = self.octree.isNodeOccupied(node)
         except octomap.NullPointerException:
             # The point is unknown
-            return False
-        return res
+            res = False
+        if res:
+            return True
+        end = np.array([0., 0., 0.])
+
+        for direction in [np.array([0.,1.,0.]), np.array([0.,-1.,0.]), np.array([1.,0.,0.]), np.array([-1.,0.,0.])]:
+            hit = self.octree.castRay(point, direction, end, ignoreUnknownCells=True, maxRange=radius)
+            if hit:
+                return True
+        return False
 
     def cast_ray(self, origin, dest):
         origin = np.array(origin, dtype=np.double)
