@@ -32,26 +32,6 @@ class MissionNode(BaseNode):
         waypoints = build_waypoints(path_global)
         self.waypoints = waypoints
 
-    """
-    visualize_local_path()
-    Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
-    @param path: [[x, y, z]] 3D path in local coordinates.
-    """
-    def visualize_path(self, path=[], nodes=[], start=None, goal=None, point=None):
-        marker_array = MarkerArray()
-        if len(path) > 0:
-            marker_array.markers.append(viz_path(path))
-        if len(nodes) > 0:
-            marker_array.markers.append(viz_nodes(nodes))
-        if start is not None:
-            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0))
-        if goal is not None:
-            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1))
-        if point is not None:
-            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2))
-
-        self.path_viz_pub.publish(marker_array)
-
 
     def exec_mission(self):
         self.clear_wps()
