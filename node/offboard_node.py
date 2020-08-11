@@ -23,6 +23,13 @@ class OffboardNode(BaseNode):
         self.path = path
         # self.path = fix_path_orientation(path)
 
+    def dist_from(self, p, sqrt=False):
+        sqr = (p[0] - self.local_position.pose.position.x)**2 + \
+              (p[1] - self.local_position.pose.position.y)**2 + \
+              (p[2] - self.local_position.pose.position.z)**2
+        return math.sqrt(sqr) if sqrt else sqr
+        
+
     def exec_mission(self):
         msg = PoseStamped()
         msg.header.stamp = rospy.Time.now()
@@ -40,16 +47,19 @@ class OffboardNode(BaseNode):
 
         last = rospy.Time.now().secs
         currentNode = 0
+        done = False
 
-        while not rospy.is_shutdown():
-            rospy.loginfo('viz path:' + str(self.viz_path))
-            rospy.loginfo('path:' + str(self.path))
+        while not rospy.is_shutdown() and not done:
             self.visualize_path(path=self.viz_path)
 
             now = rospy.Time.now().secs
-            if last + 5 < now and currentNode + 1 < len(self.path):
+            d = self.dist_from(self.path[currentNode])
+            rospy.loginfo('Distance from waypoint: ' + str(d))
+            if d < 1. and currentNode + 1 < len(self.path):
                 last = now
                 currentNode += 1
+            elif currentNode + 1 == len(self.path):
+                done = True
 
             msg.header.stamp = rospy.Time.now()
 
@@ -59,3 +69,6 @@ class OffboardNode(BaseNode):
             
             self.position_pub.publish(msg)
             self.rate.sleep()
+        
+        rospy.loginfo('Mission completed successfully !')
+        self.set_mode('AUTO.LAND')

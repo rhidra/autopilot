@@ -41,6 +41,7 @@ class BaseNode(object):
         self.home_pos_sub = rospy.Subscriber('/mavros/home_position/home', HomePosition, self.home_position_cb)
         self.imu_data_sub = rospy.Subscriber('mavros/imu/data', Imu, self.imu_data_cb)
         self.global_pos_sub = rospy.Subscriber('mavros/global_position/global', NavSatFix, self.global_position_cb)
+        self.local_pos_sub = rospy.Subscriber('mavros/local_position/pose', PoseStamped, self.local_position_cb)
         self.mission_wp_sub = rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.mission_wp_cb)
         self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
 
@@ -66,7 +67,7 @@ class BaseNode(object):
     def home_position_cb(self, data):
         self.home_position = data
 
-    def local_position_callback(self, data):
+    def local_position_cb(self, data):
         self.local_position = data
 
     def mission_wp_cb(self, data):
