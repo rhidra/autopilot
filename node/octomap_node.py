@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import rospy, math, octomap
+import rospy, math, octomap, numpy as np
 from visualization_node import VisualizationNode
 from octomap_msgs.msg import Octomap
 
@@ -13,6 +13,7 @@ class OctomapNode(VisualizationNode):
     def setup(self):
         super(OctomapNode, self).setup()
         self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
+        self.rate.sleep()
 
 
     def octomap_cb(self, data):
@@ -50,11 +51,39 @@ class OctomapNode(VisualizationNode):
         return False
 
 
-    def cast_ray(self, origin, dest):
+    def cast_ray(self, origin, dest, radius=0):
         origin = np.array(origin, dtype=np.double)
         dest = np.array(dest, dtype=np.double)
         direction = dest - origin
+        distance = np.linalg.norm(direction)
         end = np.array([0.0, 0.0, 0.0])
 
-        hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=np.linalg.norm(direction))
+        hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=distance)
+
+        if hit or radius == 0:
+            return hit, end
+        
+        # To check the cylinder volume, we cast 4 additional rays
+        # axis1 and 2 are in the plane perpendicular to the direction
+        if direction[0] == 0 and direction[1] == 0:
+            if direction[2] == 0:
+                return false, origin
+            axis1 = np.array([0., 1., 0.], dtype=np.double)
+        else:
+            axis1 = np.array([-direction[1], direction[0], 0.], dtype=np.double)           
+        axis1 /= np.linalg.norm(axis1)
+        axis2 = np.cross(direction, axis1)
+        axis2 /= np.linalg.norm(axis2)
+
+        origin1 = origin + axis1 * radius
+        origin2 = origin - axis1 * radius
+        origin3 = origin + axis2 * radius
+        origin4 = origin - axis2 * radius
+        
+        for o in [origin1, origin2, origin3, origin4]:
+            h = self.octree.castRay(o, direction, np.array([0.,0.,0.]), ignoreUnknownCells=True, maxRange=distance)
+            if h:
+                return h, end
+        
         return hit, end
+

@@ -18,7 +18,7 @@ def project(ros_node, origin, dest, distance=INCREMENT_DISTANCE):
 
 
 def line_in_obstacle(ros_node, origin, dest):
-    hit, _ = ros_node.cast_ray(origin, dest)
+    hit, _ = ros_node.cast_ray(origin, dest, radius=.25)
     return hit
 
 
