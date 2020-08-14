@@ -6,7 +6,7 @@ from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, Waypo
 from sensor_msgs.msg import NavSatFix, Imu
 from nav_msgs.msg import Path
 from octomap_msgs.msg import Octomap
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import MarkerArray, Marker
 from visualization import viz_path, viz_nodes, viz_point
 
 
@@ -257,9 +257,22 @@ class BaseNode(object):
     @param path: [[x, y, z]] 3D path in local coordinates.
     """
     def visualize_path(self, path=[], nodes=[], start=None, goal=None, point=None):
+        if not hasattr(self, 'temp_marker'):
+            self.temp_marker = []
+        
+        for marker in self.temp_marker:
+            marker.action = Marker.DELETE
+
         marker_array = MarkerArray()
+        marker_array.markers.extend(self.temp_marker)
+        self.temp_marker = []
+
         if len(path) > 0:
             marker_array.markers.append(viz_path(path))
+            for i, pt in enumerate(path):
+                m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.5)
+                self.temp_marker.append(m)
+                marker_array.markers.append(m)
         if len(nodes) > 0:
             marker_array.markers.append(viz_nodes(nodes))
         if start is not None:
