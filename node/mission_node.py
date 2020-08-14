@@ -5,13 +5,13 @@ from nav_msgs.msg import Path
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
-from base_node import BaseNode
+from octomap_node import OctomapNode
 from path_utils import local_to_global, build_waypoints
 from visualization import viz_path, viz_nodes, viz_point
 from visualization_msgs.msg import MarkerArray
 
 
-class MissionNode(BaseNode):
+class MissionNode(OctomapNode):
     def __init__(self, *args, **kwargs):
         super(MissionNode, self).__init__(*args, **kwargs)
         self.waypoints = []

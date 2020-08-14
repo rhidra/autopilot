@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-import rospy, math, octomap, numpy as np
+import rospy, math, numpy as np
 from geometry_msgs.msg import PoseStamped
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from nav_msgs.msg import Path
-from octomap_msgs.msg import Octomap
-from visualization_msgs.msg import MarkerArray, Marker
-from visualization import viz_path, viz_nodes, viz_point
 
 
 class BaseNode(object):
@@ -15,7 +12,6 @@ class BaseNode(object):
         self.node_name = node_name
         self.state = State()
         self.mission_wp = WaypointList()
-        self.octree = octomap.OcTree(0.1)
 
     def setup(self):
         rospy.init_node(self.node_name, anonymous=True)
@@ -43,11 +39,9 @@ class BaseNode(object):
         self.global_pos_sub = rospy.Subscriber('mavros/global_position/global', NavSatFix, self.global_position_cb)
         self.local_pos_sub = rospy.Subscriber('mavros/local_position/pose', PoseStamped, self.local_position_cb)
         self.mission_wp_sub = rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.mission_wp_cb)
-        self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
 
         # Publishers
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10) # Offboard control
-        self.path_viz_pub = rospy.Publisher('/path_viz', MarkerArray, queue_size=10) # Custom topic used with Rviz
 
         # 20Hz loop rate
         self.rate = rospy.Rate(20)
@@ -86,47 +80,6 @@ class BaseNode(object):
             rospy.loginfo("mode changed from {0} to {1}".format(self.state.mode, data.mode))
         self.state = data
 
-    def octomap_cb(self, data):
-        rospy.loginfo('Octomap updated !')
-        self.octomap = data
-
-        # Read the octomap binary data and load it in the octomap wrapper class
-        data = np.array(self.octomap.data, dtype=np.int8).tostring()
-        s = '# Octomap OcTree binary file\nid {}\n'.format(self.octomap.id)
-        s += 'size 42\nres {}\ndata\n'.format(self.octomap.resolution)
-        s += data
-
-        # An error is triggered because a wrong tree size has been specified in the
-        # header. We did not find a way to extract the tree size from the octomap msg
-        tree = octomap.OcTree(self.octomap.resolution)
-        tree.readBinary(s)
-        self.octree = tree
-
-    def is_point_occupied(self, point, radius=.5):
-        node = self.octree.search(point)
-        try:
-            res = self.octree.isNodeOccupied(node)
-        except octomap.NullPointerException:
-            # The point is unknown
-            res = False
-        if res:
-            return True
-        end = np.array([0., 0., 0.])
-
-        for direction in [np.array([0.,1.,0.]), np.array([0.,-1.,0.]), np.array([1.,0.,0.]), np.array([-1.,0.,0.])]:
-            hit = self.octree.castRay(point, direction, end, ignoreUnknownCells=True, maxRange=radius)
-            if hit:
-                return True
-        return False
-
-    def cast_ray(self, origin, dest):
-        origin = np.array(origin, dtype=np.double)
-        dest = np.array(dest, dtype=np.double)
-        direction = dest - origin
-        end = np.array([0.0, 0.0, 0.0])
-
-        hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=np.linalg.norm(direction))
-        return hit, end
 
     """ Helper methods """
     def set_mode(self, mode, timeout=5, loop_freq=1):
@@ -250,40 +203,6 @@ class BaseNode(object):
         if res is None or not res.success:
             exit('Cannot get MAV_TYPE param !')
 
-
-    """
-    visualize_local_path()
-    Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
-    @param path: [[x, y, z]] 3D path in local coordinates.
-    """
-    def visualize_path(self, path=[], nodes=[], start=None, goal=None, point=None):
-        if not hasattr(self, 'temp_marker'):
-            self.temp_marker = []
-        
-        for marker in self.temp_marker:
-            marker.action = Marker.DELETE
-
-        marker_array = MarkerArray()
-        marker_array.markers.extend(self.temp_marker)
-        self.temp_marker = []
-
-        if len(path) > 0:
-            marker_array.markers.append(viz_path(path))
-            for i, pt in enumerate(path):
-                m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.5)
-                self.temp_marker.append(m)
-                marker_array.markers.append(m)
-        if len(nodes) > 0:
-            marker_array.markers.append(viz_nodes(nodes))
-        if start is not None:
-            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0))
-        if goal is not None:
-            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1))
-        if point is not None:
-            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2))
-
-        self.path_viz_pub.publish(marker_array)
-    
 
     def log_topic_vars(self):
         """log the state of topic variables"""

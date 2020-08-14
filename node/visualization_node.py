@@ -1,6 +1,47 @@
-from visualization_msgs.msg import Marker
+#!/usr/bin/env python
+import rospy, math
+from base_node import BaseNode
+from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point
-import rospy
+
+
+class VisualizationNode(BaseNode):
+    def setup(self):
+        super(VisualizationNode, self).setup()
+        self.path_viz_pub = rospy.Publisher('/path_viz', MarkerArray, queue_size=10) # Custom topic used with Rviz
+
+    """
+    visualize_local_path()
+    Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
+    @param path: [[x, y, z]] 3D path in local coordinates.
+    """
+    def visualize_path(self, path=[], nodes=[], start=None, goal=None, point=None):
+        if not hasattr(self, 'temp_marker'):
+            self.temp_marker = []
+        
+        for marker in self.temp_marker:
+            marker.action = Marker.DELETE
+
+        marker_array = MarkerArray()
+        marker_array.markers.extend(self.temp_marker)
+        self.temp_marker = []
+
+        if len(path) > 0:
+            marker_array.markers.append(viz_path(path))
+            for i, pt in enumerate(path):
+                m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.5)
+                self.temp_marker.append(m)
+                marker_array.markers.append(m)
+        if len(nodes) > 0:
+            marker_array.markers.append(viz_nodes(nodes))
+        if start is not None:
+            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0))
+        if goal is not None:
+            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1))
+        if point is not None:
+            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2))
+
+        self.path_viz_pub.publish(marker_array)
 
 
 def viz_path(path):
@@ -29,6 +70,7 @@ def viz_path(path):
 
     return marker
 
+
 def viz_nodes(nodes):
     marker = Marker()
     marker.header.frame_id = '/map'
@@ -56,6 +98,7 @@ def viz_nodes(nodes):
         marker.points.append(p2)
 
     return marker
+
 
 def viz_point(point, color=(1., 1., 1.), id=0, size=1):
     marker = Marker()
