@@ -27,4 +27,7 @@
 
   <!-- Octomap server -->
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server" args="$(arg octomap)"></node>
+
+  <!-- Rviz visualization tool -->
+	<node pkg="rviz" type="rviz" name="rviz"></node>
 </launch>
