@@ -27,6 +27,9 @@ class OffboardNode(OctomapNode):
     def exec_mission(self):
         msg = PoseStamped()
         msg.header.stamp = rospy.Time.now()
+        msg.pose.position.x = 0
+        msg.pose.position.y = 0
+        msg.pose.position.z = 2
         msg.pose.orientation.x = 0
         msg.pose.orientation.y = 0
         msg.pose.orientation.z = 0
