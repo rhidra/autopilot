@@ -90,3 +90,17 @@ def fix_path_orientation(path):
         x, y, z = y, -x, z
         new_path.append([x, y, z])
     return new_path
+
+"""
+remove_start_offset()
+Remove the offset from the starting point in the path
+as if the path was starting from the (0, 0) point.
+"""
+def remove_start_offset(path):
+    x_start, y_start, z_start = path[0]
+    new_path = [[0, 0, z_start]]
+
+    for x, y, z in path:
+        new_path.append([x - x_start, y - y_start, z])
+
+    return new_path 

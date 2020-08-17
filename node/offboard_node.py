@@ -6,7 +6,7 @@ from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, Waypoi
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from octomap_node import OctomapNode
-from path_utils import local_to_global, build_waypoints, fix_path_orientation
+from path_utils import local_to_global, build_waypoints, fix_path_orientation, remove_start_offset
 
 
 class OffboardNode(OctomapNode):
@@ -14,7 +14,7 @@ class OffboardNode(OctomapNode):
         # Visualize the path in Rviz
         self.viz_path = path
         self.visualize_path(self.viz_path)
-        self.path = path
+        self.path = remove_start_offset(path)
         # self.path = fix_path_orientation(path)
 
     def dist_from(self, p, sqrt=False):
