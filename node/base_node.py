@@ -82,6 +82,34 @@ class BaseNode(object):
 
 
     """ Helper methods """
+    def set_mode(self, mode, timeout=5, loop_freq=1):
+        """mode: PX4 mode string, timeout(int): seconds, loop_freq(int): seconds"""
+        rospy.loginfo("Setting FCU mode: {0}".format(mode))
+        rate = rospy.Rate(loop_freq)
+        mode_set = False
+
+        for i in range(timeout * loop_freq):
+            if self.state.mode == mode:
+                mode_set = True
+                rospy.loginfo("Mode set successfully in {} sec".format(i / loop_freq))
+                break
+            else:
+                try:
+                    res = self.set_mode_srv(0, mode)  # 0 is custom mode
+                    if not res.mode_sent:
+                        rospy.logerr("failed to send mode command")
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
+            try:
+                rate.sleep()
+            except rospy.ROSException as e:
+                self.fail(e)
+
+        if not mode_set:
+            exit('Timeout: failed to set the mode {} !'.format(mode))
+
+
+    # Similar to set_mode() but it is supposed to be used in a main loop
     def try_set_mode(self, mode, freq=0.2):
         if self.state.mode == mode:
             return
