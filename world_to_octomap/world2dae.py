@@ -3,7 +3,11 @@ import collada, time, numpy as np, uuid, sys
 from math import pi
 
 # world_path = '/home/rhidra/Firmware/Tools/sitl_gazebo/worlds/'
-models_path = ['/home/rhidra/Firmware/Tools/sitl_gazebo/models/', '/home/rhidra/.gazebo/models/']
+models_path = [
+    '/home/rhidra/Firmware/Tools/sitl_gazebo/models/', 
+    '/home/rhidra/.gazebo/models/',
+    '/home/rhidra/gazebo_models_worlds_collection/models/'
+]
 output = collada.Collada()
 
 
@@ -50,6 +54,7 @@ def generate_ground_plane():
     return [mesh]
 
 def parse_sdf(model_name):
+    root_sdf = None
     for model_path in models_path:
         try:
             sdf_path = model_path + model_name + '/model.sdf'
@@ -58,11 +63,8 @@ def parse_sdf(model_name):
         except FileNotFoundError:
             continue
 
-    if not root_sdf:
+    if root_sdf is None:
         return []
-
-    if model_path == models_path[1]:
-        print(sdf_path)
 
     root_pose = root_sdf.find('model/link/pose').text if root_sdf.find('model/link/pose') is not None else '0 0 0 0 0 0'
     root_pose = [float(a) for a in filter(lambda a: bool(a), root_pose.split(' '))]
@@ -89,21 +91,25 @@ def parse_sdf(model_name):
             mesh.scene = scene
             meshes.append(mesh)
         else: # Importing DAE collision mesh
+            print('DAE detected !')
             uri = model_path + node.find('geometry/mesh/uri').text[8:]
             scale = node.find('geometry/mesh/scale').text if node.find('geometry/mesh/scale') is not None else '1 1 1'
             scale = [float(a) for a in filter(lambda a: bool(a), scale.split(' '))]
 
             mesh = collada.Collada(uri)
 
-            child = mesh.scene.nodes[0]
-            if len(child.transforms) != 0:
-                if isinstance(child.transforms[0], collada.scene.MatrixTransform):
+            nodes = []
+            for i, child in enumerate(mesh.scene.nodes):
+                if len(child.transforms) != 0 and isinstance(child.transforms[0], collada.scene.MatrixTransform):
                     t = child.transforms[0].matrix[:3, 3]
                     child.transforms = []
                     child.transforms.append(collada.scene.TranslateTransform(t[0], t[1], t[2]))
                     parent = collada.scene.Node('parent_' + child.id, children=[child])
-                    mesh.scene.nodes = [parent]
-            mesh.scene.nodes[0].transforms.append(collada.scene.ScaleTransform(scale[0], scale[1], scale[2]))
+                else:
+                    parent = child
+                parent.transforms.append(collada.scene.ScaleTransform(scale[0], scale[1], scale[2]))
+                nodes.append(parent)
+            mesh.scene.nodes = nodes
             meshes.append(mesh)
 
     return meshes
@@ -122,6 +128,9 @@ def parse_world(world_path):
         # Hardcode exceptions
         if uri in ['model://sun', 'model://ground_plane', 'model://asphalt_plane']:
             continue
+        print()
+        print('*'*30)
+        print(uri, name, pose)
 
         model_name = uri[8:]
         extracted_meshes = parse_sdf(model_name)
