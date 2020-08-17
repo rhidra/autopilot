@@ -82,53 +82,39 @@ class BaseNode(object):
 
 
     """ Helper methods """
-    def set_mode(self, mode, timeout=5, loop_freq=1):
-        """mode: PX4 mode string, timeout(int): seconds, loop_freq(int): seconds"""
-        rospy.loginfo("Setting FCU mode: {0}".format(mode))
-        rate = rospy.Rate(loop_freq)
-        mode_set = False
+    def try_set_mode(self, mode, freq=0.2):
+        if self.state.mode == mode:
+            return
+        if not hasattr(self, 'last_mode_request'):
+            self.last_mode_request = rospy.get_time()
 
-        for i in range(timeout * loop_freq):
-            if self.state.mode == mode:
-                mode_set = True
-                rospy.loginfo("Mode set successfully in {} sec".format(i / loop_freq))
-                break
-            else:
-                try:
-                    res = self.set_mode_srv(0, mode)  # 0 is custom mode
-                    if not res.mode_sent:
-                        rospy.logerr("failed to send mode command")
-                except rospy.ServiceException as e:
-                    rospy.logerr(e)
+        now = rospy.get_time()
+        if self.last_mode_request + 1./freq > now:
+            self.last_mode_request = now
+            rospy.loginfo('Try to set mode {}...'.format(mode))
             try:
-                rate.sleep()
-            except rospy.ROSException as e:
-                self.fail(e)
-
-        if not mode_set:
-            exit('Timeout: failed to set the mode {} !'.format(mode))
-
-
-    def set_arm(self, arm, timeout=5, loop_freq=1):
-        """arm: True to arm or False to disarm, timeout(int): seconds"""
-        rospy.loginfo("Setting FCU arm: {0}".format(arm))
-        rate = rospy.Rate(loop_freq)
-        arm_set = False
-        for i in range(timeout * loop_freq):
-            if self.state.armed == arm:
-                arm_set = True
-                rospy.loginfo("Arming set successfully in {} sec".format(i / loop_freq))
-                break
-            else:
-                try:
-                    res = self.set_arming_srv(arm)
-                    if not res.success:
-                        rospy.logerr("failed to send arm command")
-                except rospy.ServiceException as e:
-                    rospy.logerr(e)
-            rate.sleep()
-        if not arm_set:
-            exit('Timeout: failed to arm !')
+                res = self.set_mode_srv(0, mode)
+                if not res.mode_sent:
+                    rospy.logerr('Failed to send mode command')
+            except rospy.ServiceException as e:
+                rospy.logerr(e)
+    
+    def try_set_arm(self, arm, freq=0.2):
+        if self.state.armed == arm:
+            return
+        if not hasattr(self, 'last_arm_request'):
+            self.last_arm_request = rospy.get_time()
+        
+        now = rospy.get_time()
+        if self.last_arm_request + 1./freq > now:
+            self.last_arm_request = now
+            rospy.loginfo('Try to set arming...')
+            try:
+                res = self.set_arming_srv(arm)
+                if not res.success:
+                    rospy.logerr('Failed to send arm command')
+            except rospy.ServiceException as e:
+                rospy.logerr(e)
 
 
     def clear_wps(self, timeout=5, loop_freq=1):

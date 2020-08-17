@@ -36,17 +36,18 @@ class OffboardNode(OctomapNode):
         msg.pose.orientation.w = 1
 
         for i in range(100):
+            msg.header.stamp = rospy.Time.now()
             self.position_pub.publish(msg)
             self.rate.sleep()
-
-        self.set_mode('OFFBOARD')
-        self.set_arm(True)
 
         last = rospy.Time.now().secs
         currentNode = 0
         done = False
 
         while not rospy.is_shutdown() and not done:
+            self.try_set_mode('OFFBOARD')
+            self.try_set_arm(True)
+
             self.visualize_path(path=self.viz_path)
 
             now = rospy.Time.now().secs
