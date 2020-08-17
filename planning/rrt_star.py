@@ -96,10 +96,14 @@ def rrt_star(ros_node, start, goal, world_dim):
 
 
 def main_rrt_star(ros_node, start, goal, world_dim):
+    assert world_dim[0] <= start[0] and start[0] <= world_dim[1]
+    assert world_dim[2] <= start[1] and start[1] <= world_dim[3]
+    assert world_dim[4] <= start[2] and start[2] <= world_dim[5]
+
     path, nodes, count, path_len = rrt_star(ros_node, start, goal, world_dim)
 
     ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
-    for _ in range(50):
+    for _ in range(10):
         ros_node.rate.sleep()
     # path = over_sampling(path)
     # ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)

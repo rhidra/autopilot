@@ -104,3 +104,4 @@ def remove_start_offset(path):
         new_path.append([x - x_start, y - y_start, z])
 
     return new_path 
+    
