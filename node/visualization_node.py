@@ -18,7 +18,7 @@ class VisualizationNode(BaseNode):
     def visualize_path(self, path=[], nodes=[], start=None, goal=None, point=None):
         if not hasattr(self, 'temp_marker'):
             self.temp_marker = []
-        
+
         for marker in self.temp_marker:
             marker.action = Marker.DELETE
 
@@ -34,6 +34,10 @@ class VisualizationNode(BaseNode):
                 marker_array.markers.append(m)
         if len(nodes) > 0:
             marker_array.markers.append(viz_nodes(nodes))
+            for i, node in enumerate(nodes):
+                m = viz_point(node.pos, color=(0, 1, .5), id=100 + i, size=.3)
+                self.temp_marker.append(m)
+                marker_array.markers.append(m)
         if start is not None:
             marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0))
         if goal is not None:

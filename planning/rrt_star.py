@@ -3,11 +3,14 @@ from utils import random_position, rand, dist, Node
 from smoothing import over_sampling, filter_path, bezier
 
 # Radius of closeness for rerouting a node
-NEIGHBOR_RADIUS = 1
-INCREMENT_DISTANCE = .1
+NEIGHBOR_RADIUS = .7
+INCREMENT_DISTANCE = 1.
+
+UAV_THICKNESS = .25
 
 EPSILON = .5
 MAX_ITERATIONS = 10000
+MIN_ITERATIONS = 1000
 
 
 def project(ros_node, origin, dest, distance=INCREMENT_DISTANCE):
@@ -17,17 +20,11 @@ def project(ros_node, origin, dest, distance=INCREMENT_DISTANCE):
     return None if ros_node.is_point_occupied(new) else [float(new[0]), float(new[1]), float(new[2])]
 
 
-def line_in_obstacle(ros_node, origin, dest):
-    hit, _ = ros_node.cast_ray(origin, dest, radius=.25)
-    return hit
-
-
 def build_path(current):
-    rospy.loginfo('Found a path !')
     path = []
     path_len = 0
     while current:
-        rospy.loginfo(current)
+        # rospy.loginfo(current)
         path.append(current.pos)
         if current.parent:
             path_len += dist(current, current.parent, sqrt=True)
@@ -41,40 +38,35 @@ def rrt_star(ros_node, start, goal, world_dim):
     nodes.append(Node(start, None))
 
     i=0
-    while i < MAX_ITERATIONS:
+    goal_node = None
+    while i < MAX_ITERATIONS and (goal_node is None or i < MIN_ITERATIONS):
         i = i+1
+        print(i)
 
-        if i%20 == 0:
+        if i%20 == 0 and goal_node is not None:
             x_rand = goal
         else:
             x_rand = random_position(world_dim)
 
         # Search nearest node to the rand point
-        nearest = nodes[0]
-        for node in nodes:
-            if node.pos == x_rand:
-                nearest = None
-                break
-            if dist(node, x_rand) < dist(nearest, x_rand):
-                nearest = node
-        if not nearest:
+        try:
+            nearest = min(nodes, key=lambda node: dist(node, x_rand))
+        except ValueError:
             continue
 
-        # Obtain the new node by projecting the nearest over x_rand
-        new = project(ros_node, nearest.pos, x_rand, distance=2)
-        if not new:
-            continue
-        new = x_rand
+        # Obtain the new node by casting the nearest node. The new node can be against a wall
+        _, new = ros_node.cast_ray(nearest.pos, x_rand, max_dist=INCREMENT_DISTANCE, radius=UAV_THICKNESS)
 
         # Search the neighbors of the nearest node
-        neighbors = filter(lambda node: dist(node, nearest) < NEIGHBOR_RADIUS
-                            and not line_in_obstacle(ros_node, node.pos, new), nodes)
+        radius = min(NEIGHBOR_RADIUS * (math.log(len(nodes))/len(nodes)) ** (1/3.), INCREMENT_DISTANCE)
+        neighbors = filter(lambda node: dist(node, nearest) <= radius
+                            and not ros_node.cast_ray(node.pos, new, radius=UAV_THICKNESS)[0], nodes)
 
         # Select best possible neighbor
         try:
-            nearest = min(neighbors, key=lambda node: node.cost)
+            nearest = min(neighbors, key=lambda node: node.cost + dist(node, new))
         except ValueError:
-            continue
+            pass
 
         new = Node(new, nearest)
         nodes.append(new)
@@ -85,14 +77,18 @@ def rrt_star(ros_node, start, goal, world_dim):
                 node.parent = new
                 node.cost = new.cost + dist(new, node)
 
-        if dist(new, goal, sqrt=True) < EPSILON:
-            path, path_len = build_path(Node(goal, new))
-            return (path, nodes, i, path_len)
+        if goal_node is None and not ros_node.cast_ray(new.pos, goal, radius=UAV_THICKNESS)[0]:
+            goal_node = Node(goal, new)
 
-        ros_node.visualize_path(nodes=nodes, start=start, goal=goal, point=new.pos)
-        ros_node.rate.sleep()
+        if i % 1 == 0:
+            ros_node.visualize_path(nodes=nodes, start=start, point=x_rand, goal=goal, path=build_path(goal_node)[0] if goal_node is not None else [])
+            ros_node.rate.sleep()
 
-    raise ValueError('No Path Found')
+    if goal_node is None:
+        raise ValueError('No Path Found')
+
+    path, path_len = build_path(goal_node)
+    return (path, nodes, i, path_len)
 
 
 def main_rrt_star(ros_node, start, goal, world_dim):

@@ -26,7 +26,7 @@ def random_position(world_dim):
 
 
 def dist(p1, p2, sqrt=False):
-    if p1 == None or p2 == None:
+    if p1 is None or p2 is None:
         return math.inf
 
     p1 = p1.pos if isinstance(p1, Node) else p1

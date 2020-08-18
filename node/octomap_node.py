@@ -51,23 +51,25 @@ class OctomapNode(VisualizationNode):
         return False
 
 
-    def cast_ray(self, origin, dest, radius=0):
+    def cast_ray(self, origin, dest, radius=0., max_dist=-1):
         origin = np.array(origin, dtype=np.double)
         dest = np.array(dest, dtype=np.double)
         direction = dest - origin
-        distance = np.linalg.norm(direction)
-        end = np.array([0.0, 0.0, 0.0])
+        distance = np.linalg.norm(direction) + 1e-6
+        direction /= distance
+        distance = distance if max_dist == -1 else max_dist
+        end = dest if max_dist == -1 else origin + direction * max_dist
 
         hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=distance)
 
-        if hit or radius == 0:
+        if hit or radius == 0.:
             return hit, end
         
         # To check the cylinder volume, we cast 4 additional rays
         # axis1 and 2 are in the plane perpendicular to the direction
         if direction[0] == 0 and direction[1] == 0:
             if direction[2] == 0:
-                return false, origin
+                return False, origin
             axis1 = np.array([0., 1., 0.], dtype=np.double)
         else:
             axis1 = np.array([-direction[1], direction[0], 0.], dtype=np.double)           
@@ -79,9 +81,15 @@ class OctomapNode(VisualizationNode):
         origin2 = origin - axis1 * radius
         origin3 = origin + axis2 * radius
         origin4 = origin - axis2 * radius
-        
+
+        # self.visualize_path(path=[origin1, origin1 + direction * distance, origin1, 
+        #                             origin2, origin2 + direction * distance, origin2, 
+        #                             origin3, origin3 + direction * distance, origin3, 
+        #                             origin4, origin4 + direction * distance, origin4])
+        # self.rate.sleep()
+
         for o in [origin1, origin2, origin3, origin4]:
-            h = self.octree.castRay(o, direction, np.array([0.,0.,0.]), ignoreUnknownCells=True, maxRange=distance)
+            h = self.octree.castRay(o, direction, end, ignoreUnknownCells=True, maxRange=distance)
             if h:
                 return h, end
         
