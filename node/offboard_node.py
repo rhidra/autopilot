@@ -9,6 +9,9 @@ from octomap_node import OctomapNode
 from path_utils import local_to_global, build_waypoints, fix_path_orientation, remove_start_offset
 
 
+# Minimum distance from a waypoint to considere it attained
+TOLERANCE_FROM_WAYPOINT = .1
+
 class OffboardNode(OctomapNode):
     def load_local_path(self, path):
         # Visualize the path in Rviz
@@ -53,10 +56,10 @@ class OffboardNode(OctomapNode):
             now = rospy.Time.now().secs
             d = self.dist_from(self.path[currentNode])
             rospy.loginfo('Distance from waypoint: ' + str(d))
-            if d < 1. and currentNode + 1 < len(self.path):
+            if d < TOLERANCE_FROM_WAYPOINT and currentNode + 1 < len(self.path):
                 last = now
                 currentNode += 1
-            elif currentNode + 1 == len(self.path):
+            elif d < TOLERANCE_FROM_WAYPOINT and currentNode + 1 == len(self.path):
                 done = True
 
             msg.header.stamp = rospy.Time.now()
