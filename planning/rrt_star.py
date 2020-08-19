@@ -6,7 +6,7 @@ from smoothing import over_sampling, filter_path, bezier
 NEIGHBOR_RADIUS = .7
 INCREMENT_DISTANCE = 1.
 
-UAV_THICKNESS = .25
+UAV_THICKNESS = .5
 
 EPSILON = .5
 MAX_ITERATIONS = 10000
@@ -24,7 +24,6 @@ def build_path(current):
     path = []
     path_len = 0
     while current:
-        # rospy.loginfo(current)
         path.append(current.pos)
         if current.parent:
             path_len += dist(current, current.parent, sqrt=True)
@@ -37,13 +36,12 @@ def rrt_star(ros_node, start, goal, world_dim):
     nodes = []
     nodes.append(Node(start, None))
 
-    i=0
+    i = 0
     goal_node = None
     while i < MAX_ITERATIONS and (goal_node is None or i < MIN_ITERATIONS):
-        i = i+1
-        print(i)
+        i = i + 1
 
-        if i%20 == 0 and goal_node is not None:
+        if i % 20 == 0 and goal_node is not None:
             x_rand = goal
         else:
             x_rand = random_position(world_dim)
@@ -78,10 +76,16 @@ def rrt_star(ros_node, start, goal, world_dim):
                 node.cost = new.cost + dist(new, node)
 
         if goal_node is None and not ros_node.cast_ray(new.pos, goal, radius=UAV_THICKNESS)[0]:
+            # Goal discovered
             goal_node = Node(goal, new)
+        elif goal_node is not None and not ros_node.cast_ray(new.pos, goal, radius=UAV_THICKNESS)[0] and new.cost + dist(new.pos, goal) < goal_node.cost:
+            # Goal node rewiring
+            goal_node.parent = new
+            goal_node.cost = new.cost + dist(new, node)
 
-        if i % 1 == 0:
-            ros_node.visualize_path(nodes=nodes, start=start, point=x_rand, goal=goal, path=build_path(goal_node)[0] if goal_node is not None else [])
+
+        if i % 5 == 0:
+            ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=build_path(goal_node)[0] if goal_node is not None else [])
             ros_node.rate.sleep()
 
     if goal_node is None:
