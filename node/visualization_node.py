@@ -29,13 +29,13 @@ class VisualizationNode(BaseNode):
         if len(path) > 0:
             marker_array.markers.append(viz_path(path))
             for i, pt in enumerate(path):
-                m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.5)
+                m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.3)
                 self.temp_marker.append(m)
                 marker_array.markers.append(m)
         if len(nodes) > 0:
             marker_array.markers.append(viz_nodes(nodes))
             for i, node in enumerate(nodes):
-                m = viz_point(node.pos, color=(0, 1, .5), id=100 + i, size=.3)
+                m = viz_point(node.pos, color=(0, 1, .5), id=100 + i, size=.1)
                 self.temp_marker.append(m)
                 marker_array.markers.append(m)
         if start is not None:
@@ -58,7 +58,7 @@ def viz_path(path):
     marker.id = 0
     marker.type = Marker.LINE_LIST
 
-    marker.scale.x = 0.1
+    marker.scale.x = 0.13
     marker.color.g = 1
     marker.color.a = 1
 
