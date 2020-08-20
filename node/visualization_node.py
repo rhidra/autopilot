@@ -15,7 +15,7 @@ class VisualizationNode(BaseNode):
     Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
     @param path: [[x, y, z]] 3D path in local coordinates.
     """
-    def visualize_path(self, path=[], nodes=[], start=None, goal=None, point=None):
+    def visualize_path(self, path=[], path2=[], nodes=[], start=None, goal=None, point=None):
         if not hasattr(self, 'temp_marker'):
             self.temp_marker = []
 
@@ -32,6 +32,8 @@ class VisualizationNode(BaseNode):
                 m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.3)
                 self.temp_marker.append(m)
                 marker_array.markers.append(m)
+        if len(path2) > 0:
+            marker_array.markers.append(viz_path(path2, color=(1, 0, 0), id=1e5))
         if len(nodes) > 0:
             marker_array.markers.append(viz_nodes(nodes))
             for i, node in enumerate(nodes):
@@ -39,27 +41,29 @@ class VisualizationNode(BaseNode):
                 self.temp_marker.append(m)
                 marker_array.markers.append(m)
         if start is not None:
-            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0))
+            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0, size=.6))
         if goal is not None:
-            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1))
+            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1, size=.6))
         if point is not None:
-            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2))
+            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2, size=.6))
 
         self.path_viz_pub.publish(marker_array)
 
 
-def viz_path(path):
+def viz_path(path, color=(0, 1, 0), id=0):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
     marker.ns = 'path'
     marker.action = Marker.ADD
     marker.pose.orientation.w = 1.0
-    marker.id = 0
+    marker.id = id
     marker.type = Marker.LINE_LIST
 
     marker.scale.x = 0.13
-    marker.color.g = 1
+    marker.color.r = color[0]
+    marker.color.g = color[1]
+    marker.color.b = color[2]
     marker.color.a = 1
 
     prev = path[0]
