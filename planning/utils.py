@@ -4,7 +4,7 @@ class Node:
     def __init__(self, pos, parent):
         self.pos = pos
         self.parent = parent
-        if parent:
+        if parent is not None:
             self.cost = parent.cost + dist(parent, pos)
         else:
             self.cost = 0
@@ -25,7 +25,7 @@ def random_position(world_dim):
     return [rand(xmin, xmax), rand(ymin, ymax), rand(zmin, zmax)]
 
 
-def dist(p1, p2, sqrt=False):
+def dist(p1, p2, sqrt=True):
     if p1 is None or p2 is None:
         return math.inf
 

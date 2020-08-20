@@ -1,11 +1,13 @@
 import numpy as np, copy, utils, time
 
+UAV_THICKNESS = .5
+
 
 """
 over_sampling()
 Add points in a path
 """
-def over_sampling(path, max_length=5):
+def over_sampling(path, max_length=1):
     new = []
     for i in range(len(path) - 1):
         a, b = path[i], path[i+1]
@@ -31,7 +33,7 @@ def filter_path(path, ros_node):
     i = 0
     while i < len(path):
         for j, target in reversed(list(enumerate(path))[i:]):
-            hit, _ = ros_node.cast_ray(path[i], target)
+            hit, _ = ros_node.cast_ray(path[i], target, radius=UAV_THICKNESS)
             if not hit:
                 new.append(target)
                 i = j
