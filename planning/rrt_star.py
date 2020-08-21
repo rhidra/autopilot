@@ -80,11 +80,10 @@ def rrt_star(ros_node, start, goal, world_dim):
             # Goal discovered
             goal_node = Node(goal, new)
             nodes.append(goal_node)
-            print('Goal discovered at dist {} (total cost: {})'.format(dist(new, goal), goal_node.cost))
         elif goal_node is not None and not ros_node.cast_ray(new.pos, goal, radius=UAV_THICKNESS)[0] and new.cost + dist(new.pos, goal) < goal_node.cost:
-                # Goal node rewiring
-                goal_node.parent = new
-                goal_node.cost = new.cost + dist(new, node)
+            # Goal node rewiring
+            goal_node.parent = new
+            goal_node.cost = new.cost + dist(new, node)
 
         if i % 50 == 0:
             ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=build_path(goal_node)[0] if goal_node is not None else [])
