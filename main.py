@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, getopt, autopilot
-from planning import dummy_path, main_rrt_star
+from planning import dummy_path, main_rrt_star, main_a_star
 
 help = """
 Usage: python main.py -p <algo>
@@ -13,6 +13,8 @@ planning_map = {
     'dummy': dummy_path,
     'rrt*': main_rrt_star,
     'rrt_star': main_rrt_star,
+    'a*': main_a_star,
+    'a_star': main_a_star,
 }
 
 def main(argv):

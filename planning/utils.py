@@ -1,6 +1,24 @@
 import numpy as np, math
 
+UAV_THICKNESS = .5
+
 class Node:
+    def __repr__(self):
+        return self.pos.__repr__()
+
+class Node_astar(Node):
+    OBSTACLE = 1
+    FREE = 0
+
+    def __init__(self, pos, value):
+        self.value = value
+        self.pos = np.array(pos)
+        self.parent = None
+        self.H = 0
+        self.G = 0
+
+
+class Node_rrt(Node):
     def __init__(self, pos, parent):
         self.pos = pos
         self.parent = parent
@@ -8,9 +26,6 @@ class Node:
             self.cost = parent.cost + dist(parent, pos)
         else:
             self.cost = 0
-
-    def __repr__(self):
-        return self.pos.__repr__()
 
 
 def rand(a, b=None, integer=False):

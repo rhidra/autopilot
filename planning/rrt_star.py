@@ -1,14 +1,12 @@
 import numpy as np, math, rospy
-from utils import random_position, rand, dist, Node
+from utils import random_position, rand, dist, Node_rrt as Node, UAV_THICKNESS
 from smoothing import over_sampling, filter_path, bezier
+
 
 # Radius of closeness for rerouting a node
 NEIGHBOR_RADIUS = 2
 INCREMENT_DISTANCE = .7
 
-UAV_THICKNESS = .5
-
-EPSILON = .5
 MAX_ITERATIONS = 100000
 MIN_ITERATIONS = 2000
 
