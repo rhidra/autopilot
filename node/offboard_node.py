@@ -16,7 +16,7 @@ class OffboardNode(OctomapNode):
     def load_local_path(self, path):
         # Visualize the path in Rviz
         self.viz_path = path
-        self.visualize_path(self.viz_path)
+        self.visualize_path(self.viz_path, start=self.viz_path[0], goal=self.viz_path[-1])
         self.path = remove_start_offset(path)
         # self.path = fix_path_orientation(path)
 

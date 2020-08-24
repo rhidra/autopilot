@@ -8,7 +8,7 @@ NEIGHBOR_RADIUS = 2
 INCREMENT_DISTANCE = .7
 
 MAX_ITERATIONS = 100000
-MIN_ITERATIONS = 2000
+MIN_ITERATIONS = 500
 
 
 def project(ros_node, origin, dest, distance=INCREMENT_DISTANCE):
@@ -100,7 +100,7 @@ def main_rrt_star(ros_node, start, goal, world_dim, display=True, with_optim=Tru
     assert world_dim[4] <= start[2] and start[2] <= world_dim[5]
 
     start_time = time.time()
-    path, _, _, _ = rrt_star(ros_node, start, goal, world_dim, display)
+    path, nodes, _, _ = rrt_star(ros_node, start, goal, world_dim, display)
     end_time = time.time()
 
     if not with_optim:
