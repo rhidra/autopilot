@@ -113,10 +113,10 @@ rosrun autopilot main.py -p <planning_algorithm>
 ```
 
 `<planning_algorithm>` can be:
-- ~~`a*`: A*~~
-- ~~`rrt`: RRT~~
-- `rrt*`: RRT*
-- `dummy`: Dummy planning algorithm, for testing purposes
+- A*
+- ~~RRT~~
+- RRT*
+- dummy (Dummy planning algorithm, for testing purposes)
 
 The autopilot path planning compute a list of waypoints to local coordinate system,
 which it converts to GPS coordinates and builds a MAVLink mission. The mission
