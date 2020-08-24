@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 from node import OffboardNode
 import rospy, numpy as np
+from evaluation import evaluate_path
 
 
-def start(planning_algo):
+def start(planning_algo, algo_name, situation, save_stats=False, launch_mission=True, display=True):
     node = OffboardNode(node_name='autopilot')
     node.setup()
 
     # Path planning
-    path, _, _, _ = planning_algo(node, [0, 0, 1], [-4, 4, 1], world_dim=[-20, 20, -10, 10, 0, 3])
-    # path, _, _, _ = planning_algo(node, [0, 0, 4], [0, -10.5, 4], world_dim=[-10, 10, -10, 10, 0, 5.5])
+    # path, _, _, _ = planning_algo(node, [0, 0, 1], [5, 0, 1], world_dim=[-20, 20, -10, 10, 0, 3])
+    path, processing_time = planning_algo(node, [0, 0, 1], [-5, -7.5, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+    # path, _, _, _ = planning_algo(node, [0, 0, 1], [2, -10.5, 1], world_dim=[-20, 20, -10, 10, 0, 3])
+    # path, _, _, _ = planning_algo(node, [-5, -7.5, 1], [0, 0, 1], world_dim=[-20, 20, -10, 10, 0, 3])
+    # path, _, _, _ = planning_algo(node, [0, 0, 2], [0, -10.5, 2], world_dim=[-4, 12, -13, 3, 0, 5])
 
     # path, _, _, _ = planning_algo(node, [0, 0, 4], [0, 10, 4], world_dim=[-20, 20, -10, 10, 0, 2.8*2])
     # path, _, _, _ = planning_algo(node, [0, -10.5, 4], [0, 0, 4], world_dim=[-20, 20, -10, 10, 0, 2.8*2])
@@ -19,6 +23,9 @@ def start(planning_algo):
 
     node.load_local_path(path)
 
-    rospy.loginfo('Viz Path:' + str(node.viz_path))
-    rospy.loginfo('Path:' + str(node.path))
-    node.exec_mission()
+    if save_stats:
+        evaluate_path(path, processing_time, node, situation=situation, algo_name=algo_name)
+
+    if launch_mission:
+        node.exec_mission()
+
