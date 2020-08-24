@@ -8,4 +8,4 @@ def dummy_path(ros_node, start, goal, world_dim):
             [0, -10, 6],
             [0, 0, 6],
             [0, 0, 10]]
-    return path, None, None, None
+    return path, 1.e-6

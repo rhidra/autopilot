@@ -1,4 +1,4 @@
-import numpy as np, math, rospy
+import numpy as np, math, rospy, time
 from utils import random_position, rand, dist, Node_astar as Node, UAV_THICKNESS
 from smoothing import over_sampling, filter_path, bezier
 
@@ -89,6 +89,7 @@ def main_a_star(ros_node, start, goal, world_dim, display=True):
     assert world_dim[2] <= start[1] and start[1] <= world_dim[3] and world_dim[2] < world_dim[3]
     assert world_dim[4] <= start[2] and start[2] <= world_dim[5] and world_dim[4] < world_dim[5]
 
+    start_time = time.time()
     grid_shape = (int((world_dim[1] - world_dim[0]) // INCREMENT_DISTANCE),
                   int((world_dim[3] - world_dim[2]) // INCREMENT_DISTANCE),
                   int((world_dim[5] - world_dim[4]) // INCREMENT_DISTANCE))
@@ -96,6 +97,6 @@ def main_a_star(ros_node, start, goal, world_dim, display=True):
     grid = [[[None for z in range(grid_shape[2])] for y in range(grid_shape[1])] for x in range(grid_shape[0])]
 
     path, count = a_star(ros_node, start, goal, world_dim, grid, display)
-    print('Path found !')
+    end_time = time.time()
 
-    return path, count, count, count
+    return path, end_time - start_time

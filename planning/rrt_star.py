@@ -1,4 +1,4 @@
-import numpy as np, math, rospy
+import numpy as np, math, rospy, time
 from utils import random_position, rand, dist, Node_rrt as Node, UAV_THICKNESS
 from smoothing import over_sampling, filter_path, bezier
 
@@ -99,37 +99,42 @@ def main_rrt_star(ros_node, start, goal, world_dim, display=True, with_optim=Tru
     assert world_dim[2] <= start[1] and start[1] <= world_dim[3]
     assert world_dim[4] <= start[2] and start[2] <= world_dim[5]
 
-    path, nodes, count, path_len = rrt_star(ros_node, start, goal, world_dim, display)
-    print('Path found !')
+    start_time = time.time()
+    path, _, _, _ = rrt_star(ros_node, start, goal, world_dim, display)
+    end_time = time.time()
 
     if not with_optim:
-        return path, nodes, count, path_len
+        return path, end_time - start_time
 
-    ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
-    for _ in range(10):
-        ros_node.rate.sleep()
+    if display:
+        ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
+        for _ in range(10):
+            ros_node.rate.sleep()
 
-    print('Over sampling...')
     path = over_sampling(path, max_length=INCREMENT_DISTANCE)
 
-    ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
-    for _ in range(30):
-        ros_node.rate.sleep()
+    if display:
+        ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
+        for _ in range(30):
+            ros_node.rate.sleep()
     
-    print('Filtering...')
     path = filter_path(path, ros_node)
 
-    print('Planning done !')    
-    ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
-    for _ in range(30):
-        ros_node.rate.sleep()
+    if display:
+        ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
+        for _ in range(30):
+            ros_node.rate.sleep()
     
-    print('Over sampling after filtering...')
     path = over_sampling(path, max_length=INCREMENT_DISTANCE)
 
-    print('Planning done !')    
-    ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
-    for _ in range(30):
-        ros_node.rate.sleep()
+    if display:
+        ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
+        for _ in range(30):
+            ros_node.rate.sleep()
 
-    return path, nodes, count, path_len
+    end_time = time.time()
+    return path, end_time - start_time
+
+
+def main_rrt_star_without_optim(*args, **kwargs):
+    return main_rrt_star(*args, with_optim=False, **kwargs)

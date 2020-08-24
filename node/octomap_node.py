@@ -8,6 +8,7 @@ class OctomapNode(VisualizationNode):
     def __init__(self, *args, **kwargs):
         super(OctomapNode, self).__init__(*args, **kwargs)
         self.octree = octomap.OcTree(0.1)
+        self.collision_check = 0
 
 
     def setup(self):
@@ -34,6 +35,8 @@ class OctomapNode(VisualizationNode):
 
 
     def is_point_occupied(self, point, radius=.5):
+        self.collision_check += 1
+
         node = self.octree.search(point)
         try:
             res = self.octree.isNodeOccupied(node)
@@ -52,6 +55,8 @@ class OctomapNode(VisualizationNode):
 
 
     def cast_ray(self, origin, dest, radius=0., max_dist=-1, display=False):
+        self.collision_check += 1
+        
         origin = np.array(origin, dtype=np.double)
         dest = np.array(dest, dtype=np.double)
         direction = dest - origin + 1e-6
