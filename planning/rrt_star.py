@@ -29,7 +29,7 @@ def build_path(current):
     return path[::-1], int(path_len)
 
 
-def rrt_star(ros_node, start, goal, world_dim):
+def rrt_star(ros_node, start, goal, world_dim, display=True):
     rospy.loginfo('Computing RRT* algorithm...')
     nodes = []
     nodes.append(Node(start, None))
@@ -83,7 +83,7 @@ def rrt_star(ros_node, start, goal, world_dim):
             goal_node.parent = new
             goal_node.cost = new.cost + dist(new, node)
 
-        if i % 50 == 0:
+        if display and i % 50 == 0:
             ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=build_path(goal_node)[0] if goal_node is not None else [])
             ros_node.rate.sleep()
 
@@ -94,13 +94,16 @@ def rrt_star(ros_node, start, goal, world_dim):
     return (path, nodes, i, path_len)
 
 
-def main_rrt_star(ros_node, start, goal, world_dim):
+def main_rrt_star(ros_node, start, goal, world_dim, display=True, with_optim=True):
     assert world_dim[0] <= start[0] and start[0] <= world_dim[1]
     assert world_dim[2] <= start[1] and start[1] <= world_dim[3]
     assert world_dim[4] <= start[2] and start[2] <= world_dim[5]
 
-    path, nodes, count, path_len = rrt_star(ros_node, start, goal, world_dim)
+    path, nodes, count, path_len = rrt_star(ros_node, start, goal, world_dim, display)
     print('Path found !')
+
+    if not with_optim:
+        return path, nodes, count, path_len
 
     ros_node.visualize_path(nodes=nodes, start=start, goal=goal, path=path)
     for _ in range(10):

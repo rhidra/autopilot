@@ -32,7 +32,7 @@ def children(node, ros_node, world_dim, grid):
     return children
 
 
-def a_star(ros_node, start, goal, world_dim, grid):
+def a_star(ros_node, start, goal, world_dim, grid, display=True):
     rospy.loginfo('Computing A* algorithm...')
     
     openset = set()
@@ -78,13 +78,13 @@ def a_star(ros_node, start, goal, world_dim, grid):
                 node.parent = current
                 openset.add(node)
 
-        if i % 10 == 0:
+        if display and i % 10 == 0:
             ros_node.visualize_path(nodes=openset.union(closedset), start=start, goal=goal)
             ros_node.rate.sleep()
 
     raise ValueError('No Path Found')
 
-def main_a_star(ros_node, start, goal, world_dim):
+def main_a_star(ros_node, start, goal, world_dim, display=True):
     assert world_dim[0] <= start[0] and start[0] <= world_dim[1] and world_dim[0] < world_dim[1]
     assert world_dim[2] <= start[1] and start[1] <= world_dim[3] and world_dim[2] < world_dim[3]
     assert world_dim[4] <= start[2] and start[2] <= world_dim[5] and world_dim[4] < world_dim[5]
@@ -95,7 +95,7 @@ def main_a_star(ros_node, start, goal, world_dim):
     
     grid = [[[None for z in range(grid_shape[2])] for y in range(grid_shape[1])] for x in range(grid_shape[0])]
 
-    path, count = a_star(ros_node, start, goal, world_dim, grid)
+    path, count = a_star(ros_node, start, goal, world_dim, grid, display)
     print('Path found !')
 
     return path, count, count, count
