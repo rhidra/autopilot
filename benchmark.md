@@ -21,23 +21,41 @@ Goal: the corner of the room, in line of sight
 Start: center \
 Goal: the corner behing the small room
 
+Works with A* (Incr=.4, UAV=.2) \
+Works with RRT* (But maybe needs a biger UAV size) (Incr=.7)
+
 ### Test C
-Start: corner
+Start: corner \
 Goal: the opposite corner, while still being in line of sight
 
+Works with A* (Incr=.4, UAV=.2) \
+Works with RRT* (Incr=.7)
+
 ### Test D
-Start: center
+Start: center \
 Goal: Inside the small room, with the door closer to the start
 
+Works with A* (Incr=.4, UAV=.2) \
+Works with RRT* (Incr=.7)
+
 ### Test E
-Start: Furthest corner, behind the small rooms
+Start: Furthest corner, behind the small rooms \
 Goal: Same as #D
 
+Works with A* (Incr=.4, UAV=.2) \
+Works with RRT* (But needs maybe higher UAV size) (Incr=.7)
+
 ### Test F
-Start: Same as #E
-Goal: On top of the furthest pillar
+Start: Same as #E \
+Goal: On top of the furthest pillar \
 This test needs to modify the max possible height
 
+Works with A* (But maybe needs higher UAV size) (Incr=.4, UAV=.2) \
+Works with RRT* (Incr=.7)
+
 ### Test G
-Start: furthest corner from the main door
+Start: furthest corner from the main door \
 Goal: Outside the main map
+
+Works with A* (Incr=.4, UAV=.2) \
+Works with RRT* sometimes (Incr=.7)
