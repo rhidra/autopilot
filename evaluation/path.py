@@ -31,7 +31,7 @@ def evaluate_path(path, processing_time, ros_node, situation='1', algo_name='A*'
     
     prev_data.append(data)
     with open('results.json', 'w') as f:
-        json.dump(prev_data, f)
+        json.dump(prev_data, f, indent=2, sort_keys=True)
 
 
 def path_length(path):
