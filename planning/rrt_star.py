@@ -20,13 +20,10 @@ def project(ros_node, origin, dest, distance=INCREMENT_DISTANCE):
 
 def build_path(current):
     path = []
-    path_len = 0
     while current:
-        path.append(current.pos)
-        if current.parent:
-            path_len += dist(current, current.parent, sqrt=True)
+        path.append(list(current.pos))
         current = current.parent
-    return path[::-1], int(path_len)
+    return path[::-1]
 
 
 def rrt_star(ros_node, start, goal, world_dim, display=True):
@@ -90,8 +87,8 @@ def rrt_star(ros_node, start, goal, world_dim, display=True):
     if goal_node is None:
         raise ValueError('No Path Found')
 
-    path, path_len = build_path(goal_node)
-    return (path, nodes, i, path_len)
+    path = build_path(goal_node)
+    return path, nodes, i
 
 
 def main_rrt_star(ros_node, start, goal, world_dim, display=True, with_optim=True):
@@ -100,7 +97,7 @@ def main_rrt_star(ros_node, start, goal, world_dim, display=True, with_optim=Tru
     assert world_dim[4] <= start[2] and start[2] <= world_dim[5]
 
     start_time = time.time()
-    path, nodes, _, _ = rrt_star(ros_node, start, goal, world_dim, display)
+    path, nodes, _ = rrt_star(ros_node, start, goal, world_dim, display)
     end_time = time.time()
 
     if not with_optim:
