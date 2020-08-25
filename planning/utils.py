@@ -1,6 +1,6 @@
 import numpy as np, math
 
-UAV_THICKNESS = .5
+UAV_THICKNESS = .2
 
 class Node:
     def __repr__(self):

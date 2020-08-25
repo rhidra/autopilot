@@ -3,7 +3,7 @@ from utils import random_position, rand, dist, Node_astar as Node, UAV_THICKNESS
 from smoothing import over_sampling, filter_path, bezier
 
 EPSILON_NODE = .05 ** 2
-INCREMENT_DISTANCE = .5
+INCREMENT_DISTANCE = .4
 
 children_directions = np.array([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [-1, 1, 1], [-1, 0, 1], [-1, -1, 1], [0, -1, 1], [1, -1, 1], 
                                            [1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], 
