@@ -9,18 +9,28 @@ def start(planning_algo, algo_name, situation, save_stats=False, launch_mission=
     node.setup()
 
     # Path planning
-    # path, _, _, _ = planning_algo(node, [0, 0, 1], [5, 0, 1], world_dim=[-20, 20, -10, 10, 0, 3])
-    path, processing_time = planning_algo(node, [0, 0, 1], [-5, -7.5, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
-    # path, _, _, _ = planning_algo(node, [0, 0, 1], [2, -10.5, 1], world_dim=[-20, 20, -10, 10, 0, 3])
-    # path, _, _, _ = planning_algo(node, [-5, -7.5, 1], [0, 0, 1], world_dim=[-20, 20, -10, 10, 0, 3])
-    # path, _, _, _ = planning_algo(node, [0, 0, 2], [0, -10.5, 2], world_dim=[-4, 12, -13, 3, 0, 5])
 
-    # path, _, _, _ = planning_algo(node, [0, 0, 4], [0, 10, 4], world_dim=[-20, 20, -10, 10, 0, 2.8*2])
-    # path, _, _, _ = planning_algo(node, [0, -10.5, 4], [0, 0, 4], world_dim=[-20, 20, -10, 10, 0, 2.8*2])
+    ## TEST A
+    # path, processing_time = planning_algo(node, [0, 0, 1], [6, 7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+    
+    ## TEST B
+    # path, processing_time = planning_algo(node, [0, 0, 1], [-5, -7.5, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
 
-    # path, _, _, _ = planning_algo(node, [0, 0, 4], [-3.5, -3.2, 7], world_dim=[-100, 100, -100, 100, 0, 50])
-    # path, _, _, _ = planning_algo(node, [-3.5, -3.2, 7], [0, 0, 4], world_dim=[-100, 100, -100, 100, 0, 50])
+    ## TEST C
+    # path, processing_time = planning_algo(node, [1, 7, 1], [6, -7.5, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
 
+    ## TEST D
+    # path, processing_time = planning_algo(node, [0, 0, 1], [-4, 5.5, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+
+    ## TEST E
+    # path, processing_time = planning_algo(node, [-5, -7.5, 1], [-4, 5.5, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+
+    ## TEST F
+    # path, processing_time = planning_algo(node, [-5, -7.5, 1], [1.83, 6.83, 4], world_dim=[-20, 20, -10, 10, 0, 5], display=display)
+
+    ## TEST G
+    path, processing_time = planning_algo(node, [-7, 8, 1], [10, -3, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+    
     node.load_local_path(path)
 
     if save_stats:
