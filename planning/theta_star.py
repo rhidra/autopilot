@@ -77,9 +77,15 @@ def theta_star(ros_node, start, goal, world_dim, grid, display=True):
                 node.parent = None
                 openset.add(node)
             
-            if current.G + dist(current, node) < node.G:
-                node.G = current.G + dist(current, node)
-                node.parent = current
+            if current.parent and not ros_node.cast_ray(current.parent.pos, node.pos, radius=UAV_THICKNESS)[0]:
+                # If in line of sight, we connect to the parent, it avoid unecessary grid turns
+                if current.parent.G + dist(current.parent, node) < node.G:
+                    node.G = current.parent.G + dist(current.parent, node)
+                    node.parent = current.parent
+            else:
+                if current.G + dist(current, node) < node.G:
+                    node.G = current.G + dist(current, node)
+                    node.parent = current
 
         if display and i % 10 == 0:
             ros_node.visualize_path(nodes=openset.union(closedset), start=start, goal=goal)
