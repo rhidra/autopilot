@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import sys, getopt, autopilot
-from planning import dummy_path, main_rrt_star, main_a_star, main_rrt_star_without_optim
+from planning import dummy_path, main_rrt_star, main_a_star, main_rrt_star_without_optim, main_theta_star
 
 help = """
 Usage: python main.py -p <algo> -d
 
 -p, --planning: (Mandatory) Planning algorithm. 
-Can be either: A*, RRT*, RRT_star_without_optim or dummy
+Can be either: A*, RRT*, RRT_star_without_optim, Theta* or dummy
 -t, --test: Name of the test. Used in the results JSON file.
 -s, --stats: Saves the statistics of the path found in 'results.json'. 
 -l, --launch: Execute the planned mission on ROS.
@@ -37,6 +37,14 @@ planning_map = {
     'a_star': {
         'algo': main_a_star,
         'name': 'A*',
+    },
+    'theta_star': {
+        'algo': main_theta_star,
+        'name': 'Theta*',
+    },
+    'theta*': {
+        'algo': main_theta_star,
+        'name': 'Theta*',
     },
 }
 
