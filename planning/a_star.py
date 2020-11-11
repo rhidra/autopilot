@@ -1,7 +1,6 @@
 import numpy as np, math, rospy, time
-from utils import random_position, rand, dist, Node_astar as Node, UAV_THICKNESS
+from utils import random_position, rand, dist, Node_astar as Node, UAV_THICKNESS, pointToCell
 from smoothing import over_sampling, filter_path, bezier
-from decimal import Decimal, ROUND_HALF_UP
 
 EPSILON_NODE = .05 ** 2
 INCREMENT_DISTANCE = .4
@@ -17,16 +16,8 @@ def children(node, ros_node, world_dim, grid):
     children = []
     for c in potential_children:
         if world_dim[0] <= c[0] and c[0] <= world_dim[1] and world_dim[2] <= c[1] and c[1] <= world_dim[3] and world_dim[4] <= c[2] and c[2] <= world_dim[5]:
-            # Rounding 4.499999999 => 4.5 and 4.5 => 5
-            # With just round(): round(4.5) => 4 and round(3.5) => 4
-            # So instead we use Decimal() with ROUND_HALF_UP
-            # Then we clamp the coordinates between the grid boundaries
-            grid_c = int(Decimal(round((c[0] - world_dim[0]) / INCREMENT_DISTANCE, 3)).to_integral_value(rounding=ROUND_HALF_UP)),\
-                     int(Decimal(round((c[1] - world_dim[2]) / INCREMENT_DISTANCE, 3)).to_integral_value(rounding=ROUND_HALF_UP)),\
-                     int(Decimal(round((c[2] - world_dim[4]) / INCREMENT_DISTANCE, 3)).to_integral_value(rounding=ROUND_HALF_UP))
-            grid_c = max(0, grid_c[0]), max(0, grid_c[1]), max(0, grid_c[2])
-            grid_c = min(grid_c[0], len(grid)-1), min(grid_c[1], len(grid[0])-1), min(grid_c[2], len(grid[0][0])-1)
-            child = grid[grid_c[0]][grid_c[1]][grid_c[2]]
+            cell = pointToCell(c, world_dim, [len(grid),len(grid[0]),len(grid[0][0])], INCREMENT_DISTANCE)
+            child = grid[cell[0]][cell[1]][cell[2]]
             
             if child is None:
                 child = Node(c, Node.OBSTACLE if ros_node.cast_ray(node.pos, c, radius=UAV_THICKNESS)[0] else Node.FREE)
