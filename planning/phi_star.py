@@ -1,125 +1,215 @@
-import numpy as np, math, rospy, time
-from utils import random_position, rand, dist, Node_astar as Node, UAV_THICKNESS
-from smoothing import over_sampling, filter_path, bezier
-from decimal import Decimal, ROUND_HALF_UP
+import numpy as np, math, sys, time, matplotlib.pyplot as plt
+from functools import reduce
+from collections import deque
+from utils import dist, Node_phistar as Node, UAV_THICKNESS, pointToCell, NoPathFound, arePointsAligned
 
-EPSILON_NODE = .05 ** 2
+
+# Grid resolution
 INCREMENT_DISTANCE = .4
 
-DEFAULT_FOR_PATH_1 = math.degrees(math.atan2(1. / math.sqrt(2.)))
+# F(s) = G(s) + H_COST_WEIGHT * H(s)
+H_COST_WEIGHT = 1.5
 
-# JUST FOR 2D
-def phi(a,b,c):
-    return (180./math.pi) * (-math.atan2(a[1]-b[1], a[0]-b[0]) + math.atan2(c[1]-b[1], c[0]-b[0])
-
-# FOR 3D, return spherical angle between two points A and C, relative to B (vectors BA and BC)
-# Phi: angle in plane (x, y)
-# Theta: angle in plane (the rotating plane orthogonal to (x,y) going through A, z)
-def phi3d(a,b,c):
-    phi = (180./math.pi) * (-math.atan2(a[1]-b[1], a[0]-b[0]) + math.atan2(c[1]-b[1], c[0]-b[0]))
-    theta = (180./math.pi) * (-math.atan2(a[2]-b[2], math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)) + math.atan2(c[2]-b[2], math.sqrt((c[0]-b[0])**2 + (c[1]-b[1])**2)))
-    return phi, theta
-
-children_directions = np.array([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [-1, 1, 1], [-1, 0, 1], [-1, -1, 1], [0, -1, 1], [1, -1, 1], 
-                                           [1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], 
-                                [0, 0,-1], [1, 0,-1], [1, 1,-1], [0, 1,-1], [-1, 1,-1], [-1, 0,-1], [-1, -1,-1], [0, -1,-1], [1, -1,-1]])
-
+# Global variables
+openset = set()
+closedset = set()
+grid = []
 
 # Return all the children (neighbors) of a specific node
-def children(node, ros_node, world_dim, grid):
-    potential_children = node.pos + children_directions * INCREMENT_DISTANCE
+# crossbar: Only considers the 12 extremities of the vertical and horizontal face from which the point is the corner
+# otherwise considers the 26 possible neighbors in every direction
+def children(node, ros_node, world_dim, grid, crossbar=True, checkLOS=True):
+    if crossbar:
+        directions = np.array([[0,1,1], [0,1,-1], [0,-1,-1], [0,-1,1], 
+                               [1,1,0], [-1,1,0], [-1,-1,0], [1,-1,0],
+                               [1,0,1], [-1,0,1], [-1,0,-1], [1,0,-1]])
+    else:
+        directions = np.array([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [-1, 1, 1], [-1, 0, 1], [-1, -1, 1], [0, -1, 1], [1, -1, 1], 
+                                          [1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], 
+                               [0, 0,-1], [1, 0,-1], [1, 1,-1], [0, 1,-1], [-1, 1,-1], [-1, 0,-1], [-1, -1,-1], [0, -1,-1], [1, -1,-1]])
+    potential_children = node.pos + directions * INCREMENT_DISTANCE
     children = []
     for c in potential_children:
-        if world_dim[0] <= c[0] and c[0] <= world_dim[1] and world_dim[2] <= c[1] and c[1] <= world_dim[3] and world_dim[4] <= c[2] and c[2] <= world_dim[5]:
-            # Rounding 4.499999999 => 4.5 and 4.5 => 5
-            # With just round(): round(4.5) => 4 and round(3.5) => 4
-            # So instead we use Decimal() with ROUND_HALF_UP
-            # Then we clamp the coordinates between the grid boundaries
-            grid_c = int(Decimal(round((c[0] - world_dim[0]) / INCREMENT_DISTANCE, 3)).to_integral_value(rounding=ROUND_HALF_UP)),\
-                     int(Decimal(round((c[1] - world_dim[2]) / INCREMENT_DISTANCE, 3)).to_integral_value(rounding=ROUND_HALF_UP)),\
-                     int(Decimal(round((c[2] - world_dim[4]) / INCREMENT_DISTANCE, 3)).to_integral_value(rounding=ROUND_HALF_UP))
-            grid_c = max(0, grid_c[0]), max(0, grid_c[1]), max(0, grid_c[2])
-            grid_c = min(grid_c[0], len(grid)-1), min(grid_c[1], len(grid[0])-1), min(grid_c[2], len(grid[0][0])-1)
-            child = grid[grid_c[0]][grid_c[1]][grid_c[2]]
-            
+        if world_dim[0] <= c[0] <= world_dim[1] and world_dim[2] <= c[1] <= world_dim[3] and world_dim[4] <= c[2] <= world_dim[5]:
+            cell = pointToCell(c, world_dim, grid.shape, INCREMENT_DISTANCE)
+            child = grid[cell[0], cell[1], cell[2]]
+
             if child is None:
-                child = Node(c, Node.OBSTACLE if ros_node.cast_ray(node.pos, c, radius=UAV_THICKNESS)[0] else Node.FREE)
-                grid[grid_c[0]][grid_c[1]][grid_c[2]] = child
-
-            if child.value == Node.OBSTACLE:
-                continue
-
-            children.append(child)
+                child = Node(c)
+                grid[cell[0], cell[1], cell[2]] = child
+            
+            if not checkLOS or not ros_node.cast_ray(node.pos, c, radius=UAV_THICKNESS)[0]:
+                children.append(child)
     return children
 
 
-def theta_star(ros_node, start, goal, world_dim, grid, display=True):
-    rospy.loginfo('Computing A* algorithm...')
+def phi(a,b,c):
+    a, b, c = a.pos, b.pos, c.pos
+    p = (180./math.pi) * (-math.atan2(a[1]-b[1], a[0]-b[0]) + math.atan2(c[1]-b[1], c[0]-b[0]))
+    if p > 180:
+        p = - (180 - (p % 180)) # Set angle between [-180; 180]
+
+    t = (180./math.pi) * (-math.atan2(a[2]-b[2], math.sqrt((a[0]-b[0]) ** 2 + (a[1]-b[1]) ** 2)) + math.atan2(c[2]-b[2], math.sqrt((c[0]-b[0]) ** 2 + (c[1]-b[1]) ** 2)))
+    if t > 180:
+        t = - (180 - (t % 180)) # Set angle between [-180; 180]
+    return p, t
+
+
+def pathTie(node, current):
+    return arePointsAligned(current.parent.pos, current.pos, node.pos)
     
-    openset = set()
-    closedset = set()
 
-    current = Node(start, Node.FREE)
-    openset.add(current)
+def updateVertex(ros_node, current, node, grid, world_dim):
+    p, t = phi(current, current.parent, node) if current.parent else (None, None)
 
-    i=0
-    while openset:
-        i = i+1
+    if current.parent and not ros_node.cast_ray(current.parent.pos, node.pos, radius=UAV_THICKNESS)[0] \
+                    and current.lb_phi <= p <= current.ub_phi \
+                    and current.lb_the <= t <= current.ub_the \
+                    and not pathTie(node, current):
+        # Path 2
+        new_g = current.parent.G + dist(current.parent, node)
+        if new_g < node.G:
+            node.G = new_g
+            node.parent = current.parent
+            node.local = current
+            neighbors = np.array(list(map(lambda nb: phi(node, current.parent, nb), children(node, ros_node, world_dim, grid, crossbar=True, checkLOS=False))))
+            l_phi, h_phi = neighbors[:,0].min(), neighbors[:,0].max()
+            l_the, h_the = neighbors[:,1].min(), neighbors[:,1].max()
+            delta_phi, delta_the = phi(current, current.parent, node)
+            node.lb_phi = max(l_phi, current.lb_phi - delta_phi)
+            node.ub_phi = min(h_phi, current.ub_phi - delta_phi)
+            node.lb_the = max(l_the, current.lb_the - delta_the)
+            node.ub_the = min(h_the, current.ub_the - delta_the)
+    else:
+        # Path 1
+        new_g = current.G + dist(current, node)
+        if new_g < node.G:
+            node.G = new_g
+            node.parent = current
+            node.local = current
+            neighbors = np.array(list(map(lambda nb: phi(node, current, nb), children(node, ros_node, world_dim, grid, crossbar=True, checkLOS=False))))
+            node.lb_phi, node.ub_phi = neighbors[:,0].min(), neighbors[:,0].max()
+            node.lb_the, node.ub_the = neighbors[:,1].min(), neighbors[:,1].max()
 
-        current = min(openset, key=lambda o:o.G + o.H)
 
-        if dist(current, goal, sqrt=False) <= INCREMENT_DISTANCE * INCREMENT_DISTANCE:
-            path = [list(goal)]
-            while current.parent:
-                path.append(list(current.pos))
-                current = current.parent
-            path.append(list(current.pos))
-            return path[::-1], i
+# Return the path computed by the A* optimized algorithm from the start and goal points
+def find_path(ros_node, start, goal, grid, world_dim, openset=set(), closedset=set(), display=True):
+    if len(openset) == 0:
+        openset.add(start)
+
+    i = 0
+    while openset and min(map(lambda o: o.G + H_COST_WEIGHT * o.H, openset)) < goal.G + H_COST_WEIGHT * goal.H:
+        i = i + 1
+        current = min(openset, key=lambda o: o.G + H_COST_WEIGHT * o.H)
 
         openset.remove(current)
         closedset.add(current)
 
         # Loop through the node's children/siblings
-        # From start
-        for node in children(current, ros_node, world_dim, grid):
+        for node in children(current, ros_node, world_dim, grid, crossbar=False):
+            # If it is already in the closed set, skip it
             if node in closedset:
                 continue
-            
+
             if node not in openset:
-                node.G = float('inf')
+                node.reset()
                 node.H = dist(node, goal)
-                node.parent = None
                 openset.add(node)
             
-            if current.parent and not ros_node.cast_ray(current.parent.pos, node.pos, radius=UAV_THICKNESS)[0]:
-                # If in line of sight, we connect to the parent, it avoid unecessary grid turns
-                if current.parent.G + dist(current.parent, node) < node.G:
-                    node.G = current.parent.G + dist(current.parent, node)
-                    node.parent = current.parent
-            else:
-                if current.G + dist(current, node) < node.G:
-                    node.G = current.G + dist(current, node)
-                    node.parent = current
-
+            updateVertex(ros_node, current, node, grid, world_dim)
+        
         if display and i % 10 == 0:
-            ros_node.visualize_path(nodes=openset.union(closedset), start=start, goal=goal)
+            ros_node.visualize_path(nodes=openset.union(closedset), start=start.pos, goal=goal.pos)
             ros_node.rate.sleep()
 
-    raise ValueError('No Path Found')
+    if not goal.parent:
+        raise NoPathFound
+    
+    path = []
+    current = goal
+    while current.parent:
+        path.append(current.pos)
+        current = current.parent
+    path.append(current.pos)
+    return path[::-1]
 
-def main_theta_star(ros_node, start, goal, world_dim, display=True):
-    assert world_dim[0] <= start[0] and start[0] <= world_dim[1] and world_dim[0] < world_dim[1]
-    assert world_dim[2] <= start[1] and start[1] <= world_dim[3] and world_dim[2] < world_dim[3]
-    assert world_dim[4] <= start[2] and start[2] <= world_dim[5] and world_dim[4] < world_dim[5]
+"""
+def clearSubtree(node, grid, obs, openset, closedset):
+    under, over = deque(), deque()
+    under.append(node)
 
-    start_time = time.time()
+    while under:
+        node = under.popleft()
+        over.append(node)
+        node.reset()
+
+        openset.discard(node)
+        closedset.discard(node)
+
+        for neigh in children(node, grid, [], crossbar=False, checkLOS=False):
+            if neigh.local == node:
+                under.append(neigh)
+    
+    while over:
+        node = over.popleft()
+        for neigh in children(node, grid, obs, crossbar=False, checkLOS=True):
+            if neigh in closedset:
+                g_old = node.G
+                updateVertex(neigh, node, grid, obs)
+                if node.G < g_old:
+                    openset.add(node)
+"""
+
+
+def phi_star(ros_node, start, goal, world_dim, display=True):
     grid_shape = (int((world_dim[1] - world_dim[0]) // INCREMENT_DISTANCE),
                   int((world_dim[3] - world_dim[2]) // INCREMENT_DISTANCE),
                   int((world_dim[5] - world_dim[4]) // INCREMENT_DISTANCE))
+    global grid
+    grid = np.full(grid_shape, None)
+    cells = pointToCell(start, world_dim, grid.shape, INCREMENT_DISTANCE)
+    cellg = pointToCell(goal, world_dim, grid.shape, INCREMENT_DISTANCE)
+    grid[cells[0],cells[1],cells[2]], grid[cellg[0],cellg[1],cellg[2]] = Node(start), Node(goal)
+    start, goal = grid[cells[0],cells[1],cells[2]], grid[cellg[0],cellg[1],cellg[2]]
+
+    goal.H, start.G, start.H = 0, 0, dist(start, goal)
+
+    openset = set()
+    closedset = set()
+
+    start_time = time.time()
+
+    i = 0
+    while True:
+        i += 1
+        path = find_path(ros_node, start, goal, grid, world_dim, openset, closedset, display)
+        duration = abs(time.time() - start_time)
+        break
+
+        """
+        if DISPLAY_END and WAIT_INPUT:
+            blockedCells = plot.waitForInput(grid_obs, lambda: plot.display(start, goal, grid, grid_obs))
+        else:
+            try:
+                blockedCells = next(newBlockedCells)
+                updateGridBlockedCells(blockedCells, grid_obs)
+            except StopIteration:
+                break
+              
+        t1 = time.time()
+
+        for pt in corners(blockedCells):
+            if (grid[pt] in openset or grid[pt] in closedset) and grid[pt] != start:
+                clearSubtree(grid[pt], grid, grid_obs, openset, closedset)
+        """
+    return path, duration
+
+
+def main_phi_star(ros_node, start, goal, world_dim, display=True):
+    assert world_dim[0] <= start[0] and start[0] <= world_dim[1] and world_dim[0] < world_dim[1]
+    assert world_dim[2] <= start[1] and start[1] <= world_dim[3] and world_dim[2] < world_dim[3]
+    assert world_dim[4] <= start[2] and start[2] <= world_dim[5] and world_dim[4] < world_dim[5]
     
-    grid = [[[None for z in range(grid_shape[2])] for y in range(grid_shape[1])] for x in range(grid_shape[0])]
+    path, duration = phi_star(ros_node, start, goal, world_dim, display)
 
-    path, count = theta_star(ros_node, start, goal, world_dim, grid, display)
-    end_time = time.time()
-
-    return path, end_time - start_time
+    return path, duration
