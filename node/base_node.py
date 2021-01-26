@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy, math, numpy as np
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, TwistStamped
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
@@ -38,6 +38,7 @@ class BaseNode(object):
         self.imu_data_sub = rospy.Subscriber('mavros/imu/data', Imu, self.imu_data_cb)
         self.global_pos_sub = rospy.Subscriber('mavros/global_position/global', NavSatFix, self.global_position_cb)
         self.local_pos_sub = rospy.Subscriber('mavros/local_position/pose', PoseStamped, self.local_position_cb)
+        self.local_vel_sub = rospy.Subscriber('mavros/local_position/velocity', TwistStamped, self.local_velocity_cb)
         self.mission_wp_sub = rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.mission_wp_cb)
 
         # Publishers
@@ -46,7 +47,7 @@ class BaseNode(object):
         # 20Hz loop rate
         self.rate = rospy.Rate(20)
         self.rate.sleep()
-
+    
 
     """ Callback functions """
     def altitude_cb(self, data):
@@ -63,6 +64,9 @@ class BaseNode(object):
 
     def local_position_cb(self, data):
         self.local_position = data
+
+    def local_velocity_cb(self, data):
+        self.local_velocity = data
 
     def mission_wp_cb(self, data):
         if self.mission_wp.current_seq != data.current_seq:
