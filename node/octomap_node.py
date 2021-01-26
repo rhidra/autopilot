@@ -88,7 +88,7 @@ class OctomapNode(VisualizationNode):
         origin4 = origin - axis2 * radius
 
         if display:
-            self.visualize_path(path2=[origin1, origin1 + direction * distance, origin1, 
+            self.visualize_global_path(path2=[origin1, origin1 + direction * distance, origin1, 
                                         origin2, origin2 + direction * distance, origin2, 
                                         origin3, origin3 + direction * distance, origin3, 
                                         origin4, origin4 + direction * distance, origin4,

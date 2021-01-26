@@ -12,6 +12,8 @@ class BaseNode(object):
         self.node_name = node_name
         self.state = State()
         self.mission_wp = WaypointList()
+        self.pos = np.array([0, 0, 0])
+        self.vel = np.array([0, 0, 0])
 
     def setup(self):
         rospy.init_node(self.node_name, anonymous=True)
@@ -38,8 +40,9 @@ class BaseNode(object):
         self.imu_data_sub = rospy.Subscriber('mavros/imu/data', Imu, self.imu_data_cb)
         self.global_pos_sub = rospy.Subscriber('mavros/global_position/global', NavSatFix, self.global_position_cb)
         self.local_pos_sub = rospy.Subscriber('mavros/local_position/pose', PoseStamped, self.local_position_cb)
-        self.local_vel_sub = rospy.Subscriber('mavros/local_position/velocity', TwistStamped, self.local_velocity_cb)
+        self.local_vel_sub = rospy.Subscriber('mavros/local_position/velocity_body', TwistStamped, self.local_velocity_cb)
         self.mission_wp_sub = rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.mission_wp_cb)
+        self.local_goal_sub = rospy.Subscriber('/autopilot/local_goal', PoseStamped, self.local_goal_cb)
 
         # Publishers
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10) # Offboard control
@@ -58,15 +61,21 @@ class BaseNode(object):
 
     def imu_data_cb(self, data):
         self.imu_data = data
+        self.acc = np.array([self.imu_data.linear_acceleration.x, self.imu_data.linear_acceleration.y, self.imu_data.linear_acceleration.z])
 
     def home_position_cb(self, data):
         self.home_position = data
 
     def local_position_cb(self, data):
         self.local_position = data
+        self.pos = np.array([self.local_position.pose.position.x, self.local_position.pose.position.y, self.local_position.pose.position.z])
 
     def local_velocity_cb(self, data):
         self.local_velocity = data
+        self.vel = np.array([self.local_velocity.twist.linear.x, self.local_velocity.twist.linear.y, self.local_velocity.twist.linear.z])
+
+    def local_goal_cb(self, data):
+        self.local_goal = data
 
     def mission_wp_cb(self, data):
         if self.mission_wp.current_seq != data.current_seq:

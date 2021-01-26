@@ -19,22 +19,12 @@ class LocalGoalNode(OctomapNode):
     def setup(self):
         super(LocalGoalNode, self).setup()
         self.local_goal_pub = rospy.Publisher('/autopilot/local_goal', PoseStamped, queue_size=10) # Local goal extractor
-        self.pos = np.array([0, 0, 0])
-        self.vel = np.array([0, 0, 0])
         self.rate.sleep()
-
-    def local_position_cb(self, data):
-        super(LocalGoalNode, self).local_position_cb(data)
-        self.pos = np.array([self.local_position.pose.position.x, self.local_position.pose.position.y, self.local_position.pose.position.z])
-
-    def local_velocity_cb(self, data):
-        super(LocalGoalNode, self).local_velocity_cb(data)
-        self.vel = np.array([self.local_velocity.twist.linear.x, self.local_velocity.twist.linear.y, self.local_velocity.twist.linear.z])
 
     def load_local_path(self, path):
         # Visualize the path in Rviz
         self.path = np.array(path)
-        self.visualize_path(self.path, start=self.path[0], goal=self.path[-1])
+        self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1])
 
 
     def send_local_goal(self):
@@ -92,7 +82,7 @@ class LocalGoalNode(OctomapNode):
             msg.pose.position.z = proj[2]
             
             self.local_goal_pub.publish(msg)
-            self.visualize_path(self.path, start=self.path[0], goal=self.path[-1], point=proj)
+            self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1], point=proj)
             self.rate.sleep()
 
 

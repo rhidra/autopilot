@@ -5,7 +5,7 @@ from evaluation import evaluate_path
 from planning import dummy_path, main_rrt_star, main_a_star, main_rrt_star_without_optim, main_theta_star, main_phi_star
 
 help = """
-Usage: python main.py -p <algo> -d
+Usage: python global_planner.py -p <algo> -d
 
 -p, --planning: (Mandatory) Planning algorithm. 
 Can be either: A*, RRT*, RRT_star_without_optim, Theta*, Phi* or dummy
@@ -21,6 +21,7 @@ def start(planning_algo, algo_name, situation, save_stats=False, launch_mission=
 
     # Global Path planning
     path, processing_time = planning_algo(node, [0, 0, 1], [0, -7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+    # path, processing_time = planning_algo(node, [0, 0, 1], [0, 7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
 
     node.load_local_path(path)
 

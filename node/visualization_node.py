@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import rospy, math
+import rospy, math, numpy as np
 from base_node import BaseNode
 from visualization_msgs.msg import MarkerArray, Marker
 from geometry_msgs.msg import Point
@@ -8,14 +8,16 @@ from geometry_msgs.msg import Point
 class VisualizationNode(BaseNode):
     def setup(self):
         super(VisualizationNode, self).setup()
-        self.path_viz_pub = rospy.Publisher('/path_viz', MarkerArray, queue_size=10) # Custom topic used with Rviz
+        self.viz_global_pub = rospy.Publisher('/autopilot/viz/global', MarkerArray, queue_size=10) # Custom topic used with Rviz
+        self.viz_local_pub = rospy.Publisher('/autopilot/viz/local', MarkerArray, queue_size=10) # Custom topic used with Rviz
+        self.rate.sleep()
 
     """
-    visualize_local_path()
+    visualize_global_path()
     Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
     @param path: [[x, y, z]] 3D path in local coordinates.
     """
-    def visualize_path(self, path=[], path2=[], nodes=[], start=None, goal=None, point=None):
+    def visualize_global_path(self, path=[], path2=[], nodes=[], start=None, goal=None, point=None):
         if not hasattr(self, 'temp_marker'):
             self.temp_marker = []
 
@@ -47,7 +49,34 @@ class VisualizationNode(BaseNode):
         if point is not None:
             marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2, size=.6))
 
-        self.path_viz_pub.publish(marker_array)
+        self.viz_global_pub.publish(marker_array)
+
+
+    """
+    visualize_local_path()
+    Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
+    @param path: [[x, y, z]] 3D path in local coordinates.
+    """
+    def visualize_local_path(self, pos=None, vel=None, trajLibrary=[], trajSelected=None, trajHistory=[], tf=1):
+        if not hasattr(self, 'temp_marker'):
+            self.temp_marker = []
+
+        for marker in self.temp_marker:
+            marker.action = Marker.DELETE
+
+        marker_array = MarkerArray()
+        marker_array.markers.extend(self.temp_marker)
+        self.temp_marker = []
+
+        if vel is not None and pos is not None:
+            marker_array.markers.append(viz_arrow(pos, pos+vel, color=(1, 0.76862745, 0)))
+
+        t = np.linspace(0, tf, 5)
+        for i, traj in enumerate(trajLibrary):
+            pos = traj.get_position(t)
+            marker_array.markers.append(viz_path(pos, color=(0, 0, 1), id=i))
+
+        self.viz_local_pub.publish(marker_array)
 
 
 def viz_path(path, color=(0, 1, 0), id=0):
@@ -125,6 +154,34 @@ def viz_point(point, color=(1., 1., 1.), id=0, size=1):
     marker.scale.x = size
     marker.scale.y = size
     marker.scale.z = size
+
+    marker.color.r = color[0]
+    marker.color.g = color[1]
+    marker.color.b = color[2]
+    marker.color.a = 1
+
+    return marker
+
+
+def viz_arrow(start, end, color=(1, 1, 1), id=0, size=.1):
+    marker = Marker()
+    marker.header.frame_id = '/map'
+    marker.header.stamp = rospy.Time.now()
+    marker.ns = 'arrows'
+    marker.action = Marker.ADD
+    marker.id = id
+    marker.type = Marker.ARROW
+
+
+    a, b = Point(), Point()
+    a.x, a.y, a.z = start[0], start[1], start[2]
+    b.x, b.y, b.z = end[0], end[1], end[2]
+    marker.points.append(a)
+    marker.points.append(b)
+
+    marker.scale.x = size
+    marker.scale.y = size * 1.7
+    marker.scale.z = size * 1.7
 
     marker.color.r = color[0]
     marker.color.g = color[1]

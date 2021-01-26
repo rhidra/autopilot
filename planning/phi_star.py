@@ -119,7 +119,7 @@ def find_path(ros_node, start, goal, grid, world_dim, openset=set(), closedset=s
             updateVertex(ros_node, current, node, grid, world_dim)
         
         if display and i % 10 == 0:
-            ros_node.visualize_path(nodes=openset.union(closedset), start=start.pos, goal=goal.pos)
+            ros_node.visualize_global_path(nodes=openset.union(closedset), start=start.pos, goal=goal.pos)
             ros_node.rate.sleep()
 
     if not goal.parent:
