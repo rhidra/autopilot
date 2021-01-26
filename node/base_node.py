@@ -66,7 +66,7 @@ class BaseNode(object):
 
     def mission_wp_cb(self, data):
         if self.mission_wp.current_seq != data.current_seq:
-                rospy.loginfo("current mission waypoint sequence updated: {0}".format(data.current_seq))
+            rospy.loginfo("current mission waypoint sequence updated: {0}".format(data.current_seq))
         self.mission_wp = data
 
     def state_cb(self, data):

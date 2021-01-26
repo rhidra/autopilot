@@ -9,8 +9,10 @@ def start(planning_algo, algo_name, situation, save_stats=False, launch_mission=
     node.setup()
 
     # Path planning
-    path, processing_time = planning_algo(node, [0, 0, 1], [6, 7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+    # path, processing_time = planning_algo(node, [0, 0, 1], [6, 7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+    path, processing_time = planning_algo(node, [0, 0, 1], [0, -7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
     
+    print(path)
     node.load_local_path(path)
 
     if save_stats:
