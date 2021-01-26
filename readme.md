@@ -92,13 +92,55 @@ folder of this repo.
 
 For more info, refer to `autopilot/world_to_octomap/readme.md`.
 
+
+### SLAM
+
+For mapping and localization, we are using [OpenVSLAM](https://github.com/xdspacelab/openvslam).
+First, you need to [install OpenVSLAM](https://openvslam.readthedocs.io/en/master/installation.html#chapter-installation), 
+using OpenCV 3.x.x and maybe PangolinViewer.
+You can simply follow the script on that page to compile all the dependancies.
+Then, you need to install the [ROS package](https://openvslam.readthedocs.io/en/master/ros_package.html).
+
+You may need to download a [DBOW](https://github.com/dorian3d/DBoW2) dictionnary. One is provided by OpenVSLAM
+on [Google Drive](https://drive.google.com/open?id=1wUPb328th8bUqhOk-i8xllt5mgRW4n84)
+or [Baidu Drive](https://pan.baidu.com/s/1627YS4b-DC_0Ioya3gLTPQ) (Pass: zb6v). 
+This will give you the `orb_vocab.dbow` file needed later.
+
+You may also need to calibrate your camera. OpenVSLAM requires a `config.yaml` file to calibrate the camera.
+[This page](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration) provides a tutorial
+to calibrate a camera and output a Yaml and a Txt files. But the Yaml file is not the right format
+for OpenVSLAM. **A better solution should be found...**
+
+### SLAM mapping with an Android phone
+
+To create a map of the environment, you may want to map it using an Android phone.
+To do that use the app [IP Webcam](https://play.google.com/store/apps/details?id=com.pas.webcam&hl=fr&gl=US),
+and get the IP address of the phone. The video feed should be accessible at `http://192.168.x.x:8080/video`.
+
+Then, clone the [ip_camera](https://github.com/ravich2-7183/ip_camera) ROS package, a small
+python utility which publish an IP camera feed to the `/camera/image_raw` ROS topic.
+
+```shell script
+git clone https://github.com/ravich2-7183/ip_camera
+cd ip_camera
+python2 nodes/ip_camera.py -u http://192.168.x.x:8080/video
+```
+
+You can then start the OpenVSLAM node which can analyses the raw video feed.
+You may need to use to transport the video to a different topic. Follow the 
+[tutorial](https://openvslam.readthedocs.io/en/master/ros_package.html#publish-images-of-a-usb-camera) to learn how.
+```shell script
+rosrun openvslam run_slam -v /home/rhidra/orb_vocab/orb_vocab.dbow2 -c aist_entrance_hall_1/config.yaml
+```
+
+
 ## Run the autopilot
 
 To launch all necessary nodes, a launch file is available in `autopilot/launch/autopilot.launch`.
 It launches ROS, MAVROS, PX4, Gazebo and the Octomap server using a `.bt` file.
 You can also specify a vehicle, and a starting position.
 ```shell script
-roslaunch autopilot autopilot.launch octomap:=octomaps/warehouse.bt vehicle:=iris world:=warehouse
+roslaunch autopilot autopilot.launch vehicle:=iris world:=test_zone
 ```
 
 To visualize the octomap, you can use `rosrun rviz rviz`.
