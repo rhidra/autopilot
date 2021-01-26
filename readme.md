@@ -134,55 +134,50 @@ rosrun openvslam run_slam -v /home/rhidra/orb_vocab/orb_vocab.dbow2 -c aist_entr
 ```
 
 
-## Run the autopilot
+## Usage
+
+### Launch the simulation
 
 To launch all necessary nodes, a launch file is available in `autopilot/launch/autopilot.launch`.
 It launches ROS, MAVROS, PX4, Gazebo and the Octomap server using a `.bt` file.
+It also start Rviz with the `./config.rviz` configuration file, to visualize the octomap and the algorithms.
+The `/autopilot/viz/global` and `/autopilot/viz/local` topics are used by the autopilot to display data on Rviz.
 You can also specify a vehicle, and a starting position.
 ```shell script
 roslaunch autopilot autopilot.launch vehicle:=iris world:=test_zone
 ```
 
-To visualize the octomap, you can use `rosrun rviz rviz`.
+### Global planner
 
-**TODO**: The launch file should start the autopilot node.
-The autopilot will communicate with the MAVROS topics to move the UAV.
-
-## How to use the autopilot
+To launch the global planner, launch the simulation (previous section),
+and run the global planner ROS node with the following command.
+You can specify a few different parameters, like the algorithms used,
+if an advanced display should be used, or to record data for later analysis.
+You can use the `--help` option to learn more. 
 
 ```shell script
-rosrun autopilot main.py -p <planning_algorithm>
+rosrun autopilot global_planner.py -p <planning_algorithm>
 ```
 
 `<planning_algorithm>` can be:
-- A*
+- a_star
 - ~~RRT~~
-- RRT*
+- rrt_star
+- theta_star
+- phi_star
 - dummy (Dummy planning algorithm, for testing purposes)
 
-The autopilot path planning compute a list of waypoints to local coordinate system,
-which it converts to GPS coordinates and builds a MAVLink mission. The mission
-is published to a MAVROS topic and the flight mode is set to `AUTO.MISSION`, so
-the FCU execute the mission loaded.
+The global planner computes a global path only **once**, then broadcast
+continuously a potential _local goal_ position to use as an objective for the
+local planner. The local goal is broadcasted as a
+[PoseStamped](http://docs.ros.org/en/api/geometry_msgs/html/msg/PoseStamped.html)
+on the `/autopilot/local_goal` topic.
 
-## DEPRECATED
+### Local planner
 
-This section is for commands not useful for the project.
-
-To launch PX4, using the Gazebo simulation, but **without ROS and MAVROS**. We use the quadcopter **iris** and the map **warehouse**.
-```shell script
-make px4_sitl_default gazebo_iris__warehouse
-```
-
-To install the C++ Octomap library system wide.
-[Reference](https://github.com/OctoMap/octomap/wiki/Compilation-and-Installation-of-OctoMap)
+To launch the local planner, launch the simulation and the global planner.
+Then run the local planner ROS node with the following command.
 
 ```shell script
-git clone git://github.com/OctoMap/octomap.git
-cd octomap/octomap
-mkdir build
-cmake ..
-make
-make test # To verify the build
-make install # To install the library system wide
+rosrun autopilot local_planner.py
 ```
