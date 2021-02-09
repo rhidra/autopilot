@@ -133,6 +133,26 @@ You may need to use to transport the video to a different topic. Follow the
 rosrun openvslam run_slam -v /home/rhidra/orb_vocab/orb_vocab.dbow2 -c aist_entrance_hall_1/config.yaml
 ```
 
+### Bebop setup
+
+To run the program on actual UAVs, we are using the Parrot Bebop 2. The firmware is closed, so we are using
+a ROS driver, [bebop_autonomy](https://bebop-autonomy.readthedocs.io/).
+
+To install the driver, follow the [official tutorial](https://bebop-autonomy.readthedocs.io/en/latest/installation.html).
+
+During the installation we had [this issue](https://github.com/AutonomyLab/bebop_autonomy/issues/170).
+To solve it, make sure you have the folder `catkin_ws/devel/lib/parrot_arsdk`.
+If not, install the `parrot_arsdk` ROS module. Then copy the module in the catkin workspace.
+```shell script
+sudo apt install ros-melodic-parrot-arsdk
+cp -r /opt/ros/melodic/lib/parrot_arsdk ~/catkin_ws/devel/lib/
+```
+
+Once you have the module installed, add this line to your `.bashrc` file.
+```shell script
+export LD_LIBRARY_PATH=~/catkin_ws/devel/lib/parrot_arsdk:$LD_LIBRARY_PATH
+```
+
 
 ## Usage
 
