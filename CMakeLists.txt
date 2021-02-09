@@ -16,10 +16,10 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(octo_node src/octo_node.cpp)
-target_link_libraries(octo_node ${catkin_LIBRARIES})
-add_dependencies(octo_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_executable(octo_node src/octo_node.cpp)
+# target_link_libraries(octo_node ${catkin_LIBRARIES})
+# add_dependencies(octo_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-catkin_install_python(PROGRAMS autopilot.py
+catkin_install_python(PROGRAMS global_planner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
