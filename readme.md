@@ -111,6 +111,11 @@ You may also need to calibrate your camera. OpenVSLAM requires a `config.yaml` f
 to calibrate a camera and output a Yaml and a Txt files. But the Yaml file is not the right format
 for OpenVSLAM. **A better solution should be found...**
 
+Add the bash sourcing file of OpenVSLAM in your `.bashrc`.
+```shell script
+source $HOME/openvslam/ros/devel/setup.bash
+```
+
 ### SLAM mapping with an Android phone
 
 To create a map of the environment, you may want to map it using an Android phone.
