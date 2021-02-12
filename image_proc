@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import rospy, sys, getopt, cv2 as cv, numpy as np
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+
+help = """Usage: python image_proc --in=/image_raw/ --out=/camera/image_raw/
+
+-i, --in: topic to extract the video stream.
+Defaults to /image_raw/.
+-o, --out: topic to publish the video stream.
+Defaults to /camera/image_raw/
+"""
+
+inTopic = '/image_raw'
+outTopic = '/camera/image_raw'
+
+bridge = CvBridge()
+rospy.init_node('image_proc', anonymous=True)
+pub = rospy.Publisher(outTopic, Image, queue_size=10) # Offboard control
+
+try:
+    opts, _ = getopt.getopt(sys.argv[1:],'hi:o:',['help', 'in=', 'out='])
+except getopt.GetoptError:
+    print(help)
+    sys.exit(2)
+
+for opt, arg in opts:
+    if opt in ('-h', '--help'):
+        print(help)
+        sys.exit()
+    elif opt in ('-i', '--in'):
+        inTopic = arg
+    elif opt in ('-o', '--out'):
+        outTopic = arg
+
+def image_callback(img_msg):
+    try:
+        cv_image = bridge.imgmsg_to_cv2(img_msg, "bgr8")
+    except CvBridgeError as e:
+        rospy.logerr("CvBridge Error: {}".format(e))
+    
+    cv_image = np.clip(cv_image + 30, 0, 255).astype(np.uint8)
+    # cv_image = cv.cvtColor(cv_image, cv.COLOR_BGR2GRAY);
+    # cv_image = cv.equalizeHist(cv_image)
+    # cv_image = cv.cvtColor(cv_image, cv.COLOR_GRAY2RGB)
+
+    try:
+        image_message = bridge.cv2_to_imgmsg(cv_image, encoding="bgr8")
+        pub.publish(image_message)
+    except CvBridgeError as e:
+        rospy.logerr("CvBridge Error: {}".format(e))
+
+
+sub_image = rospy.Subscriber(inTopic, Image, image_callback)
+
+rospy.loginfo('Image processing stream started...')
+while not rospy.is_shutdown():
+    rospy.spin()
