@@ -158,6 +158,11 @@ Once you have the module installed, add this line to your `.bashrc` file.
 export LD_LIBRARY_PATH=~/catkin_ws/devel/lib/parrot_arsdk:$LD_LIBRARY_PATH
 ```
 
+To process the Bebop video stream, we have a custom module `image_proc` which add some brightness.
+You need to install a few dependencies.
+```shell script
+sudo apt install python-cv-bridge
+```
 
 ## Usage
 
