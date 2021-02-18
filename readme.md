@@ -109,12 +109,60 @@ This will give you the `orb_vocab.dbow` file needed later.
 You may also need to calibrate your camera. OpenVSLAM requires a `config.yaml` file to calibrate the camera.
 [This page](http://wiki.ros.org/camera_calibration/Tutorials/MonocularCalibration) provides a tutorial
 to calibrate a camera and output a Yaml and a Txt files. But the Yaml file is not the right format
-for OpenVSLAM. **A better solution should be found...**
+for OpenVSLAM. To convert the Yaml format, you have to do it by hand. You can use [this](https://github.com/xdspacelab/openvslam/issues/104)
+and [this](http://www.huyaoyu.com/technical/2018/06/23/convert-results-from-ros-camera_calibration-into-format-used-by-opencv.html).
+We provide a config file for the Bebop in `./bebop/config.yaml`.
 
 Add the bash sourcing file of OpenVSLAM in your `.bashrc`.
 ```shell script
 source $HOME/openvslam/ros/devel/setup.bash
 ```
+
+By default, the ROS OpenVSLAM package does not publish any data on ROS topics.
+We replace a C++ file inside the OpenVSLAM package to make it publish data.
+We are using a user made [implementation](https://github.com/xdspacelab/openvslam/issues/347) of the provided `run_localization.cc`.
+```shell script
+# Replace the file
+cd openvslam/ros/src/openvslam/src
+wget https://raw.githubusercontent.com/anbello/openvslam/pr-ros1-pose-pub/ros/1/src/openvslam/src/run_localization.cc -O run_localization.cc
+cd ../../..
+
+# Build OpenVSLAM
+catkin_make \
+    -DBUILD_WITH_MARCH_NATIVE=ON \
+    -DUSE_PANGOLIN_VIEWER=ON \
+    -DUSE_SOCKET_PUBLISHER=OFF \
+    -DUSE_STACK_TRACE_LOGGER=ON \
+    -DBOW_FRAMEWORK=DBoW2
+```
+
+If the the build fails, we found out that commenting the following lines in the
+`run_localization.cc` file in the `pose_odometry_pub` function makes it work.
+**But it is not an ideal solution and a better fix should be found !**
+**Ideally a custom C++ module should be added to this repository to start the SLAM and publish in topics.**
+```C++
+// transform broadcast
+static tf2_ros::TransformBroadcaster tf_br;
+
+geometry_msgs::TransformStamped transformStamped;
+
+transformStamped.header.stamp = ros::Time::now();
+transformStamped.header.frame_id = "map";
+transformStamped.child_frame_id = "base_link_frame";
+transformStamped.transform.translation.x = transform_tf.getOrigin().getX();
+transformStamped.transform.translation.y = transform_tf.getOrigin().getY();
+transformStamped.transform.translation.z = transform_tf.getOrigin().getZ();
+transformStamped.transform.rotation.x = transform_tf.getRotation().getX();
+transformStamped.transform.rotation.y = transform_tf.getRotation().getY();
+transformStamped.transform.rotation.z = transform_tf.getRotation().getZ();
+transformStamped.transform.rotation.w = transform_tf.getRotation().getW();
+
+tf_br.sendTransform(transformStamped);
+```
+
+The pose and odometry data are published in `/openvslam/camera_pose` and `/openvslam/odometry`, 
+as `geometry_msgs/PoseStamped` and `nav_msgs/Odometry`.
+
 
 ### SLAM mapping with an Android phone
 
@@ -162,6 +210,15 @@ To process the Bebop video stream, we have a custom module `image_proc` which ad
 You need to install a few dependencies.
 ```shell script
 sudo apt install python-cv-bridge
+```
+
+To connect to the Bebop you need to connect to the WiFi access point deployed by the UAV.
+To still be able to access the internet while being connected, you can connect to a wired internet connection,
+reroute all 192.168.42.1 (drone IP address) traffic to the WiFi interface and the rest of the traffic to the wired interface.
+To do that, get your WiFi interface name with `ip route list`, and update your routing table.
+You have to run that script everytime you connect to the WiFi access point.
+```shell script
+sudo ip route add 192.168.42.1/32 dev wlp3s0
 ```
 
 ## Usage
