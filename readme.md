@@ -221,18 +221,31 @@ You have to run that script everytime you connect to the WiFi access point.
 sudo ip route add 192.168.42.1/32 dev wlp3s0
 ```
 
-## Usage
+## Launch simulation
 
-### Launch the simulation
-
-To launch all necessary nodes, a launch file is available in `autopilot/launch/autopilot.launch`.
+To launch all necessary nodes, a launch file is available in `autopilot/launch/simulation.launch`.
 It launches ROS, MAVROS, PX4, Gazebo and the Octomap server using a `.bt` file.
 It also start Rviz with the `./config.rviz` configuration file, to visualize the octomap and the algorithms.
 The `/autopilot/viz/global` and `/autopilot/viz/local` topics are used by the autopilot to display data on Rviz.
 You can also specify a vehicle, and a starting position.
 ```shell script
-roslaunch autopilot autopilot.launch vehicle:=iris world:=test_zone
+roslaunch autopilot simulation.launch vehicle:=iris world:=test_zone
 ```
+
+## Use a Bebop UAV
+
+To use a Bebop as the autonomous UAV, you first need to make a map of the environment.
+You can just start the drone without taking off, and move it around to analyse the environment.
+To start the mapping module, run `roslaunch autopilot mapping.launch`.
+It launches the Bebop driver, the OpenVSLAM mapping module and the image processing bridge module.
+To improve the image quality, you can modify the brightness and contrast of the image processing module.
+Once done, the OpenVSLAM creates a map database, located be default at `autopilot/map-db.msg`.
+
+You can now run the autopilot in fly mode, with `roslaunch autopilot fly.launch`.
+It launches the Bebop driver, the OpenVSLAM localization module, the image processing bridge module,
+the Rviz visualization tool and the octomap server.
+
+## Autopilot
 
 ### Global planner
 
