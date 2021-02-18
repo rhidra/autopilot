@@ -6,21 +6,23 @@ from cv_bridge import CvBridge, CvBridgeError
 
 help = """Usage: python image_proc --in=/image_raw/ --out=/camera/image_raw/
 
--i, --in: topic to extract the video stream.
-Defaults to /image_raw/.
--o, --out: topic to publish the video stream.
-Defaults to /camera/image_raw/
+-i, --in: topic to extract the video stream. Default: /image_raw/
+-o, --out: topic to publish the video stream. Default: /camera/image_raw/
+-b, --brightness: brightness increase. Default: 30
+-c, --contrast: contrast coefficient. Default: 1
 """
 
 inTopic = '/image_raw'
 outTopic = '/camera/image_raw'
+brightness = 20
+contrast = 1
 
 bridge = CvBridge()
 rospy.init_node('image_proc', anonymous=True)
 pub = rospy.Publisher(outTopic, Image, queue_size=10) # Offboard control
 
 try:
-    opts, _ = getopt.getopt(sys.argv[1:],'hi:o:',['help', 'in=', 'out='])
+    opts, _ = getopt.getopt(sys.argv[1:],'hi:o:b:c:',['help', 'in=', 'out=', 'brightness=', 'contrast='])
 except getopt.GetoptError:
     print(help)
     sys.exit(2)
@@ -33,14 +35,20 @@ for opt, arg in opts:
         inTopic = arg
     elif opt in ('-o', '--out'):
         outTopic = arg
+    elif opt in ('-b', '--brightness'):
+        brightness = int(arg)
+    elif opt in ('-c', '--contrast'):
+        contrast = float(arg)
 
 def image_callback(img_msg):
     try:
         cv_image = bridge.imgmsg_to_cv2(img_msg, "bgr8")
     except CvBridgeError as e:
         rospy.logerr("CvBridge Error: {}".format(e))
-    
-    cv_image = np.clip(cv_image + 30, 0, 255).astype(np.uint8)
+
+    cv_image = cv.convertScaleAbs(cv_image, alpha=contrast, beta=brightness)
+
+    # Histogram egalization
     # cv_image = cv.cvtColor(cv_image, cv.COLOR_BGR2GRAY);
     # cv_image = cv.equalizeHist(cv_image)
     # cv_image = cv.cvtColor(cv_image, cv.COLOR_GRAY2RGB)
