@@ -4,3 +4,5 @@ __pycache__/
 build/
 analysis/*.png
 .vscode/
+
+map-db.msg
