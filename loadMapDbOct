@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+
+"""
+Publishes the point cloud data extracted from an OpenVSLAM database file.
+Read the MessagePack file format and converts it to the ROS PointCloud2 format.
+The data is published in the /cloud_in topic, to be used by the octomap server config
+"""
+
+import sys, msgpack, rospy, numpy as np
+from sensor_msgs.msg import PointCloud2, PointField
+from std_msgs.msg import Header
+import sensor_msgs.point_cloud2 as pc2
+
+def main(binPath):
+    rospy.init_node('load_octomap', anonymous=True)
+    pub = rospy.Publisher('/cloud_in', PointCloud2, queue_size=10)
+
+    # Read file as binary and unpack data using MessagePack library
+    with open(binPath, "rb") as f:
+        data = msgpack.unpackb(f.read(), use_list=False, raw=False)
+
+    # The point data is tagged "landmarks"
+    landmarks = data["landmarks"]
+    print("Point cloud has {} points.".format(len(landmarks)))
+
+    header = Header()
+    header.stamp = rospy.Time.now()
+    header.frame_id = '/map'
+    points = np.array([pt['pos_w'] for _, pt in landmarks.items()])
+    fields = [PointField('x', 0, PointField.FLOAT32, 1), \
+              PointField('y', 4, PointField.FLOAT32, 1), \
+              PointField('z', 8, PointField.FLOAT32, 1)]
+    msg = pc2.create_cloud(header=header, fields=fields, points=points)
+
+    pub.publish(msg)
+    print("Finished")
+
+
+if __name__ == "__main__":
+    argv = sys.argv
+
+    if len(sys.argv) < 2:
+        print("Convert an OpenVSLAM map database into an octomap file")
+        print("Each line represents position of landmark like \"x, y, z\"")
+        print("Usage: ")
+        print("rosrun autopilot loadMapDbOct [OpenVSLAM map MessagePack file]")
+        sys.exit()
+    else:
+        binPath = sys.argv[1]
+
+    main(binPath)

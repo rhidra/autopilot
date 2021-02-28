@@ -17,5 +17,5 @@
     <arg name="vocab" default="$(find autopilot)/bebop/orb_vocab.dbow2" /> 
     <arg name="config" default="$(find autopilot)/bebop/config.yaml" />
     <arg name="map-db" default="$(find autopilot)/map-db.msg" />
-    <node pkg="openvslam" name="openvslam" type="run_localization" args="--vocab $(arg vocab) --config $(arg config) --map-db $(arg map-db)"/>
+    <node pkg="openvslam" name="openvslam" type="run_localization" args="--vocab $(arg vocab) --config $(arg config) --map-db $(arg map-db) --mapping"/>
 </launch>
