@@ -33,6 +33,12 @@ class OctomapNode(VisualizationNode):
         tree.readBinary(s)
         self.octree = tree
 
+        # Euclidean Distance Transform generation
+        bbmin = self.octree.getMetricMin() - 4
+        bbmax = self.octree.getMetricMax() + 4
+        self.octree.dynamicEDT_generate(100, bbmin, bbmax)
+        self.octree.dynamicEDT_update(True)
+
 
     def is_point_occupied(self, point, radius=.5):
         self.collision_check += 1
@@ -45,6 +51,10 @@ class OctomapNode(VisualizationNode):
             res = False
         if res:
             return True
+        
+        if np.isclose(radius, 0):
+            return False
+
         end = np.array([0., 0., 0.])
 
         for direction in [np.array([0.,1.,0.]), np.array([0.,-1.,0.]), np.array([1.,0.,0.]), np.array([-1.,0.,0.])]:
@@ -52,6 +62,14 @@ class OctomapNode(VisualizationNode):
             if hit:
                 return True
         return False
+
+
+    def get_point_distance(self, point):
+        pt = np.array([point[0], point[1], point[2]]).astype(np.double)
+        d = self.octree.dynamicEDT_getDistance(pt)
+        if d < -0.5:
+            return 0
+        return d
 
 
     def cast_ray(self, origin, dest, radius=0., max_dist=-1, display=False):
