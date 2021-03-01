@@ -11,11 +11,11 @@ Usage: python global_planner.py -p <algo> -d
 Can be either: A*, RRT*, RRT_star_without_optim, Theta*, Phi* or dummy
 -t, --test: Name of the test. Used in the results JSON file.
 -s, --stats: Saves the statistics of the path found in 'results.json'. 
--l, --launch: Execute the planned mission on ROS.
+-l, --local: Computes and sends the local goal continuously once the path is found.
 -d, --display: Publish real-time information on Rviz.
 """
 
-def start(planning_algo, algo_name, situation, save_stats=False, launch_mission=True, display=True):
+def start(planning_algo, algo_name, situation, save_stats=False, send_local=True, display=True):
     node = LocalGoalNode(node_name='local_goal_generator')
     node.setup()
 
@@ -28,17 +28,17 @@ def start(planning_algo, algo_name, situation, save_stats=False, launch_mission=
     if save_stats:
         evaluate_path(path, processing_time, node, situation=situation, algo_name=algo_name)
 
-    if launch_mission:
+    if send_local:
         node.send_local_goal()
 
 
 def main(argv):
     algo = None
     situation = 'test'
-    save_stats, launch_mission, display = False, False, False
+    save_stats, send_local, display = False, False, False
 
     try:
-        opts, _ = getopt.getopt(argv,'hp:t:sld',['help', 'planning=', 'test=', 'stats', 'launch', 'display'])
+        opts, _ = getopt.getopt(argv,'hp:t:sld',['help', 'planning=', 'test=', 'stats', 'local', 'display'])
     except getopt.GetoptError:
         print(help)
         sys.exit(2)
@@ -68,8 +68,8 @@ def main(argv):
             situation = arg
         elif opt in ('-s', '--stats'):
             save_stats = True
-        elif opt in ('-l', '--launch'):
-            launch_mission = True
+        elif opt in ('-l', '--local'):
+            send_local = True
         elif opt in ('-d', '--display'):
             display = True
 
@@ -78,7 +78,7 @@ def main(argv):
         print('Use --help for more info')
         sys.exit()
 
-    start(algo, algo_name, situation=situation, save_stats=save_stats, launch_mission=launch_mission, display=display)
+    start(algo, algo_name, situation=situation, save_stats=save_stats, send_local=send_local, display=display)
 
 
 if __name__ == '__main__':
