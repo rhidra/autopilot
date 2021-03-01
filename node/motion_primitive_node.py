@@ -16,10 +16,19 @@ class MotionPrimitiveNode(OctomapNode):
         self.tf = 1
     
     def find_trajectory(self):
+        print('Generating the trajectory library...')
         trajs = self.generate_traj_library(self.pos, self.vel, self.acc)
+        print('Trajectory library generated !')
+
+        for traj in trajs:
+            traj.compute_cost(self.local_goal, self.get_point_edt)
+        print('Trajectories ranked')
+
+        trajSelected = min(trajs, key=lambda t: t._cost)
+        print('Best motion primitive selected')
 
         while not rospy.is_shutdown():
-            self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=trajs, tf=self.tf)
+            self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=trajs, trajSelected=trajSelected, tf=self.tf)
             self.rate.sleep()
 
     def generate_traj_library(self, pos0, vel0, acc0):
@@ -37,7 +46,7 @@ class MotionPrimitiveNode(OctomapNode):
         return trajs
 
     def generate_traj(self, pos0, vel0, acc0, velf):
-        traj = MotionPrimitive(pos0, vel0, acc0, [0,0,-9.81])
+        traj = MotionPrimitive(pos0, vel0, acc0, [0, 0, -9.81])
         traj.set_goal_velocity(velf)
         traj.set_goal_acceleration([0, 0, 0])
         traj.generate(self.tf)

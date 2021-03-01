@@ -37,6 +37,8 @@ class OctomapNode(VisualizationNode):
         bbmin = self.octree.getMetricMin() - 4
         bbmax = self.octree.getMetricMax() + 4
         self.octree.dynamicEDT_generate(100, bbmin, bbmax)
+        # The update computes distances in real unit (with sqrt)
+        # This step can be faster if we use squared distances instead
         self.octree.dynamicEDT_update(True)
 
 
@@ -64,10 +66,10 @@ class OctomapNode(VisualizationNode):
         return False
 
 
-    def get_point_distance(self, point):
+    def get_point_edt(self, point):
         pt = np.array([point[0], point[1], point[2]]).astype(np.double)
-        d = self.octree.dynamicEDT_getDistance(pt)
-        if d < -0.5:
+        d = self.octree.dynamicEDT_getDistance(pt) - .5
+        if d < 0:
             return 0
         return d
 

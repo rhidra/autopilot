@@ -75,7 +75,7 @@ class BaseNode(object):
         self.vel = np.array([self.local_velocity.twist.linear.x, self.local_velocity.twist.linear.y, self.local_velocity.twist.linear.z])
 
     def local_goal_cb(self, data):
-        self.local_goal = data
+        self.local_goal = np.array([data.pose.position.x, data.pose.position.y, data.pose.position.z])
 
     def mission_wp_cb(self, data):
         if self.mission_wp.current_seq != data.current_seq:

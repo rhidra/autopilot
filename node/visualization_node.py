@@ -54,8 +54,7 @@ class VisualizationNode(BaseNode):
 
     """
     visualize_local_path()
-    Publish a local path to a ROS topic, in order to be visualize by the Rviz visualizer.
-    @param path: [[x, y, z]] 3D path in local coordinates.
+    Publish a local path to a ROS topic, in order to be visualized by the Rviz visualizer.
     """
     def visualize_local_path(self, pos=None, vel=None, trajLibrary=[], trajSelected=None, trajHistory=[], tf=1):
         if not hasattr(self, 'temp_marker'):
@@ -71,15 +70,20 @@ class VisualizationNode(BaseNode):
         if vel is not None and pos is not None:
             marker_array.markers.append(viz_arrow(pos, pos+vel, color=(1, 0.76862745, 0)))
 
-        t = np.linspace(0, tf, 5)
+        t = np.linspace(0, tf, 10)
+        maxCost = np.max([traj._cost for traj in trajLibrary] + [0])
         for i, traj in enumerate(trajLibrary):
             pos = traj.get_position(t)
-            marker_array.markers.append(viz_path(pos, color=(0, 0, 1), id=i))
+            maxCost = 1000
+            d = traj._cost / maxCost if traj._cost < maxCost else 1
+            c = np.array([0, 255, 0]) * (1 - d) + np.array([255, 0, 0]) * d
+            m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.03, alpha=1 if traj is trajSelected else .3)
+            marker_array.markers.append(m)
 
         self.viz_local_pub.publish(marker_array)
 
 
-def viz_path(path, color=(0, 1, 0), id=0):
+def viz_path(path, color=(0, 1, 0), id=0, width=.13, alpha=1):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
@@ -89,11 +93,11 @@ def viz_path(path, color=(0, 1, 0), id=0):
     marker.id = id
     marker.type = Marker.LINE_LIST
 
-    marker.scale.x = 0.13
+    marker.scale.x = width
     marker.color.r = color[0]
     marker.color.g = color[1]
     marker.color.b = color[2]
-    marker.color.a = 1
+    marker.color.a = alpha
 
     prev = path[0]
     for curr in path[1:]:

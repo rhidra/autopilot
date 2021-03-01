@@ -657,16 +657,12 @@ class MotionPrimitive:
         Returns the total trajectory cost. Trajectories with higher cost will 
         tend to have more aggressive inputs (thrust and body rates), so that 
         this is a cheap way to compare two trajectories.
-
         """
-        # return self._axis[0].get_cost() + self._axis[1].get_cost() + self._axis[2].get_cost() 
-
-        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 10, 10, 1e100))
+        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 50, 10, 1e100))
         t = np.linspace(0, self._tf, samplingCollision)
-        pos = self.get_position(t).astype(np.int)
-        pos[:, 0] = np.clip(pos[:, 0], 0, edt.shape[0] - 1)
-        pos[:, 1] = np.clip(pos[:, 1], 0, edt.shape[1] - 1)
-        collisionCost = np.sum(1 / edt[pos[:, 0], pos[:, 1]]) * self._tf / samplingCollision
+        pos = self.get_position(t).astype(np.double)
+        distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
+        collisionCost = np.sum(1 / (distances + 1e-12)) * self._tf / samplingCollision
 
         if collisionCost == np.inf:
             self._cost = collisionCost
