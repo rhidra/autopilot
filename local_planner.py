@@ -15,7 +15,7 @@ def start():
     node = MotionPrimitiveNode('motion_primitive')
     node.setup()
 
-    node.generate_traj_library()
+    node.find_trajectory()
 
 def main(argv):
     start()
