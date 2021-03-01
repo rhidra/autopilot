@@ -10,26 +10,75 @@ from path_utils import local_to_global, build_waypoints, fix_path_orientation, r
 from planning import MotionPrimitive
 
 
+TOLERANCE_FROM_WAYPOINT = .1
+
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
         self.tf = 1
+        self.trajs = []
+        self.trajectory = None
     
-    def find_trajectory(self):
+    def follow_local_goal(self):
+        print('Init local planner')
+        msg = PoseStamped()
+        msg.header.stamp = rospy.Time.now()
+        msg.pose.position.x = 0
+        msg.pose.position.y = 0
+        msg.pose.position.z = 2
+        msg.pose.orientation.x = 0
+        msg.pose.orientation.y = 0
+        msg.pose.orientation.z = 0
+        msg.pose.orientation.w = 1
+
+        for i in range(100):
+            msg.header.stamp = rospy.Time.now()
+            self.position_pub.publish(msg)
+            self.rate.sleep()
+
+        self.compute_optimal_traj()
+        currentNode = 0
+
+        while not rospy.is_shutdown():
+            self.try_set_mode('OFFBOARD')
+            self.try_set_arm(True)
+
+            if self.dist_from(self.trajectory[currentNode], sqrt=True) < TOLERANCE_FROM_WAYPOINT:
+                if currentNode == self.trajectory.shape[0] - 1:
+                    self.compute_optimal_traj()
+                    currentNode = 0
+                else:
+                    currentNode += 1
+
+            msg.header.stamp = rospy.Time.now()
+
+            msg.pose.position.x = self.trajectory[currentNode, 0]
+            msg.pose.position.y = self.trajectory[currentNode, 1]
+            msg.pose.position.z = self.trajectory[currentNode, 2]
+
+            self.position_pub.publish(msg)
+            self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.trajs, trajSelected=self.trajectory, tf=self.tf)
+            self.rate.sleep()
+
+    def dist_from(self, p, sqrt=False):
+        sqr = (p[0] - self.local_position.pose.position.x)**2 + \
+              (p[1] - self.local_position.pose.position.y)**2 + \
+              (p[2] - self.local_position.pose.position.z)**2
+        return math.sqrt(sqr) if sqrt else sqr
+
+    def compute_optimal_traj(self):
         print('Generating the trajectory library...')
-        trajs = self.generate_traj_library(self.pos, self.vel, self.acc)
+        self.trajs = self.generate_traj_library(self.pos, self.vel, self.acc)
         print('Trajectory library generated !')
 
-        for traj in trajs:
+        for traj in self.trajs:
             traj.compute_cost(self.local_goal, self.get_point_edt)
         print('Trajectories ranked')
 
-        trajSelected = min(trajs, key=lambda t: t._cost)
+        traj = min(self.trajs, key=lambda t: t._cost)
+        t = np.linspace(0, self.tf, 10)
+        self.trajectory = traj.get_position(t)
         print('Best motion primitive selected')
-
-        while not rospy.is_shutdown():
-            self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=trajs, trajSelected=trajSelected, tf=self.tf)
-            self.rate.sleep()
 
     def generate_traj_library(self, pos0, vel0, acc0):
         numAngleVariation = 21

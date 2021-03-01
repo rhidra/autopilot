@@ -15,7 +15,7 @@ def start():
     node = MotionPrimitiveNode('motion_primitive')
     node.setup()
 
-    node.find_trajectory()
+    node.follow_local_goal()
 
 def main(argv):
     start()
