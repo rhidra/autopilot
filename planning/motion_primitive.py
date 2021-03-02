@@ -50,21 +50,24 @@ VERSION
 import numpy as np
 
 
+class TrajectoryError(Exception):
+    pass
 class MotionPrimitiveLibrary:
-    def __init__(self, delta_yaw=21, delta_norm=10, tf=1):
+    def __init__(self, delta_yaw=21, delta_norm=10, delta_pitch=3, tf=1):
         self.delta_yaw = delta_yaw
         self.delta_norm = delta_norm
+        self.delta_pitch = delta_pitch
         self.tf = tf
         self.trajs = []
 
-    def generate_traj_library(self, pos0, vel0, acc0):
-        yaw0 = np.arctan2(vel0[1], vel0[0])
+    def generate_traj_library(self, pos0, vel0, acc0, yaw0):
         norm0 = np.sqrt(vel0[0]*vel0[0] + vel0[1]*vel0[1])
 
         self.trajs = []
-        for yaw in np.linspace(yaw0 - np.pi*.45, yaw0 + np.pi*.45, self.delta_yaw):
-            for norm in np.linspace(np.clip(norm0 - 2, 0, 1e5), norm0 + 4, self.delta_norm):
-                self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw), norm * np.sin(yaw), vel0[2]]))
+        for pitch in np.linspace(- np.pi * .4, np.pi * .4, self.delta_pitch):
+            for yaw in np.linspace(yaw0 - np.pi*.45, yaw0 + np.pi*.45, self.delta_yaw):
+                for norm in np.linspace(np.clip(norm0 - 4, .1, 1e5), norm0 + 4, self.delta_norm):
+                    self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw) * np.cos(pitch), norm * np.sin(yaw) * np.cos(pitch), - norm * np.sin(pitch)]))
 
     def generate_traj(self, pos0, vel0, acc0, velf):
         traj = MotionPrimitive(pos0, vel0, acc0, [0, 0, -9.81])
@@ -73,12 +76,15 @@ class MotionPrimitiveLibrary:
         traj.generate(self.tf)
         return traj
     
-    def rank_trajectories(self, goal, get_point_edt):
+    def rank_trajectories(self, goal_point, goal_direction, get_point_edt):
         for traj in self.trajs:
-            traj.compute_cost(goal, get_point_edt)
+            traj.compute_cost(goal_point, goal_direction, get_point_edt)
     
     def get_best_traj(self):
-        return min(self.trajs, key=lambda t: t._cost)
+        traj = min(self.trajs, key=lambda t: t._cost)
+        if traj._cost > 1000:
+            raise TrajectoryError()
+        return traj 
 
 
 class SingleAxisTrajectory:
@@ -687,13 +693,14 @@ class MotionPrimitive:
             return np.array([0,0,0])
 
 
-    def compute_cost(self, goal, edt):
+    def compute_cost(self, goal_point, goal_direction, edt):
         """ Return the total trajectory cost.
 
         Returns the total trajectory cost. Trajectories with higher cost will 
         tend to have more aggressive inputs (thrust and body rates), so that 
         this is a cheap way to compare two trajectories.
         """
+        # Collision cost
         samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 50, 10, 1e100))
         t = np.linspace(0, self._tf, samplingCollision)
         pos = self.get_position(t).astype(np.double)
@@ -704,10 +711,18 @@ class MotionPrimitive:
             self._cost = collisionCost
             return self._cost
 
-        finalPos = self.get_position(self._tf)
-        distCost = np.linalg.norm(goal - finalPos)
-        
-        self._cost = 1 * distCost + 10 * collisionCost
+        # Altitude change cost
+        altitudeCost = 0 if pos[-1, 2] > 1.5 else 1e5
+
+        # Local goal distance cost
+        distCost = np.linalg.norm((goal_point - pos[-1]) * np.array([1, 1, 10]))
+
+        # Local goal direction cost
+        vf = self.get_velocity(self._tf)
+        directionCost = np.linalg.norm(vf / np.linalg.norm(vf) - goal_direction)
+
+        # Final cost
+        self._cost = 5 * distCost + 10 * collisionCost + altitudeCost + 3 * directionCost
         return self._cost
 
     def get_param_alpha(self, axNum):

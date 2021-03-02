@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy, math, numpy as np
-from geometry_msgs.msg import PoseStamped, TwistStamped
+from geometry_msgs.msg import PoseStamped, TwistStamped, Point, Vector3
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, PositionTarget
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
@@ -16,7 +16,8 @@ class BaseNode(object):
         self.vel = np.array([0, 0, 0])
         self.acc = np.array([0, 0, 0])
         self.yaw = 0.
-        self.local_goal = None
+        self.local_goal_point = None
+        self.local_goal_direction = None
 
     def setup(self):
         rospy.init_node(self.node_name, anonymous=True)
@@ -45,7 +46,8 @@ class BaseNode(object):
         self.local_pos_sub = rospy.Subscriber('mavros/local_position/pose', PoseStamped, self.local_position_cb)
         self.local_vel_sub = rospy.Subscriber('mavros/local_position/velocity_body', TwistStamped, self.local_velocity_cb)
         self.mission_wp_sub = rospy.Subscriber('/mavros/mission/waypoints', WaypointList, self.mission_wp_cb)
-        self.local_goal_sub = rospy.Subscriber('/autopilot/local_goal', PoseStamped, self.local_goal_cb)
+        self.local_goal_sub = rospy.Subscriber('/autopilot/local_goal/point', Point, self.local_goal_pt_cb)
+        self.local_goal_sub = rospy.Subscriber('/autopilot/local_goal/direction', Point, self.local_goal_dir_cb)
 
         # Publishers
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10)
@@ -79,8 +81,11 @@ class BaseNode(object):
         self.local_velocity = data
         self.vel = np.array([self.local_velocity.twist.linear.x, self.local_velocity.twist.linear.y, self.local_velocity.twist.linear.z])
 
-    def local_goal_cb(self, data):
-        self.local_goal = np.array([data.pose.position.x, data.pose.position.y, data.pose.position.z])
+    def local_goal_pt_cb(self, data):
+        self.local_goal_point = np.array([data.x, data.y, data.z])
+
+    def local_goal_dir_cb(self, data):
+        self.local_goal_direction = np.array([data.x, data.y, data.z])
 
     def mission_wp_cb(self, data):
         if self.mission_wp.current_seq != data.current_seq:
