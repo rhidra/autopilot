@@ -50,6 +50,37 @@ VERSION
 import numpy as np
 
 
+class MotionPrimitveLibrary:
+    def __init__(self, delta_yaw=21, delta_norm=10, tf=1):
+        self.delta_yaw = delta_yaw
+        self.delta_norm = delta_norm
+        self.tf = tf
+        self.trajs = []
+
+    def generate_traj_library(self, pos0, vel0, acc0):
+        yaw0 = np.arctan2(vel0[1], vel0[0])
+        norm0 = np.sqrt(vel0[0]*vel0[0] + vel0[1]*vel0[1])
+
+        self.trajs = []
+        for yaw in np.linspace(yaw0 - np.pi*.45, yaw0 + np.pi*.45, self.delta_yaw):
+            for norm in np.linspace(np.clip(norm0 - 2, 0, 1e5), norm0 + 4, self.delta_norm):
+                self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw), norm * np.sin(yaw), vel0[2]]))
+
+    def generate_traj(self, pos0, vel0, acc0, velf):
+        traj = MotionPrimitive(pos0, vel0, acc0, [0, 0, -9.81])
+        traj.set_goal_velocity(velf)
+        traj.set_goal_acceleration([0, 0, 0])
+        traj.generate(self.tf)
+        return traj
+    
+    def rank_trajectories(self, goal, get_point_edt):
+        for traj in self.trajs:
+            traj.compute_cost(goal, get_point_edt)
+    
+    def get_best_traj(self):
+        return min(self.trajs, key=lambda t: t._cost)
+
+
 class SingleAxisTrajectory:
     """A trajectory along one axis.
     
@@ -587,6 +618,11 @@ class MotionPrimitive:
     def get_position(self, t):
         ''' Return the trajectory's 3D position value at time `t`.'''
         return np.array([self._axis[i].get_position(t) for i in range(3)]).T
+    
+    def get_yaw(self, t):
+        """ Return the trajectory's yaw orientation value at time `t`.
+        Follow NED convention, 0 is the global X axis, in radians."""
+        return np.arctan2(self._axis[1].get_velocity(t), self._axis[0].get_velocity(t))
 
     def get_normal_vector(self, t):
         """ Return the vehicle's normal vector at time `t`.
