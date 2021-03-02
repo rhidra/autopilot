@@ -56,7 +56,7 @@ class LocalGoalNode(OctomapNode):
             u = (segB - segA) / np.linalg.norm(segB - segA)
             normSqr = np.dot(segB - segA, segB - segA)
             delta = np.square(np.dot(u, (segA - self.pos))) - (np.linalg.norm(segA - self.pos) ** 2 - segDist*segDist)
-            if np.isclose(delta, 0):
+            if np.isclose(delta, 0) or -1e-3 <= delta < 0:
                 d = - np.dot(u, (segA - self.pos))
                 posProj = segA + d * u
             elif delta > 0:
