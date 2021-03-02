@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy, math, numpy as np
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Point, Vector3
 from nav_msgs.msg import Path
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
@@ -18,7 +18,8 @@ Needs the velocity and position of the robot.
 class LocalGoalNode(OctomapNode):
     def setup(self):
         super(LocalGoalNode, self).setup()
-        self.local_goal_pub = rospy.Publisher('/autopilot/local_goal', PoseStamped, queue_size=10) # Local goal extractor
+        self.goal_point_pub = rospy.Publisher('/autopilot/local_goal/point', Point, queue_size=10) # Local goal extractor
+        self.goal_dir_pub = rospy.Publisher('/autopilot/local_goal/direction', Vector3, queue_size=10) # Local goal extractor
         self.rate.sleep()
 
     def load_local_path(self, path):
@@ -32,15 +33,15 @@ class LocalGoalNode(OctomapNode):
         Blocking method which continuously sends the local goal
         relative to the current position and velocity of the robot.
         """
-        msg = PoseStamped()
-        msg.header.stamp = rospy.Time.now()
-        msg.pose.position.x = 0
-        msg.pose.position.y = 0
-        msg.pose.position.z = 2
-        msg.pose.orientation.x = 0
-        msg.pose.orientation.y = 0
-        msg.pose.orientation.z = 0
-        msg.pose.orientation.w = 1
+        msg_pt = Point()
+        msg_pt.x = 0
+        msg_pt.y = 0
+        msg_pt.z = 2
+
+        msg_dir = Vector3()
+        msg_dir.x = 0
+        msg_dir.y = 0
+        msg_dir.z = 0
 
         done = False
         while not rospy.is_shutdown() and not done:
@@ -77,12 +78,19 @@ class LocalGoalNode(OctomapNode):
                 if np.linalg.norm(proj - self.path[-1]) < 1:
                     proj = self.path[-1]
 
-            msg.header.stamp = rospy.Time.now()
-            msg.pose.position.x = proj[0]
-            msg.pose.position.y = proj[1]
-            msg.pose.position.z = proj[2]
+            direction = proj - posProj
+            direction = direction / np.linalg.norm(direction)
+
+            msg_pt.x = proj[0]
+            msg_pt.y = proj[1]
+            msg_pt.z = proj[2]
+
+            msg_dir.x = direction[0]
+            msg_dir.y = direction[1]
+            msg_dir.z = direction[2]
             
-            self.local_goal_pub.publish(msg)
+            self.goal_point_pub.publish(msg_pt)
+            self.goal_dir_pub.publish(msg_dir)
             self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1], point=proj)
             self.rate.sleep()
 
