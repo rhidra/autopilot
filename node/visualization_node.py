@@ -77,7 +77,7 @@ class VisualizationNode(BaseNode):
             maxCost = 1000
             d = traj._cost / maxCost if traj._cost < maxCost else 1
             c = np.array([0, 255, 0]) * (1 - d) + np.array([255, 0, 0]) * d
-            m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.03, alpha=1 if traj is trajSelected else .3)
+            m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.03, alpha=1 if traj is trajSelected else .2)
             marker_array.markers.append(m)
 
         self.viz_local_pub.publish(marker_array)
