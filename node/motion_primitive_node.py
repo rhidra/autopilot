@@ -12,12 +12,17 @@ from planning import MotionPrimitveLibrary
 
 TOLERANCE_FROM_WAYPOINT = .1
 
+# Possible navigation states
+NORMAL = 1
+RESET_NAVIGATION = 2
+
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
         self.tf = 1
         self.mpl = None
         self.trajectory = None
+        self.state = NORMAL
     
     def follow_local_goal(self):
         print('Init local planner')
@@ -41,15 +46,21 @@ class MotionPrimitiveNode(OctomapNode):
             self.position_raw_pub.publish(msg)
             self.rate.sleep()
 
-        self.compute_optimal_traj(self.pos, self.vel, self.acc)
+        self.state = RESET_NAVIGATION
 
         while not rospy.is_shutdown():
             self.try_set_mode('OFFBOARD')
             self.try_set_arm(True)
 
+            if self.state == RESET_NAVIGATION:
+                self.reset_navigation()
+                self.rate.sleep()
+                continue
+
             final_pos = self.trajectory.get_position(self.tf)
             final_vel = self.trajectory.get_velocity(self.tf)
             final_acc = self.trajectory.get_acceleration(self.tf)
+
             if self.dist_from(final_pos) < TOLERANCE_FROM_WAYPOINT:
                 self.compute_optimal_traj(final_pos, final_vel, final_acc)
 
@@ -61,12 +72,12 @@ class MotionPrimitiveNode(OctomapNode):
             self.position_raw_pub.publish(msg)
             self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, tf=self.tf)
             self.rate.sleep()
-
-    def dist_from(self, p, sqrt=True):
-        sqr = (p[0] - self.local_position.pose.position.x)**2 + \
-              (p[1] - self.local_position.pose.position.y)**2 + \
-              (p[2] - self.local_position.pose.position.z)**2
-        return math.sqrt(sqr) if sqrt else sqr
+    
+    def reset_navigation(self):
+        msg = PositionTarget()
+        msg.header.stamp = rospy.Time.now()
+        self.local_position
+        msg.position.z = 2
 
     def compute_optimal_traj(self, pos=None, vel=None, acc=None):
         if pos is None:

@@ -232,6 +232,12 @@ class BaseNode(object):
             exit('Cannot get MAV_TYPE param !')
 
 
+    def dist_from(self, p, sqrt=True):
+        if self.pos is None:
+            return np.inf
+        return np.linalg.norm(np.array(p), self.pos) if sqrt else np.sum((np.array(p) - self.pos) ** 2)
+
+
     def log_topic_vars(self):
         """log the state of topic variables"""
         rospy.loginfo("========================")

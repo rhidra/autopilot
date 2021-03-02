@@ -20,12 +20,6 @@ class OffboardNode(OctomapNode):
         self.path = remove_start_offset(path)
         # self.path = fix_path_orientation(path)
 
-    def dist_from(self, p, sqrt=False):
-        sqr = (p[0] - self.local_position.pose.position.x)**2 + \
-              (p[1] - self.local_position.pose.position.y)**2 + \
-              (p[2] - self.local_position.pose.position.z)**2
-        return math.sqrt(sqr) if sqrt else sqr
-        
 
     def exec_mission(self):
         msg = PoseStamped()
