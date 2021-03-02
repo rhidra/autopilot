@@ -137,7 +137,7 @@ class BaseNode(object):
         now = rospy.get_time()
         if self.last_mode_request + 1./freq > now:
             self.last_mode_request = now
-            rospy.loginfo('Try to set mode {}...'.format(mode))
+            # rospy.loginfo('Try to set mode {}...'.format(mode))
             try:
                 res = self.set_mode_srv(0, mode)
                 if not res.mode_sent:
@@ -154,7 +154,7 @@ class BaseNode(object):
         now = rospy.get_time()
         if self.last_arm_request + 1./freq > now:
             self.last_arm_request = now
-            rospy.loginfo('Try to set arming...')
+            # rospy.loginfo('Try to set arming...')
             try:
                 res = self.set_arming_srv(arm)
                 if not res.success:

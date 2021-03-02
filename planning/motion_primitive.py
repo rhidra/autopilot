@@ -50,7 +50,7 @@ VERSION
 import numpy as np
 
 
-class MotionPrimitveLibrary:
+class MotionPrimitiveLibrary:
     def __init__(self, delta_yaw=21, delta_norm=10, tf=1):
         self.delta_yaw = delta_yaw
         self.delta_norm = delta_norm
