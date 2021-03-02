@@ -16,7 +16,7 @@ Can be either: A*, RRT*, RRT_star_without_optim, Theta*, Phi* or dummy
 """
 
 def start(planning_algo, algo_name, situation, save_stats=False, send_local=True, display=True):
-    node = LocalGoalNode(node_name='local_goal_generator')
+    node = LocalGoalNode(node_name='local_goal_generator', generateEDT=False)
     node.setup()
 
     # Global Path planning

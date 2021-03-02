@@ -1,5 +1,6 @@
 from math import pi, sin, cos
-from mavros_msgs.msg import CommandCode, Waypoint
+from mavros_msgs.msg import CommandCode, Waypoint, PositionTarget
+import rospy
 
 
 """
@@ -105,3 +106,63 @@ def remove_start_offset(path):
 
     return new_path 
     
+"""
+build_position_target()
+Build a PositionTarget MAVROS message.
+Set the correct type_mask flag depending on the parameters used.
+"""
+ALL_FLAGS = PositionTarget.IGNORE_PX + PositionTarget.IGNORE_PY + PositionTarget.IGNORE_PZ + \
+            PositionTarget.IGNORE_VX + PositionTarget.IGNORE_VY + PositionTarget.IGNORE_VZ + \
+            PositionTarget.IGNORE_AFX + PositionTarget.IGNORE_AFY + PositionTarget.IGNORE_AFZ + PositionTarget.IGNORE_YAW + PositionTarget.IGNORE_YAW_RATE
+def build_position_target(px=None, py=None, pz=None, v=None, vx=None, vy=None, vz=None, a=None, ax=None, ay=None, az=None, yaw=None, yaw_rate=None, is_force=False):
+    msg = PositionTarget()
+    msg.header.stamp = rospy.Time.now()
+    msg.type_mask = ALL_FLAGS
+    msg.coordinate_frame = PositionTarget.FRAME_LOCAL_NED
+
+    if v is not None:
+        vx, vy, vz = v, v, v
+    if a is not None:
+        ax, ay, az = a, a, a
+
+    if px is not None:
+        msg.position.x = px
+        msg.type_mask -= PositionTarget.IGNORE_PX
+    if py is not None:
+        msg.position.y = py
+        msg.type_mask -= PositionTarget.IGNORE_PY
+    if pz is not None:
+        msg.position.z = pz
+        msg.type_mask -= PositionTarget.IGNORE_PZ
+
+    if vx is not None:
+        msg.velocity.x = vx
+        msg.type_mask -= PositionTarget.IGNORE_VX
+    if vy is not None:
+        msg.velocity.y = vy
+        msg.type_mask -= PositionTarget.IGNORE_VY
+    if vz is not None:
+        msg.velocity.z = vz
+        msg.type_mask -= PositionTarget.IGNORE_VZ
+
+    if ax is not None:
+        msg.velocity.x = ax
+        msg.type_mask -= PositionTarget.IGNORE_AFX
+    if ay is not None:
+        msg.velocity.y = ay
+        msg.type_mask -= PositionTarget.IGNORE_AFY
+    if az is not None:
+        msg.velocity.z = az
+        msg.type_mask -= PositionTarget.IGNORE_AFZ
+
+    if yaw is not None:
+        msg.yaw = yaw
+        msg.type_mask -= PositionTarget.IGNORE_YAW
+    if yaw_rate is not None:
+        msg.yaw_rate = yaw_rate
+        msg.type_mask -= PositionTarget.IGNORE_YAW_RATE
+    
+    if is_force:
+        msg.type_mask -= PositionTarget.FORCE
+    
+    return msg

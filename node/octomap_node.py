@@ -5,10 +5,11 @@ from octomap_msgs.msg import Octomap
 
 
 class OctomapNode(VisualizationNode):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, generateEDT=True, *args, **kwargs):
         super(OctomapNode, self).__init__(*args, **kwargs)
         self.octree = octomap.OcTree(0.1)
         self.collision_check = 0
+        self.generateEDT = kwargs.pop('generateEDT', True)
 
 
     def setup(self):
@@ -34,12 +35,14 @@ class OctomapNode(VisualizationNode):
         self.octree = tree
 
         # Euclidean Distance Transform generation
-        bbmin = self.octree.getMetricMin() - 4
-        bbmax = self.octree.getMetricMax() + 4
-        self.octree.dynamicEDT_generate(100, bbmin, bbmax)
-        # The update computes distances in real unit (with sqrt)
-        # This step can be faster if we use squared distances instead
-        self.octree.dynamicEDT_update(True)
+        if self.generateEDT:
+            print('Generating EDT...')
+            bbmin = self.octree.getMetricMin() - 2
+            bbmax = self.octree.getMetricMax() + 2
+            self.octree.dynamicEDT_generate(50, bbmin, bbmax)
+            # The update computes distances in real unit (with sqrt)
+            # This step can be faster if we use squared distances instead
+            self.octree.dynamicEDT_update(True)
 
 
     def is_point_occupied(self, point, radius=.5):

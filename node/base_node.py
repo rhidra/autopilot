@@ -14,6 +14,9 @@ class BaseNode(object):
         self.mission_wp = WaypointList()
         self.pos = np.array([0, 0, 0])
         self.vel = np.array([0, 0, 0])
+        self.acc = np.array([0, 0, 0])
+        self.yaw = 0.
+        self.local_goal = None
 
     def setup(self):
         rospy.init_node(self.node_name, anonymous=True)
@@ -61,8 +64,9 @@ class BaseNode(object):
         self.global_position = data
 
     def imu_data_cb(self, data):
-        self.imu_data = data
+        self.imu_data, o = data, data.orientation
         self.acc = np.array([self.imu_data.linear_acceleration.x, self.imu_data.linear_acceleration.y, self.imu_data.linear_acceleration.z])
+        self.yaw = np.arctan2(2. * (o.w * o.z + o.x * o.y), o.w * o.w + o.x * o.x - o.y * o.y - o.z * o.z)
 
     def home_position_cb(self, data):
         self.home_position = data
@@ -235,7 +239,7 @@ class BaseNode(object):
     def dist_from(self, p, sqrt=True):
         if self.pos is None:
             return np.inf
-        return np.linalg.norm(np.array(p), self.pos) if sqrt else np.sum((np.array(p) - self.pos) ** 2)
+        return np.linalg.norm(np.array(p) - self.pos) if sqrt else np.sum((np.array(p) - self.pos) ** 2)
 
 
     def log_topic_vars(self):

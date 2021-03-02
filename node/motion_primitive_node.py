@@ -1,20 +1,23 @@
 #!/usr/bin/env python
-import rospy, math, numpy as np
+import rospy, math, numpy as np, time
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint, PositionTarget
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from octomap_node import OctomapNode
-from path_utils import local_to_global, build_waypoints, fix_path_orientation, remove_start_offset
+from path_utils import build_position_target
 from planning import MotionPrimitveLibrary
 
 
 TOLERANCE_FROM_WAYPOINT = .1
 
 # Possible navigation states
-NORMAL = 1
-RESET_NAVIGATION = 2
+NAV_IDLE = 1
+NAV_RESET = 2
+NAV_FOLLOW = 3
+
+IDLE_DURATION = 3
 
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
@@ -22,9 +25,13 @@ class MotionPrimitiveNode(OctomapNode):
         self.tf = 1
         self.mpl = None
         self.trajectory = None
-        self.state = NORMAL
+        self.nav_state = NAV_IDLE
+        self.idle_start = None
     
+
     def follow_local_goal(self):
+        self.wait_local_goal()
+
         print('Init local planner')
         msg = PositionTarget()
         msg.header.stamp = rospy.Time.now()
@@ -46,17 +53,31 @@ class MotionPrimitiveNode(OctomapNode):
             self.position_raw_pub.publish(msg)
             self.rate.sleep()
 
-        self.state = RESET_NAVIGATION
+        self.nav_state = NAV_RESET
 
         while not rospy.is_shutdown():
             self.try_set_mode('OFFBOARD')
             self.try_set_arm(True)
 
-            if self.state == RESET_NAVIGATION:
+            if self.nav_state == NAV_RESET:
                 self.reset_navigation()
                 self.rate.sleep()
                 continue
 
+            if self.nav_state == NAV_IDLE:
+                if self.idle_start is None:
+                    self.idle_start = time.time()
+                elif abs(self.idle_start - time.time()) > IDLE_DURATION:
+                    self.nav_state = NAV_FOLLOW
+                    self.idle_start = None
+                msg = build_position_target(v=0, a=0)
+                self.position_raw_pub.publish(msg)
+                self.rate.sleep()
+                continue
+
+            if self.trajectory is None:
+                self.compute_optimal_traj()
+            
             final_pos = self.trajectory.get_position(self.tf)
             final_vel = self.trajectory.get_velocity(self.tf)
             final_acc = self.trajectory.get_acceleration(self.tf)
@@ -73,11 +94,17 @@ class MotionPrimitiveNode(OctomapNode):
             self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, tf=self.tf)
             self.rate.sleep()
     
+
     def reset_navigation(self):
-        msg = PositionTarget()
-        msg.header.stamp = rospy.Time.now()
-        self.local_position
-        msg.position.z = 2
+        yaw = np.arctan2(self.local_goal[1] - self.pos[1], self.local_goal[0] - self.pos[0])
+        if abs(self.yaw - yaw) > .1 or self.pos[2] < 2:
+            msg = build_position_target(pz=2 if self.pos[2] < 2 else None, v=0, yaw=yaw)
+            self.reset_done = None
+        else:
+            msg = build_position_target(v=0, a=0)
+            self.nav_state = NAV_IDLE
+        self.position_raw_pub.publish(msg)
+
 
     def compute_optimal_traj(self, pos=None, vel=None, acc=None):
         if pos is None:
@@ -87,3 +114,8 @@ class MotionPrimitiveNode(OctomapNode):
         self.mpl.rank_trajectories(self.local_goal, self.get_point_edt)
         self.trajectory = self.mpl.get_best_traj()
 
+
+    def wait_local_goal(self):
+        print('Waiting for local goal instructions...')
+        while self.local_goal is None and not rospy.is_shutdown():
+            self.rate.sleep()

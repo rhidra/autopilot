@@ -56,7 +56,7 @@ class LocalGoalNode(OctomapNode):
             u = (segB - segA) / np.linalg.norm(segB - segA)
             normSqr = np.dot(segB - segA, segB - segA)
             delta = np.square(np.dot(u, (segA - self.pos))) - (np.linalg.norm(segA - self.pos) ** 2 - segDist*segDist)
-            if np.isclose(delta, 0) or -1e-3 <= delta < 0:
+            if np.isclose(delta, 0) or -1e-2 <= delta < 0:
                 d = - np.dot(u, (segA - self.pos))
                 posProj = segA + d * u
             elif delta > 0:
@@ -66,7 +66,8 @@ class LocalGoalNode(OctomapNode):
                 dot1 = np.dot(segB - segA, posProj1 - segA)
                 posProj = posProj1 if 0 <= dot1 <= normSqr or np.isclose(dot1, 0) or np.isclose(dot1, normSqr) else posProj2
             else:
-                raise ValueError('Cannot solve Segment/Sphere intersection during local goal extraction (delta={})'.format(delta))
+                print('Cannot solve Segment/Sphere intersection during local goal extraction (delta={})'.format(delta))
+                continue
 
             # Forward projection in the path and snapping to the goal
             if np.linalg.norm(posProj - self.path[-1]) < 1:
