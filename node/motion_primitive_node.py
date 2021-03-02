@@ -2,7 +2,7 @@
 import rospy, math, numpy as np
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
-from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint
+from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint, PositionTarget
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from octomap_node import OctomapNode
@@ -21,42 +21,45 @@ class MotionPrimitiveNode(OctomapNode):
     
     def follow_local_goal(self):
         print('Init local planner')
-        msg = PoseStamped()
+        msg = PositionTarget()
         msg.header.stamp = rospy.Time.now()
-        msg.pose.position.x = 0
-        msg.pose.position.y = 0
-        msg.pose.position.z = 2
-        msg.pose.orientation.x = 0
-        msg.pose.orientation.y = 0
-        msg.pose.orientation.z = 0
-        msg.pose.orientation.w = 1
+        msg.position.x = 0
+        msg.position.y = 0
+        msg.position.z = 2
+        # msg.velocity.x = 0
+        # msg.velocity.y = 0
+        # msg.velocity.z = 0
+        # msg.acceleration_or_force.x = 0
+        # msg.acceleration_or_force.y = 0
+        # msg.acceleration_or_force.z = 0
+        # msg.yaw = 90. * np.pi / 180.
+        msg.coordinate_frame = PositionTarget.FRAME_BODY_NED
+        msg.type_mask = PositionTarget.IGNORE_YAW_RATE + PositionTarget.IGNORE_VX + PositionTarget.IGNORE_VY + PositionTarget.IGNORE_VZ + PositionTarget.IGNORE_AFX + PositionTarget.IGNORE_AFY + PositionTarget.IGNORE_AFZ
 
-        for i in range(100):
+
+        for _ in range(100):
             msg.header.stamp = rospy.Time.now()
-            self.position_pub.publish(msg)
+            self.position_raw_pub.publish(msg)
             self.rate.sleep()
 
-        self.compute_optimal_traj()
-        currentNode = 0
+        self.compute_optimal_traj(self.pos, self.vel, self.acc)
 
         while not rospy.is_shutdown():
             self.try_set_mode('OFFBOARD')
             self.try_set_arm(True)
 
-            if self.dist_from(self.trajectory[currentNode], sqrt=True) < TOLERANCE_FROM_WAYPOINT:
-                if currentNode == self.trajectory.shape[0] - 1:
-                    self.compute_optimal_traj()
-                    currentNode = 0
-                else:
-                    currentNode += 1
+            final_pos = self.trajectory.get_position(self.tf)
+            final_vel = self.trajectory.get_velocity(self.tf)
+            final_acc = self.trajectory.get_acceleration(self.tf)
+            if self.dist_from(final_pos, sqrt=True) < TOLERANCE_FROM_WAYPOINT:
+                self.compute_optimal_traj(final_pos, final_vel, final_acc)
 
             msg.header.stamp = rospy.Time.now()
+            msg.position.x = final_pos[0]
+            msg.position.y = final_pos[1]
+            msg.position.z = final_pos[2]
 
-            msg.pose.position.x = self.trajectory[currentNode, 0]
-            msg.pose.position.y = self.trajectory[currentNode, 1]
-            msg.pose.position.z = self.trajectory[currentNode, 2]
-
-            self.position_pub.publish(msg)
+            self.position_raw_pub.publish(msg)
             self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.trajs, trajSelected=self.trajectory, tf=self.tf)
             self.rate.sleep()
 
@@ -66,18 +69,18 @@ class MotionPrimitiveNode(OctomapNode):
               (p[2] - self.local_position.pose.position.z)**2
         return math.sqrt(sqr) if sqrt else sqr
 
-    def compute_optimal_traj(self):
-        print('Generating the trajectory library...')
-        self.trajs = self.generate_traj_library(self.pos, self.vel, self.acc)
+    def compute_optimal_traj(self, pos=None, vel=None, acc=None):
+        if pos is None:
+            pos, vel, acc = self.pos, self.vel, self.acc
+        print('Generating the trajectory library for pos={}; vel={}; acc={}'.format(pos, vel, acc))
+        self.trajs = self.generate_traj_library(pos, vel, acc)
         print('Trajectory library generated !')
 
         for traj in self.trajs:
             traj.compute_cost(self.local_goal, self.get_point_edt)
         print('Trajectories ranked')
 
-        traj = min(self.trajs, key=lambda t: t._cost)
-        t = np.linspace(0, self.tf, 10)
-        self.trajectory = traj.get_position(t)
+        self.trajectory = min(self.trajs, key=lambda t: t._cost)
         print('Best motion primitive selected')
 
     def generate_traj_library(self, pos0, vel0, acc0):

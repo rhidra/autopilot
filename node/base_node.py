@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy, math, numpy as np
 from geometry_msgs.msg import PoseStamped, TwistStamped
-from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList
+from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, PositionTarget
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from nav_msgs.msg import Path
@@ -45,7 +45,8 @@ class BaseNode(object):
         self.local_goal_sub = rospy.Subscriber('/autopilot/local_goal', PoseStamped, self.local_goal_cb)
 
         # Publishers
-        self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10) # Offboard control
+        self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10)
+        self.position_raw_pub = rospy.Publisher('/mavros/setpoint_raw/local', PositionTarget, queue_size=10)
 
         # 20Hz loop rate
         self.rate = rospy.Rate(20)
