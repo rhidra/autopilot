@@ -241,9 +241,11 @@ class BaseNode(object):
             exit('Cannot get MAV_TYPE param !')
 
 
-    def dist_from(self, p, sqrt=True):
+    def dist_from(self, p, sqrt=True, vertical=True):
         if self.pos is None:
             return np.inf
+        if not vertical:
+            p = np.array([p[0], p[1], self.pos[2]])
         return np.linalg.norm(np.array(p) - self.pos) if sqrt else np.sum((np.array(p) - self.pos) ** 2)
 
 

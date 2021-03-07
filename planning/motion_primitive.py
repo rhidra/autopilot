@@ -53,7 +53,7 @@ import numpy as np
 class TrajectoryError(Exception):
     pass
 class MotionPrimitiveLibrary:
-    def __init__(self, delta_yaw=21, delta_norm=10, delta_z=5, tf=1):
+    def __init__(self, delta_yaw=31, delta_norm=10, delta_z=5, tf=1):
         self.delta_yaw = delta_yaw
         self.delta_norm = delta_norm
         self.delta_z = delta_z
@@ -711,7 +711,7 @@ class MotionPrimitive:
         # Low altitude cost
         altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
         collisionCost += altitudeCost
-        
+
         if collisionCost == np.inf:
             self._cost = collisionCost
             return self._cost
@@ -726,7 +726,7 @@ class MotionPrimitive:
 
         # Final cost
         self._distance_cost = 5 * distCost
-        self._collision_cost = 10 * collisionCost
+        self._collision_cost = 1 * collisionCost
         self._direction_cost = 3 * directionCost
         self._cost = self._distance_cost + self._collision_cost + self._direction_cost
         return self._cost

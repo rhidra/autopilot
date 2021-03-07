@@ -11,6 +11,7 @@ from planning import MotionPrimitiveLibrary, TrajectoryError
 
 
 TOLERANCE_FROM_WAYPOINT = .5
+TOLERANCE_FROM_GOAL = 1
 
 # Possible navigation states
 NAV_IDLE = 1
@@ -54,7 +55,13 @@ class MotionPrimitiveNode(OctomapNode):
             if self.nav_state == NAV_IDLE:
                 self.idle_navigation()
                 continue
-
+            
+            print('distance to goal {}'.format(self.dist_from(self.local_goal_point, vertical=False)))
+            if self.dist_from(self.local_goal_point, vertical=False) < TOLERANCE_FROM_GOAL:
+                rospy.loginfo('Goal attained !')
+                rospy.loginfo('Mission done !')
+                break
+            
             try:
                 if self.trajectory is None:
                     self.compute_optimal_traj()
@@ -64,10 +71,11 @@ class MotionPrimitiveNode(OctomapNode):
                 final_acc = self.trajectory.get_acceleration(self.tf)
                 final_yaw = self.trajectory.get_yaw(self.tf)
 
+
                 if self.dist_from(final_pos) < TOLERANCE_FROM_WAYPOINT:
                     self.compute_optimal_traj(final_pos, final_vel, final_acc, final_yaw)
                     rospy.loginfo('Selected trajectory with cost: {}'.format(self.trajectory.print_cost()))
-                    
+
                 msg = build_position_target(px=final_pos[0], py=final_pos[1], pz=final_pos[2], yaw=final_yaw)
                 self.position_raw_pub.publish(msg)
                 self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, trajHistory=self.traj_history, tf=self.tf)
