@@ -82,14 +82,19 @@ class VisualizationNode(BaseNode):
             # marker_array.markers.append(viz_point(pos[-1], color=(1, 1, 1), id=i+1, size=.1, alpha=.3))
         marker_array.markers.append(viz_point(pos[0], color=(1, 1, 1), id=0, size=.2, alpha=.5))
 
+        for i, traj in enumerate(trajHistory):
+            pos = traj.get_position(t)
+            m = viz_path(pos, color=(.9, .9, .9), id=i, ns='hist', width=.03)
+            marker_array.markers.append(m)
+
         self.viz_local_pub.publish(marker_array)
 
 
-def viz_path(path, color=(0, 1, 0), id=0, width=.13, alpha=1):
+def viz_path(path, color=(0, 1, 0), id=0, width=.13, alpha=1, ns='path'):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
-    marker.ns = 'path'
+    marker.ns = ns
     marker.action = Marker.ADD
     marker.pose.orientation.w = 1.0
     marker.id = id
