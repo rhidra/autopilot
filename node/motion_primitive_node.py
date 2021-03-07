@@ -27,6 +27,7 @@ class MotionPrimitiveNode(OctomapNode):
         self.trajectory = None
         self.nav_state = NAV_IDLE
         self.idle_start = None
+        self.traj_history = []
     
 
     def follow_local_goal(self):
@@ -65,10 +66,12 @@ class MotionPrimitiveNode(OctomapNode):
 
                 if self.dist_from(final_pos) < TOLERANCE_FROM_WAYPOINT:
                     self.compute_optimal_traj(final_pos, final_vel, final_acc, final_yaw)
-
+                    rospy.loginfo('Selected trajectory with cost: {}'.format(self.trajectory.print_cost()))
+                    
                 msg = build_position_target(px=final_pos[0], py=final_pos[1], pz=final_pos[2], yaw=final_yaw)
                 self.position_raw_pub.publish(msg)
-                self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, tf=self.tf)
+                self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, trajHistory=self.traj_history, tf=self.tf)
+                self.traj_history.append(self.trajectory)
                 self.rate.sleep()
             except TrajectoryError:
                 self.nav_state = NAV_RESET

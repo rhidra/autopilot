@@ -53,10 +53,10 @@ import numpy as np
 class TrajectoryError(Exception):
     pass
 class MotionPrimitiveLibrary:
-    def __init__(self, delta_yaw=21, delta_norm=10, delta_pitch=3, tf=1):
+    def __init__(self, delta_yaw=21, delta_norm=10, delta_z=5, tf=1):
         self.delta_yaw = delta_yaw
         self.delta_norm = delta_norm
-        self.delta_pitch = delta_pitch
+        self.delta_z = delta_z
         self.tf = tf
         self.trajs = []
 
@@ -64,13 +64,14 @@ class MotionPrimitiveLibrary:
         norm0 = np.sqrt(vel0[0]*vel0[0] + vel0[1]*vel0[1])
 
         self.trajs = []
-        for pitch in np.linspace(- np.pi * .4, np.pi * .4, self.delta_pitch):
+        for zf in np.linspace(pos0[2] - 1, pos0[2] + 1, self.delta_z):
             for yaw in np.linspace(yaw0 - np.pi*.45, yaw0 + np.pi*.45, self.delta_yaw):
                 for norm in np.linspace(np.clip(norm0 - 4, .1, 1e5), norm0 + 4, self.delta_norm):
-                    self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw) * np.cos(pitch), norm * np.sin(yaw) * np.cos(pitch), - norm * np.sin(pitch)]))
+                    self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw), norm * np.sin(yaw), 0], zf))
 
-    def generate_traj(self, pos0, vel0, acc0, velf):
+    def generate_traj(self, pos0, vel0, acc0, velf, zf):
         traj = MotionPrimitive(pos0, vel0, acc0, [0, 0, -9.81])
+        traj.set_goal_position([None, None, zf])
         traj.set_goal_velocity(velf)
         traj.set_goal_acceleration([0, 0, 0])
         traj.generate(self.tf)
@@ -707,23 +708,32 @@ class MotionPrimitive:
         distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
         collisionCost = np.sum(1 / (distances + 1e-12)) * self._tf / samplingCollision
 
+        # Low altitude cost
+        altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
+        collisionCost += altitudeCost
+        
         if collisionCost == np.inf:
             self._cost = collisionCost
             return self._cost
-
-        # Altitude change cost
-        altitudeCost = 0 if pos[-1, 2] > 1.5 else 1e5
 
         # Local goal distance cost
         distCost = np.linalg.norm((goal_point - pos[-1]) * np.array([1, 1, 10]))
 
         # Local goal direction cost
         vf = self.get_velocity(self._tf)
-        directionCost = np.linalg.norm(vf / np.linalg.norm(vf) - goal_direction)
+        vf_unit = vf / np.linalg.norm(vf)
+        directionCost = np.linalg.norm(vf_unit - goal_direction)
 
         # Final cost
-        self._cost = 5 * distCost + 10 * collisionCost + altitudeCost + 3 * directionCost
+        self._distance_cost = 5 * distCost
+        self._collision_cost = 10 * collisionCost
+        self._direction_cost = 3 * directionCost
+        self._cost = self._distance_cost + self._collision_cost + self._direction_cost
         return self._cost
+    
+    def print_cost(self):
+        return '{}\n|\tdistance: {}\n|\tcollision: {}\n|\tdirection: {}\n'\
+            .format(self._cost, self._distance_cost, self._collision_cost, self._direction_cost)
 
     def get_param_alpha(self, axNum):
         """Return the three parameters alpha which defines the trajectory."""
