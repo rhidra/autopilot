@@ -71,11 +71,14 @@ class VisualizationNode(BaseNode):
             marker_array.markers.append(viz_arrow(pos, pos+vel, color=(1, 0.76862745, 0)))
 
         t = np.linspace(0, tf, 10)
-        maxCost = np.max([traj._cost for traj in trajLibrary] + [0])
+        maxCost = np.max([traj._cost for traj in trajLibrary if traj._cost < 1000] + [0])
         for i, traj in enumerate(trajLibrary):
             pos = traj.get_position(t)
-            maxCost = 1000
+            # maxCost = 1000
             d = traj._cost / maxCost if traj._cost < maxCost else 1
+            if traj._cost >= maxCost:
+                marker_array.markers.append(clean_marker(id=i, ns='path'))
+                continue
             c = np.array([0, 255, 0]) * (1 - d) + np.array([255, 0, 0]) * d
             m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.03, alpha=1 if traj is trajSelected else .2)
             marker_array.markers.append(m)
@@ -199,4 +202,13 @@ def viz_arrow(start, end, color=(1, 1, 1), id=0, size=.1):
     marker.color.b = color[2]
     marker.color.a = 1
 
+    return marker
+
+def clean_marker(id=0, ns='path'):
+    marker = Marker()
+    marker.header.frame_id = '/map'
+    marker.header.stamp = rospy.Time.now()
+    marker.ns = ns
+    marker.action = Marker.DELETE
+    marker.id = id
     return marker
