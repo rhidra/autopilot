@@ -6,10 +6,22 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   octomap_ros
+  message_generation
+)
+
+add_service_files(
+    FILES
+    MotionPrimitive.srv
+)
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    geometry_msgs
 )
 
 catkin_package(
-  CATKIN_DEPENDS octomap_ros
+  CATKIN_DEPENDS octomap_ros message_runtime
 )
 
 include_directories(

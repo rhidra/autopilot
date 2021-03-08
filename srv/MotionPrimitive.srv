@@ -1,0 +1,9 @@
+---
+geometry_msgs/Vector3 pos0
+geometry_msgs/Vector3 vel0
+geometry_msgs/Vector3 acc0
+geometry_msgs/Vector3 alpha
+geometry_msgs/Vector3 beta
+geometry_msgs/Vector3 gamma
+geometry_msgs/Vector3 gravity
+float32 tf
