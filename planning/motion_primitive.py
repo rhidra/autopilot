@@ -60,8 +60,9 @@ class MotionPrimitiveLibrary:
         self.tf = tf
         self.trajs = []
 
-    def generate_traj_library(self, pos0, vel0, acc0, yaw0):
+    def generate_traj_library(self, pos0, vel0, acc0):
         norm0 = np.sqrt(vel0[0]*vel0[0] + vel0[1]*vel0[1])
+        yaw0 = np.arctan2(vel0[1], vel0[0])
 
         self.trajs = []
         for zf in np.linspace(pos0[2] - 1, pos0[2] + 1, self.delta_z):
@@ -379,7 +380,6 @@ class MotionPrimitive:
         self._grav = gravity
         self._tf = None
         self._cost = np.inf
-        self._last_wp = 0 # Last index of waypoint queried
         self.reset()
 
     def set_goal_position(self, pos):
@@ -736,11 +736,6 @@ class MotionPrimitive:
         return '{}\n|\tdistance: {}\n|\tcollision: {}\n|\tdirection: {}\n'\
             .format(self._cost, self._distance_cost, self._collision_cost, self._direction_cost)
     
-    def get_next_waypoint(self, node_sleep_dur):
-        t = self._last_wp * node_sleep_dur.to_sec()
-        self._last_wp += 1
-        return t
-
     def get_param_alpha(self, axNum):
         """Return the three parameters alpha which defines the trajectory."""
         return self._axis[axNum].get_param_alpha()

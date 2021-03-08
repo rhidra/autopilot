@@ -1,5 +1,6 @@
 from math import pi, sin, cos
 from mavros_msgs.msg import CommandCode, Waypoint, PositionTarget
+from geometry_msgs.msg import TwistStamped
 import rospy
 
 
@@ -165,4 +166,24 @@ def build_position_target(px=None, py=None, pz=None, v=None, vx=None, vy=None, v
     if is_force:
         msg.type_mask -= PositionTarget.FORCE
     
+    return msg
+
+"""
+build_traj_tracker()
+Build a TwistStamped message.
+To be used as a trajectory tracker with the mavors_controllers package.
+"""
+def build_traj_tracker(pos=[0., 0., 2.], vel=[0., 0., 0.]):
+    msg = TwistStamped()
+
+    msg.header.stamp = rospy.Time.now()
+    msg.header.frame_id = 'map'
+    
+    msg.twist.angular.x = pos[0]
+    msg.twist.angular.y = pos[1]
+    msg.twist.angular.z = pos[2]
+    msg.twist.linear.x = vel[0]
+    msg.twist.linear.y = vel[1]
+    msg.twist.linear.z = vel[2]
+
     return msg
