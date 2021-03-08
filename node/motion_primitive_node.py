@@ -7,7 +7,7 @@ from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, Waypo
 from sensor_msgs.msg import NavSatFix, Imu
 from octomap_node import OctomapNode
 from path_utils import build_traj_tracker
-from planning import MotionPrimitiveLibrary, TrajectoryError
+from motion_primitive import MotionPrimitiveLibrary, TrajectoryError
 
 
 TOLERANCE_FROM_WAYPOINT = .5
