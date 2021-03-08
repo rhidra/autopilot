@@ -47,9 +47,9 @@ VERSION
 
 """
 
-import numpy as np
+import numpy as np, rospy
 from single_axis_trajectory import SingleAxisTrajectory
-from autopilot.srv import MotionPrimitiveResponse
+from autopilot.msg import MotionPrimitive as MotionPrimitiveMsg
 
 
 class StateFeasibilityResult:
@@ -136,7 +136,9 @@ class MotionPrimitive:
         self.reset()
 
     def toMsg(self):
-        msg = MotionPrimitiveResponse()
+        msg = MotionPrimitiveMsg()
+        msg.header.stamp = rospy.Time.now()
+        msg.header.frame_id = 'map'
         msg.pos0.x, msg.pos0.y, msg.pos0.z = self._axis[0]._p0, self._axis[1]._p0, self._axis[2]._p0
         msg.vel0.x, msg.vel0.y, msg.vel0.z = self._axis[0]._v0, self._axis[1]._v0, self._axis[2]._v0
         msg.acc0.x, msg.acc0.y, msg.acc0.z = self._axis[0]._a0, self._axis[1]._a0, self._axis[2]._a0
@@ -492,8 +494,8 @@ class MotionPrimitive:
 
         # Final cost
         self._distance_cost = 5 * distCost
-        self._collision_cost = 1 * collisionCost
-        self._direction_cost = 3 * directionCost
+        self._collision_cost = 0 * collisionCost
+        self._direction_cost = 5 * directionCost
         self._cost = self._distance_cost + self._collision_cost + self._direction_cost
         return self._cost
     

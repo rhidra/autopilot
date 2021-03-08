@@ -21,7 +21,7 @@ class MotionPrimitiveLibrary:
         self.trajs = []
         for zf in np.linspace(pos0[2] - 1, pos0[2] + 1, self.delta_z):
             for yaw in np.linspace(yaw0 - np.pi*.45, yaw0 + np.pi*.45, self.delta_yaw):
-                for norm in np.linspace(np.clip(norm0 - 1, .1, 1e5), norm0 + 1, self.delta_norm):
+                for norm in np.linspace(np.clip(norm0 - 3, .1, 1e5), norm0 + 3, self.delta_norm):
                     self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw), norm * np.sin(yaw), 0], zf))
 
     def generate_traj(self, pos0, vel0, acc0, velf, zf):

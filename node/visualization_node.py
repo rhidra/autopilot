@@ -80,9 +80,9 @@ class VisualizationNode(BaseNode):
                 marker_array.markers.append(clean_marker(id=i, ns='path'))
                 continue
             c = np.array([0, 255, 0]) * (1 - d) + np.array([255, 0, 0]) * d
-            m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.03, alpha=1 if traj is trajSelected else .2)
+            m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.03, alpha=1 if traj is trajSelected else .1)
             marker_array.markers.append(m)
-            # marker_array.markers.append(viz_point(pos[-1], color=(1, 1, 1), id=i+1, size=.1, alpha=.3))
+            marker_array.markers.append(viz_point(pos[-1], color=(1, 1, 1), id=i+1, size=.1, alpha=.1))
         marker_array.markers.append(viz_point(pos[0], color=(1, 1, 1), id=0, size=.2, alpha=.5))
 
         for i, traj in enumerate(trajHistory):

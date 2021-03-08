@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 import rospy, math, numpy as np, time
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Empty
 from nav_msgs.msg import Path
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint, PositionTarget
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from octomap_node import OctomapNode
 from motion_primitive import MotionPrimitiveLibrary, TrajectoryError
-from autopilot.srv import MotionPrimitive
+from autopilot.msg import MotionPrimitive
 
 
 TOLERANCE_FROM_WAYPOINT = .5
@@ -18,12 +19,12 @@ IDLE_DURATION = 1
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
-        rospy.loginfo('Setting up the service...')
-        self.tf = 3
+        self.tf = 5
         self.mpl = None
         self.trajectory = None
         self.traj_history = []
-        self.service = rospy.Service('/autopilot/trajectory', MotionPrimitive, self.generate_trajectory)
+        self.trajectory_sub = rospy.Subscriber('/autopilot/trajectory/request', Empty, self.generate_trajectory)
+        self.trajectory_pub = rospy.Publisher('/autopilot/trajectory/response', MotionPrimitive, queue_size=10)
         rospy.loginfo('Waiting for trajectory request...')
         rospy.spin()
     
@@ -35,11 +36,12 @@ class MotionPrimitiveNode(OctomapNode):
         try:
             self.trajectory = self.compute_optimal_traj()
             rospy.loginfo('Selected trajectory with cost: {}'.format(self.trajectory.print_cost()))
+            rospy.loginfo('Final velocity: {} ({})'.format(self.trajectory.get_velocity(self.tf), np.linalg.norm(self.trajectory.get_velocity(self.tf))))
 
             msg = self.trajectory.toMsg()
+            self.trajectory_pub.publish(msg)
             self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, trajHistory=self.traj_history, tf=self.tf)
             self.traj_history.append(self.trajectory)
-            return msg
         except TrajectoryError:
             rospy.logerr('Cannot generate a trajectory: No feasible trajectory found')
     

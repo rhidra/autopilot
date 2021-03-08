@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from autopilot.srv import MotionPrimitiveResponse
 import sys, getopt
 from node import MotionPrimitiveNode
 
