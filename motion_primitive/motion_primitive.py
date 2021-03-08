@@ -49,6 +49,7 @@ VERSION
 
 import numpy as np
 from single_axis_trajectory import SingleAxisTrajectory
+from autopilot.srv import MotionPrimitiveResponse
 
 
 class StateFeasibilityResult:
@@ -67,6 +68,19 @@ class StateFeasibilityResult:
             return "Infeasible"
         return "Unknown"
             
+
+def buildMotionPrimitiveFromMsg(msg):
+    pos0 = np.array([msg.pos0.x, msg.pos0.y, msg.pos0.z])
+    vel0 = np.array([msg.vel0.x, msg.vel0.y, msg.vel0.z])
+    acc0 = np.array([msg.acc0.x, msg.acc0.y, msg.acc0.z])
+    gravity = np.array([msg.gravity.x, msg.gravity.y, msg.gravity.z])
+    p = MotionPrimitive(pos0, vel0, acc0, gravity)
+    p._tf = msg.tf
+    p._axis[0]._a, p._axis[1]._a, p._axis[2]._a = msg.alpha.x, msg.alpha.y, msg.alpha.z
+    p._axis[0]._b, p._axis[1]._b, p._axis[2]._b = msg.beta.x, msg.beta.y, msg.beta.z
+    p._axis[0]._g, p._axis[1]._g, p._axis[2]._g = msg.gamma.x, msg.gamma.y, msg.gamma.z
+    return p
+
 
 class MotionPrimitive:
     """Rapid quadrocopter trajectory generator.
@@ -120,6 +134,18 @@ class MotionPrimitive:
         self._tf = None
         self._cost = np.inf
         self.reset()
+
+    def toMsg(self):
+        msg = MotionPrimitiveResponse()
+        msg.pos0.x, msg.pos0.y, msg.pos0.z = self._axis[0]._p0, self._axis[1]._p0, self._axis[2]._p0
+        msg.vel0.x, msg.vel0.y, msg.vel0.z = self._axis[0]._v0, self._axis[1]._v0, self._axis[2]._v0
+        msg.acc0.x, msg.acc0.y, msg.acc0.z = self._axis[0]._a0, self._axis[1]._a0, self._axis[2]._a0
+        msg.alpha.x, msg.alpha.y, msg.alpha.z = self._axis[0]._a, self._axis[1]._a, self._axis[2]._a
+        msg.beta.x, msg.beta.y, msg.beta.z = self._axis[0]._b, self._axis[1]._b, self._axis[2]._b
+        msg.gamma.x, msg.gamma.y, msg.gamma.z = self._axis[0]._g, self._axis[1]._g, self._axis[2]._g
+        msg.gravity.x, msg.gravity.y, msg.gravity.z = self._grav[0], self._grav[1], self._grav[2]
+        msg.tf = self._tf
+        return msg
 
     def set_goal_position(self, pos):
         """ Define the goal end position.

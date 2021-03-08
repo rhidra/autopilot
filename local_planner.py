@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from autopilot.srv import MotionPrimitiveResponse
 import sys, getopt
 from node import MotionPrimitiveNode
 
@@ -12,10 +13,8 @@ and select one to execute.
 """
 
 def start():
-    node = MotionPrimitiveNode(node_name='motion_primitive', generateEDT=True)
+    node = MotionPrimitiveNode(node_name='local_planner', generateEDT=True)
     node.setup()
-
-    node.follow_local_goal()
 
 def main(argv):
     start()
