@@ -92,6 +92,15 @@ folder of this repo.
 
 For more info, refer to `autopilot/world_to_octomap/readme.md`.
 
+### Trajectory tracking
+
+To efficiently track a generated trajectory, we use [mavros_controllers](https://github.com/Jaeyoung-Lim/mavros_controllers).
+It launches a `geometric_controller` ROS node, which reads a `TwistStamped` message in
+the `reference/setpoint` topic. Then, it communicates with the PX4 firmware to execute the tracking.
+We send the points of the motion primitives to this topic in real time.
+
+To install the module, follow the instructions in the repo.
+
 
 ### SLAM
 
