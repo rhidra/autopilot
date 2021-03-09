@@ -19,7 +19,7 @@ IDLE_DURATION = 1
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
-        self.tf = 3
+        self.tf = 1
         self.mpl = None
         self.trajectory = None
         self.traj_history = []

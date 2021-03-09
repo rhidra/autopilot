@@ -60,7 +60,6 @@ class TrajectorySamplerNode(OctomapNode):
         self.nav_state = NAV_PAUSE
         rospy.loginfo('Entering NAV_PAUSE mode')
 
-
         while not rospy.is_shutdown():
             self.try_set_mode('OFFBOARD')
             self.try_set_arm(True)
