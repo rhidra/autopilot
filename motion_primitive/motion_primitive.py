@@ -380,15 +380,15 @@ class MotionPrimitive:
 
     def get_jerk(self, t):
         """ Return the trajectory's 3D jerk value at time `t`."""
-        return np.array([self._axis[i].get_jerk(t) for i in range(3)])
+        return np.array([self._axis[i].get_jerk(t) for i in range(3)]).T
 
     def get_acceleration(self, t):
         """ Return the trajectory's 3D acceleration value at time `t`."""
-        return np.array([self._axis[i].get_acceleration(t) for i in range(3)])
+        return np.array([self._axis[i].get_acceleration(t) for i in range(3)]).T
 
     def get_velocity(self, t):
         """ Return the trajectory's 3D velocity value at time `t`."""
-        return np.array([self._axis[i].get_velocity(t) for i in range(3)])
+        return np.array([self._axis[i].get_velocity(t) for i in range(3)]).T
 
     def get_position(self, t):
         ''' Return the trajectory's 3D position value at time `t`.'''
@@ -470,15 +470,16 @@ class MotionPrimitive:
         this is a cheap way to compare two trajectories.
         """
         # Collision cost
-        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 50, 10, 1e100))
+        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 10, 50, 1e100))
         t = np.linspace(0, self._tf, samplingCollision)
         pos = self.get_position(t).astype(np.double)
+        vel = self.get_velocity(t)
         distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
-        collisionCost = np.sum(1 / (distances + 1e-12)) * self._tf / samplingCollision
+        collisionCost = np.sum(np.linalg.norm(vel, axis=1) / (distances + 1e-12)) * self._tf / samplingCollision
 
         # Low altitude cost
-        altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
-        collisionCost += altitudeCost
+        # altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
+        # collisionCost += altitudeCost
 
         if collisionCost == np.inf:
             self._cost = collisionCost
@@ -494,14 +495,14 @@ class MotionPrimitive:
 
         # Final cost
         self._distance_cost = 5 * distCost
-        self._collision_cost = 0 * collisionCost
-        self._direction_cost = 5 * directionCost
+        self._collision_cost = 1 * collisionCost
+        self._direction_cost = 3 * directionCost
         self._cost = self._distance_cost + self._collision_cost + self._direction_cost
         return self._cost
     
     def print_cost(self):
-        return '{}\n|\tdistance: {}\n|\tcollision: {}\n|\tdirection: {}\n'\
-            .format(self._cost, self._distance_cost, self._collision_cost, self._direction_cost)
+        return '\n| {}\n|\tdistance: {}\n|\tcollision: {}\n|\tdirection: {}\n|\tfinal velocity: {} ({})\n'\
+            .format(self._cost, self._distance_cost, self._collision_cost, self._direction_cost, self.get_velocity(self._tf), np.linalg.norm(self.get_velocity(self._tf)))
     
     def get_param_alpha(self, axNum):
         """Return the three parameters alpha which defines the trajectory."""

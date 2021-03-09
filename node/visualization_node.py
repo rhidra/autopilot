@@ -56,7 +56,7 @@ class VisualizationNode(BaseNode):
     visualize_local_path()
     Publish a local path to a ROS topic, in order to be visualized by the Rviz visualizer.
     """
-    def visualize_local_path(self, pos=None, vel=None, trajLibrary=[], trajSelected=None, trajHistory=[], tf=1):
+    def visualize_local_path(self, trajLibrary=[], trajSelected=None, trajHistory=[], tf=1):
         if not hasattr(self, 'temp_marker'):
             self.temp_marker = []
 
@@ -67,22 +67,25 @@ class VisualizationNode(BaseNode):
         marker_array.markers.extend(self.temp_marker)
         self.temp_marker = []
 
-        if vel is not None and pos is not None:
-            marker_array.markers.append(viz_arrow(pos, pos+vel, color=(1, 0.76862745, 0)))
-
         t = np.linspace(0, tf, 10)
         maxCost = np.max([traj._cost for traj in trajLibrary if traj._cost < 1000] + [0])
+        maxVel = np.max([np.linalg.norm(traj.get_velocity(traj._tf)) for traj in trajLibrary] + [0])
         for i, traj in enumerate(trajLibrary):
             pos = traj.get_position(t)
+            vel = traj.get_velocity(t)
             # maxCost = 1000
             d = traj._cost / maxCost if traj._cost < maxCost else 1
-            if traj._cost >= maxCost:
-                marker_array.markers.append(clean_marker(id=i, ns='path'))
-                continue
+            # d = np.linalg.norm(traj.get_velocity(traj._tf)) / maxVel
+            # if traj._cost >= maxCost:
+            #     marker_array.markers.append(clean_marker(id=i, ns='path'))
+            #     continue
             c = np.array([0, 255, 0]) * (1 - d) + np.array([255, 0, 0]) * d
-            m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.03, alpha=1 if traj is trajSelected else .1)
+            m = viz_path(pos, color=c / 255 if traj is not trajSelected else (0,1,1), id=i, width=.08 if traj is trajSelected else .03, alpha=1 if traj is trajSelected else .1)
             marker_array.markers.append(m)
-            marker_array.markers.append(viz_point(pos[-1], color=(1, 1, 1), id=i+1, size=.1, alpha=.1))
+            marker_array.markers.append(viz_point(pos[-1], color=c/255, id=i+1, size=.1, alpha=.1))
+            if traj is trajSelected:
+                for iv, (v, p) in enumerate(zip(vel, pos)):
+                    marker_array.markers.append(viz_arrow(p, p + v*.4, color=(242/255., 198/255., 22/255.), id=100+iv, size=.03))
         marker_array.markers.append(viz_point(pos[0], color=(1, 1, 1), id=0, size=.2, alpha=.5))
 
         for i, traj in enumerate(trajHistory):

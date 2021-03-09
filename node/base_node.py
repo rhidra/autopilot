@@ -52,7 +52,6 @@ class BaseNode(object):
         # Publishers
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10)
         self.position_raw_pub = rospy.Publisher('/mavros/setpoint_raw/local', PositionTarget, queue_size=10)
-        self.traj_tracking_pub = rospy.Publisher('/reference/setpoint', TwistStamped, queue_size=10)
 
         # 20Hz loop rate
         self.rate = rospy.Rate(20)

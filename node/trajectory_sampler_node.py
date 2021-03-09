@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy, math, numpy as np, time
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, Float32
 from nav_msgs.msg import Path
 from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, WaypointList, CommandCode, Waypoint, PositionTarget
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
@@ -10,6 +10,7 @@ from octomap_node import OctomapNode
 from path_utils import build_traj_tracker
 from motion_primitive import MotionPrimitiveLibrary, TrajectoryError, buildMotionPrimitiveFromMsg
 from autopilot.msg import MotionPrimitive
+from controller_msgs.msg import FlatTarget
 
 TOLERANCE_FROM_GOAL = 1
 IDLE_DURATION = 1
@@ -23,6 +24,8 @@ class TrajectorySamplerNode(OctomapNode):
         self.rate = rospy.Rate(50)
         self.trajectory_sub = rospy.Subscriber('/autopilot/trajectory/response', MotionPrimitive, self.load_trajectory)
         self.trajectory_pub = rospy.Publisher('/autopilot/trajectory/request', Empty, queue_size=10)
+        self.traj_tracking_pub = rospy.Publisher('/reference/flatsetpoint', FlatTarget, queue_size=10)
+        self.yaw_tracking_pub = rospy.Publisher('/reference/yaw', Float32, queue_size=10)
         self.trajectory = None
         self.next_trajectory = None
         self.nav_state = NAV_PAUSE
@@ -91,9 +94,15 @@ class TrajectorySamplerNode(OctomapNode):
                 
                 pos = self.trajectory.get_position(t)
                 vel = self.trajectory.get_velocity(t)
+                acc = self.trajectory.get_acceleration(t)
 
-                msg = build_traj_tracker(pos, vel)
+                # rospy.loginfo('Pos={} | Vel={} | Acc={}'.format(pos, vel, acc))
+
+                msg = build_traj_tracker(pos, vel, acc)
+                msg_yaw = Float32()
+                msg_yaw.data = np.arctan2(vel[1], vel[0])
                 self.traj_tracking_pub.publish(msg)
+                self.yaw_tracking_pub.publish(msg_yaw)
                 self.rate.sleep()
             except TrajectoryError:
                 self.nav_state = NAV_PAUSE

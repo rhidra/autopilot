@@ -19,7 +19,7 @@ IDLE_DURATION = 1
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
-        self.tf = 5
+        self.tf = 3
         self.mpl = None
         self.trajectory = None
         self.traj_history = []
@@ -33,16 +33,16 @@ class MotionPrimitiveNode(OctomapNode):
         if self.local_goal_point is None or self.local_goal_direction is None:
             rospy.logerr('Cannot generate a trajectory: No local goal received !')
 
+        rospy.loginfo('*'*30)
         try:
             self.trajectory = self.compute_optimal_traj()
-            rospy.loginfo('Selected trajectory with cost: {}'.format(self.trajectory.print_cost()))
-            rospy.loginfo('Final velocity: {} ({})'.format(self.trajectory.get_velocity(self.tf), np.linalg.norm(self.trajectory.get_velocity(self.tf))))
 
             msg = self.trajectory.toMsg()
             self.trajectory_pub.publish(msg)
-            self.visualize_local_path(pos=self.pos, vel=self.vel, trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, trajHistory=self.traj_history, tf=self.tf)
+            self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=self.trajectory, trajHistory=self.traj_history, tf=self.tf)
             self.traj_history.append(self.trajectory)
         except TrajectoryError:
+            self.visualize_local_path(trajLibrary=self.mpl.trajs, trajHistory=self.traj_history, tf=self.tf)
             rospy.logerr('Cannot generate a trajectory: No feasible trajectory found')
     
 
@@ -50,6 +50,8 @@ class MotionPrimitiveNode(OctomapNode):
         start = time.time()
         if self.trajectory is None:
             pos, vel, acc, yaw = self.pos, self.vel, self.acc, self.yaw
+            vel, acc = np.array([0, 0, 0]), np.array([0, 0, 0])
+            yaw = np.arctan2(self.local_goal_point[1] - pos[1], self.local_goal_point[0] - pos[0])
         else:
             pos, vel = self.trajectory.get_position(self.tf), self.trajectory.get_velocity(self.tf), 
             acc, yaw = self.trajectory.get_acceleration(self.tf), self.trajectory.get_yaw(self.tf), 
