@@ -104,8 +104,13 @@ To install the module, follow the instructions in the repo.
 
 ### SLAM
 
-For mapping and localization, we are using [OpenVSLAM](https://github.com/xdspacelab/openvslam).
-First, you need to [install OpenVSLAM](https://openvslam.readthedocs.io/en/master/installation.html#chapter-installation), 
+For mapping and localization, we are using [OpenVSLAM](https://github.com/xdspacelab/openvslam)
+(or the [community version](https://github.com/OpenVSLAM-Community/openvslam)).
+
+**Instead of the official version, we are using a [modified custom version for ROS](https://github.com/rhidra/ros-openvslam).**
+
+First, you need to [install OpenVSLAM](https://openvslam.readthedocs.io/en/master/installation.html#chapter-installation)
+([community version](https://openvslam-community.readthedocs.io/en/latest/installation.html)), 
 using OpenCV 3.x.x and maybe PangolinViewer.
 You can simply follow the script on that page to compile all the dependancies.
 Then, you need to install the [ROS package](https://openvslam.readthedocs.io/en/master/ros_package.html).
@@ -125,48 +130,6 @@ We provide a config file for the Bebop in `./bebop/config.yaml`.
 Add the bash sourcing file of OpenVSLAM in your `.bashrc`.
 ```shell script
 source $HOME/openvslam/ros/devel/setup.bash
-```
-
-By default, the ROS OpenVSLAM package does not publish any data on ROS topics.
-We replace a C++ file inside the OpenVSLAM package to make it publish data.
-We are using a user made [implementation](https://github.com/xdspacelab/openvslam/issues/347) of the provided `run_localization.cc`.
-```shell script
-# Replace the file
-cd openvslam/ros/src/openvslam/src
-wget https://raw.githubusercontent.com/anbello/openvslam/pr-ros1-pose-pub/ros/1/src/openvslam/src/run_localization.cc -O run_localization.cc
-cd ../../..
-
-# Build OpenVSLAM
-catkin_make \
-    -DBUILD_WITH_MARCH_NATIVE=ON \
-    -DUSE_PANGOLIN_VIEWER=ON \
-    -DUSE_SOCKET_PUBLISHER=OFF \
-    -DUSE_STACK_TRACE_LOGGER=ON \
-    -DBOW_FRAMEWORK=DBoW2
-```
-
-If the the build fails, we found out that commenting the following lines in the
-`run_localization.cc` file in the `pose_odometry_pub` function makes it work.
-**But it is not an ideal solution and a better fix should be found !**
-**Ideally a custom C++ module should be added to this repository to start the SLAM and publish in topics.**
-```C++
-// transform broadcast
-static tf2_ros::TransformBroadcaster tf_br;
-
-geometry_msgs::TransformStamped transformStamped;
-
-transformStamped.header.stamp = ros::Time::now();
-transformStamped.header.frame_id = "map";
-transformStamped.child_frame_id = "base_link_frame";
-transformStamped.transform.translation.x = transform_tf.getOrigin().getX();
-transformStamped.transform.translation.y = transform_tf.getOrigin().getY();
-transformStamped.transform.translation.z = transform_tf.getOrigin().getZ();
-transformStamped.transform.rotation.x = transform_tf.getRotation().getX();
-transformStamped.transform.rotation.y = transform_tf.getRotation().getY();
-transformStamped.transform.rotation.z = transform_tf.getRotation().getZ();
-transformStamped.transform.rotation.w = transform_tf.getRotation().getW();
-
-tf_br.sendTransform(transformStamped);
 ```
 
 The pose and odometry data are published in `/openvslam/camera_pose` and `/openvslam/odometry`, 
@@ -197,7 +160,7 @@ rosrun openvslam run_slam -v /home/rhidra/orb_vocab/orb_vocab.dbow2 -c aist_entr
 
 ### Bebop setup
 
-To run the program on actual UAVs, we are using the Parrot Bebop 2. The firmware is closed, so we are using
+To run the program on actual UAVs, we are using the Parrot Bebop 2. To bypass the closed source firmware, so we are using
 a ROS driver, [bebop_autonomy](https://bebop-autonomy.readthedocs.io/).
 
 To install the driver, follow the [official tutorial](https://bebop-autonomy.readthedocs.io/en/latest/installation.html).
@@ -260,6 +223,9 @@ the Rviz visualization tool and the octomap server.
 
 To launch the global planner, launch the simulation (previous section),
 and run the global planner ROS node with the following command.
+
+Currently, the launch simulation file also starts the global planner, using the Phi* algorithm.
+
 You can specify a few different parameters, like the algorithms used,
 if an advanced display should be used, or to record data for later analysis.
 You can use the `--help` option to learn more. 
@@ -282,6 +248,9 @@ local planner. The local goal is broadcasted as a
 [PoseStamped](http://docs.ros.org/en/api/geometry_msgs/html/msg/PoseStamped.html)
 on the `/autopilot/local_goal` topic.
 
+It also deploys a service `/autopilot/local_goal` for specific request of a local goal at a different UAV position.
+The message type is defined in `srv/LocalGoal.srv`.
+
 ### Local planner
 
 To launch the local planner, launch the simulation and the global planner.
@@ -290,3 +259,17 @@ Then run the local planner ROS node with the following command.
 ```shell script
 rosrun autopilot local_planner.py
 ```
+
+The local planner listens to messages on `/autopilot/trajectory/request` (`std_msgs/Empty`),
+then computes a potential trajectory and sends it to `/autopilot/trajectory/response` (msg defined in `msg/MotionPrimitive`).
+
+### Trajectory sampler
+
+To sample the generated trajectory and send it to the MAVROS trajectory tracker, we are using a custom node.
+```shell script
+rosrun autopilot sampler.py
+```
+
+The node is writing at 50Hz UAV poses in `/reference/flatsetpoint` and `/reference/yaw`
+(respectively `controller_msgs/FlatTarget` and `std_msgs/Float32`).
+Those are read by the mavros_controller `geometric_controller` node.
