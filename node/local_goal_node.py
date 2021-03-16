@@ -40,7 +40,7 @@ class LocalGoalNode(OctomapNode):
 
             self.goal_point_pub.publish(msg_pt)
             self.goal_dir_pub.publish(msg_dir)
-            self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1], point=proj)
+            self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1])
             self.rate.sleep()
 
 
