@@ -7,6 +7,9 @@
   <arg name="P" default="0"/>
   <arg name="Y" default="0"/>
 
+  <arg name="start" default="-1.723340,-4.168233,1"/>
+  <arg name="goal" default="3.230813,0.271203,1"/>
+
   <arg name="world" default="test_zone"/>
   <arg name="vehicle" default="iris"/>
 
