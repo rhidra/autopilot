@@ -1,0 +1,5 @@
+geometry_msgs/Vector3 position
+geometry_msgs/Vector3 velocity
+---
+geometry_msgs/Vector3 local_goal_position
+geometry_msgs/Vector3 local_goal_direction

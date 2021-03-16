@@ -14,6 +14,11 @@ add_message_files(
     MotionPrimitive.msg
 )
 
+add_service_files(
+    FILES
+    LocalGoal.srv
+)
+
 generate_messages(
     DEPENDENCIES
     std_msgs

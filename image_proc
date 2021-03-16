@@ -14,7 +14,7 @@ help = """Usage: python image_proc --in=/image_raw/ --out=/camera/image_raw/
 
 inTopic = '/image_raw'
 outTopic = '/camera/image_raw'
-brightness = 20
+brightness = 10
 contrast = 1
 
 bridge = CvBridge()

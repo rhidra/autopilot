@@ -7,6 +7,7 @@ from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, Waypo
 from sensor_msgs.msg import NavSatFix, Imu
 from octomap_node import OctomapNode
 from path_utils import local_to_global, build_waypoints, fix_path_orientation, remove_start_offset
+from autopilot.srv import LocalGoal, LocalGoalResponse
 
 """
 LocalGoalNode
@@ -20,6 +21,7 @@ class LocalGoalNode(OctomapNode):
         super(LocalGoalNode, self).setup()
         self.goal_point_pub = rospy.Publisher('/autopilot/local_goal/point', Point, queue_size=10) # Local goal extractor
         self.goal_dir_pub = rospy.Publisher('/autopilot/local_goal/direction', Vector3, queue_size=10) # Local goal extractor
+        self.local_goal_srv = rospy.Service('/autopilot/local_goal', LocalGoal, self.get_local_goal)
         self.rate.sleep()
 
     def load_local_path(self, path):
@@ -33,6 +35,16 @@ class LocalGoalNode(OctomapNode):
         Blocking method which continuously sends the local goal
         relative to the current position and velocity of the robot.
         """
+        while not rospy.is_shutdown():
+            msg_pt, msg_dir, proj = self.find_local_goal(self.pos, self.vel)
+
+            self.goal_point_pub.publish(msg_pt)
+            self.goal_dir_pub.publish(msg_dir)
+            self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1], point=proj)
+            self.rate.sleep()
+
+
+    def find_local_goal(self, pos, vel):
         msg_pt = Point()
         msg_pt.x = 0
         msg_pt.y = 0
@@ -43,56 +55,62 @@ class LocalGoalNode(OctomapNode):
         msg_dir.y = 0
         msg_dir.z = 0
 
-        done = False
-        while not rospy.is_shutdown() and not done:
-            # Compute closest path point to the current position
-            a, b = self.path[:-1], self.path[1:]
-            p = np.repeat(self.pos.reshape(1,-1), a.shape[0], axis=0)
-            d = ptSegmentDist(p, a, b)
-            segIdx = np.argmin(d)
-            segDist, segA, segB = d[segIdx], a[segIdx], b[segIdx]
+        # Compute closest path point to the current position
+        a, b = self.path[:-1], self.path[1:]
+        p = np.repeat(pos.reshape(1,-1), a.shape[0], axis=0)
+        d = ptSegmentDist(p, a, b)
+        segIdx = np.argmin(d)
+        segDist, segA, segB = d[segIdx], a[segIdx], b[segIdx]
 
-            # Solve segment - sphere intersection
-            # ref: https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
-            u = (segB - segA) / np.linalg.norm(segB - segA)
-            normSqr = np.dot(segB - segA, segB - segA)
-            delta = np.square(np.dot(u, (segA - self.pos))) - (np.linalg.norm(segA - self.pos) ** 2 - segDist*segDist)
-            if np.isclose(delta, 0) or -1e-2 <= delta < 0:
-                d = - np.dot(u, (segA - self.pos))
-                posProj = segA + d * u
-            elif delta > 0:
-                d1 = - np.dot(u, (segA - self.pos)) - np.sqrt(delta)
-                d2 = - np.dot(u, (segA - self.pos)) + np.sqrt(delta)
-                posProj1, posProj2 = segA + d1 * u, segA + d2 * u
-                dot1 = np.dot(segB - segA, posProj1 - segA)
-                posProj = posProj1 if 0 <= dot1 <= normSqr or np.isclose(dot1, 0) or np.isclose(dot1, normSqr) else posProj2
-            else:
-                print('Cannot solve Segment/Sphere intersection during local goal extraction (delta={})'.format(delta))
-                continue
+        # Solve segment - sphere intersection
+        # ref: https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
+        u = (segB - segA) / np.linalg.norm(segB - segA)
+        normSqr = np.dot(segB - segA, segB - segA)
+        delta = np.square(np.dot(u, (segA - pos))) - (np.linalg.norm(segA - pos) ** 2 - segDist*segDist)
+        if np.isclose(delta, 0) or -1e-2 <= delta < 0:
+            d = - np.dot(u, (segA - pos))
+            posProj = segA + d * u
+        elif delta > 0:
+            d1 = - np.dot(u, (segA - pos)) - np.sqrt(delta)
+            d2 = - np.dot(u, (segA - pos)) + np.sqrt(delta)
+            posProj1, posProj2 = segA + d1 * u, segA + d2 * u
+            dot1 = np.dot(segB - segA, posProj1 - segA)
+            posProj = posProj1 if 0 <= dot1 <= normSqr or np.isclose(dot1, 0) or np.isclose(dot1, normSqr) else posProj2
+        else:
+            print('Cannot solve Segment/Sphere intersection during local goal extraction (delta={})'.format(delta))
+            return msg_pt, msg_dir
 
-            # Forward projection in the path and snapping to the goal
-            if np.linalg.norm(posProj - self.path[-1]) < 1:
+        # Forward projection in the path and snapping to the goal
+        if np.linalg.norm(posProj - self.path[-1]) < 1:
+            proj = self.path[-1]
+        else:
+            proj = forwardProject(posProj, segIdx, self.path, distance=4)#1*np.linalg.norm(vel))
+            if np.linalg.norm(proj - self.path[-1]) < 1:
                 proj = self.path[-1]
-            else:
-                proj = forwardProject(posProj, segIdx, self.path, distance=4)#1*np.linalg.norm(self.vel))
-                if np.linalg.norm(proj - self.path[-1]) < 1:
-                    proj = self.path[-1]
 
-            direction = proj - posProj
-            direction = direction / np.linalg.norm(direction)
+        direction = proj - posProj
+        direction = direction / np.linalg.norm(direction)
 
-            msg_pt.x = proj[0]
-            msg_pt.y = proj[1]
-            msg_pt.z = proj[2]
+        msg_pt.x = proj[0]
+        msg_pt.y = proj[1]
+        msg_pt.z = proj[2]
 
-            msg_dir.x = direction[0]
-            msg_dir.y = direction[1]
-            msg_dir.z = direction[2]
-            
-            self.goal_point_pub.publish(msg_pt)
-            self.goal_dir_pub.publish(msg_dir)
-            self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1], point=proj)
-            self.rate.sleep()
+        msg_dir.x = direction[0]
+        msg_dir.y = direction[1]
+        msg_dir.z = direction[2]
+
+        return msg_pt, msg_dir, proj
+
+
+    def get_local_goal(self, msg):
+        pos = np.array([msg.position.x, msg.position.y, msg.position.z])
+        vel = np.array([msg.velocity.x, msg.velocity.y, msg.velocity.z])
+        msg_pt, msg_dir, _ = self.find_local_goal(pos, vel)
+
+        msg = LocalGoalResponse()
+        msg.local_goal_position.x, msg.local_goal_position.y, msg.local_goal_position.z = msg_pt.x, msg_pt.y, msg_pt.z
+        msg.local_goal_direction.x, msg.local_goal_direction.y, msg.local_goal_direction.z = msg_dir.x, msg_dir.y, msg_dir.z
+        return msg
 
 
 def ptSegmentDist(p, a, b):
