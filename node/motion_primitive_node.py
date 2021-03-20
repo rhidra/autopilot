@@ -36,6 +36,7 @@ class MotionPrimitiveNode(OctomapNode):
         if self.current_traj == -1:
             self.generate_trajectory()
             self.current_traj = 0
+        rospy.loginfo('Sending traj = {}'.format(self.current_traj))
         msg = self.traj_history[self.current_traj].toMsg()
         self.trajectory_pub.publish(msg)
         self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=self.traj_history[self.current_traj], trajHistory=self.traj_history, tf=self.tf)

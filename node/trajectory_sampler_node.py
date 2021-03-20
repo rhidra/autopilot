@@ -80,7 +80,10 @@ class TrajectorySamplerNode(OctomapNode):
             t = (rospy.Time.now() - self.traj_start).to_sec()
 
             try:
-                self.request_trajectory()
+                if self.next_trajectory is None:
+                    self.request_trajectory()
+
+                # If no trajectory or if we reached the end, we change trajectory
                 if self.trajectory is None or t >= self.trajectory._tf:
                     self.trajectory = self.next_trajectory
                     self.next_trajectory = None
@@ -95,7 +98,7 @@ class TrajectorySamplerNode(OctomapNode):
                 vel = self.trajectory.get_velocity(t)
                 acc = self.trajectory.get_acceleration(t)
 
-                # rospy.loginfo('Pos={} | Vel={} | Acc={}'.format(pos, vel, acc))
+                rospy.loginfo('Pos={} | Vel={} | Acc={}'.format(pos, vel, acc))
 
                 msg = build_traj_tracker(pos, vel, acc)
                 msg_yaw = Float32()
