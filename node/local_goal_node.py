@@ -22,6 +22,7 @@ class LocalGoalNode(OctomapNode):
         self.goal_point_pub = rospy.Publisher('/autopilot/local_goal/point', Point, queue_size=10) # Local goal extractor
         self.goal_dir_pub = rospy.Publisher('/autopilot/local_goal/direction', Vector3, queue_size=10) # Local goal extractor
         self.local_goal_srv = rospy.Service('/autopilot/local_goal', LocalGoal, self.get_local_goal)
+        self.rate = rospy.Rate(1)
         self.rate.sleep()
 
     def load_local_path(self, path):
@@ -105,7 +106,9 @@ class LocalGoalNode(OctomapNode):
     def get_local_goal(self, msg):
         pos = np.array([msg.position.x, msg.position.y, msg.position.z])
         vel = np.array([msg.velocity.x, msg.velocity.y, msg.velocity.z])
-        msg_pt, msg_dir, _ = self.find_local_goal(pos, vel)
+        msg_pt, msg_dir, proj = self.find_local_goal(pos, vel)
+
+        self.visualize_global_path(self.path, start=self.path[0], goal=self.path[-1], point=proj)
 
         msg = LocalGoalResponse()
         msg.local_goal_position.x, msg.local_goal_position.y, msg.local_goal_position.z = msg_pt.x, msg_pt.y, msg_pt.z
