@@ -133,6 +133,7 @@ class MotionPrimitive:
         self._grav = gravity
         self._tf = None
         self._cost = np.inf
+        self.local_goal = None
         self.reset()
 
     def toMsg(self):
@@ -148,6 +149,46 @@ class MotionPrimitive:
         msg.gravity.x, msg.gravity.y, msg.gravity.z = self._grav[0], self._grav[1], self._grav[2]
         msg.tf = self._tf
         return msg
+
+    def compute_cost(self, goal_point, goal_direction, edt):
+        """ Return the total trajectory cost.
+
+        Returns the total trajectory cost. Trajectories with higher cost will 
+        tend to have more aggressive inputs (thrust and body rates), so that 
+        this is a cheap way to compare two trajectories.
+        """
+        self.local_goal = goal_point
+        
+        # Collision cost
+        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 10, 50, 1e100))
+        t = np.linspace(0, self._tf, samplingCollision)
+        pos = self.get_position(t).astype(np.double)
+        vel = self.get_velocity(t)
+        distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
+        collisionCost = np.sum(np.linalg.norm(vel, axis=1) / (distances * 10 + 1e-3)) * self._tf / samplingCollision
+
+        # Low altitude cost
+        # altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
+        # collisionCost += altitudeCost
+
+        if collisionCost == np.inf:
+            self._cost = collisionCost
+            return self._cost
+
+        # Local goal distance cost
+        distCost = np.linalg.norm((goal_point - pos[-1]) * np.array([1, 1, 10]))
+
+        # Local goal direction cost
+        vf = self.get_velocity(self._tf)
+        vf_unit = vf / np.linalg.norm(vf)
+        directionCost = np.linalg.norm(vf_unit - goal_direction)
+
+        # Final cost
+        self._distance_cost = 5 * distCost
+        self._collision_cost = .1 * collisionCost
+        self._direction_cost = 1 * directionCost
+        self._cost = self._distance_cost + self._collision_cost + self._direction_cost
+        return self._cost
 
     def set_goal_position(self, pos):
         """ Define the goal end position.
@@ -460,45 +501,6 @@ class MotionPrimitive:
             return  np.arccos(np.dot(n0,n1))/dt*(crossProd/np.linalg.norm(crossProd))
         else:
             return np.array([0,0,0])
-
-
-    def compute_cost(self, goal_point, goal_direction, edt):
-        """ Return the total trajectory cost.
-
-        Returns the total trajectory cost. Trajectories with higher cost will 
-        tend to have more aggressive inputs (thrust and body rates), so that 
-        this is a cheap way to compare two trajectories.
-        """
-        # Collision cost
-        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 10, 50, 1e100))
-        t = np.linspace(0, self._tf, samplingCollision)
-        pos = self.get_position(t).astype(np.double)
-        vel = self.get_velocity(t)
-        distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
-        collisionCost = np.sum(np.linalg.norm(vel, axis=1) / (distances * 10 + 1e-3)) * self._tf / samplingCollision
-
-        # Low altitude cost
-        # altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
-        # collisionCost += altitudeCost
-
-        if collisionCost == np.inf:
-            self._cost = collisionCost
-            return self._cost
-
-        # Local goal distance cost
-        distCost = np.linalg.norm((goal_point - pos[-1]) * np.array([1, 1, 10]))
-
-        # Local goal direction cost
-        vf = self.get_velocity(self._tf)
-        vf_unit = vf / np.linalg.norm(vf)
-        directionCost = np.linalg.norm(vf_unit - goal_direction)
-
-        # Final cost
-        self._distance_cost = 5 * distCost
-        self._collision_cost = .1 * collisionCost
-        self._direction_cost = 3 * directionCost
-        self._cost = self._distance_cost + self._collision_cost + self._direction_cost
-        return self._cost
     
     def print_cost(self):
         return '\n| {}\n|\tdistance: {}\n|\tcollision: {}\n|\tdirection: {}\n|\tfinal velocity: {} ({})\n'\

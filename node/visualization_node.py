@@ -92,15 +92,17 @@ class VisualizationNode(BaseNode):
             pos = traj.get_position(t)
             m = viz_path(pos, color=(.9, .9, .9), id=i, ns='hist', width=.03)
             marker_array.markers.append(m)
+            marker_array.markers.append(viz_point(traj.local_goal, size=.2, id=i, ns='hist'))
+            marker_array.markers.append(viz_arrow(pos[-1], traj.local_goal, (0,0,0), size=.02, id=i, ns='hist'))
 
         self.viz_local_pub.publish(marker_array)
 
 
-def viz_path(path, color=(0, 1, 0), id=0, width=.13, alpha=1, ns='path'):
+def viz_path(path, color=(0, 1, 0), id=0, width=.13, alpha=1, ns=''):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
-    marker.ns = ns
+    marker.ns = 'path_' + ns
     marker.action = Marker.ADD
     marker.pose.orientation.w = 1.0
     marker.id = id
@@ -154,11 +156,11 @@ def viz_nodes(nodes):
     return marker
 
 
-def viz_point(point, color=(1., 1., 1.), id=0, size=1, alpha=1):
+def viz_point(point, color=(1., 1., 1.), id=0, size=1, alpha=1, ns=''):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
-    marker.ns = 'points'
+    marker.ns = 'points_' + ns
     marker.action = Marker.ADD
     marker.id = id
     marker.type = Marker.SPHERE
@@ -180,11 +182,11 @@ def viz_point(point, color=(1., 1., 1.), id=0, size=1, alpha=1):
     return marker
 
 
-def viz_arrow(start, end, color=(1, 1, 1), id=0, size=.1):
+def viz_arrow(start, end, color=(1, 1, 1), id=0, size=.1, ns=''):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
-    marker.ns = 'arrows'
+    marker.ns = 'arrows_' + ns
     marker.action = Marker.ADD
     marker.id = id
     marker.type = Marker.ARROW
@@ -207,11 +209,11 @@ def viz_arrow(start, end, color=(1, 1, 1), id=0, size=.1):
 
     return marker
 
-def clean_marker(id=0, ns='path'):
+def clean_marker(id=0, ns=''):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
-    marker.ns = ns
+    marker.ns = 'path_' + ns
     marker.action = Marker.DELETE
     marker.id = id
     return marker
