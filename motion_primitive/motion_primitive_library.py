@@ -32,7 +32,7 @@ class MotionPrimitiveLibrary:
         traj = MotionPrimitive(pos0, vel0, acc0, [0, 0, -9.81])
         traj.set_goal_position([None, None, zf])
         traj.set_goal_velocity(velf)
-        # traj.set_goal_acceleration([0, 0, 0])
+        traj.set_goal_acceleration([0, 0, 0])
         traj.generate(self.tf)
         return traj
     
