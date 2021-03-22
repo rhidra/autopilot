@@ -12,7 +12,7 @@ and select one to execute.
 """
 
 def start():
-    node = MotionPrimitiveNode(node_name='local_planner', generateEDT=True)
+    node = MotionPrimitiveNode(node_name='local_planner')
     node.setup()
 
 def main(argv):

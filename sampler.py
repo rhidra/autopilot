@@ -2,7 +2,7 @@
 from node import TrajectorySamplerNode
 
 def main():
-    node = TrajectorySamplerNode(node_name='trajectory_sampler', generateEDT=False)
+    node = TrajectorySamplerNode(node_name='trajectory_sampler')
     node.setup()
 
     node.execute_trajectory()

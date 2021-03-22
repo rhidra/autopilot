@@ -17,7 +17,7 @@ Can be either: A*, RRT*, RRT_star_without_optim, Theta*, Phi* or dummy
 """
 
 def start(planning_algo, algo_name, start_pos, goal, situation, save_stats=False, send_local=True, display=True):
-    node = LocalGoalNode(node_name='local_goal_generator', generateEDT=False)
+    node = LocalGoalNode(node_name='global_planner')
     node.setup()
 
     # Global Path planning
@@ -41,7 +41,8 @@ def main(argv):
     algo = None
     situation = 'test'
     save_stats, send_local, display = False, False, False
-    start_pos, goal = [0, 0, 1], [6, -7, 1]
+    start_pos = [rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0) + 2]
+    goal = [rospy.get_param('/goal/x', 6), rospy.get_param('/goal/y', -7), rospy.get_param('/goal/z', 1)]
 
     try:
         opts, _ = getopt.getopt(argv,'hb:e:p:t:sld',['help', 'begin=', 'end=', 'planning=', 'test=', 'stats', 'local', 'display'])

@@ -5,15 +5,16 @@ from octomap_msgs.msg import Octomap
 
 
 class OctomapNode(VisualizationNode):
-    def __init__(self, generateEDT=True, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(OctomapNode, self).__init__(*args, **kwargs)
         self.octree = octomap.OcTree(0.1)
         self.collision_check = 0
-        self.generateEDT = kwargs.pop('generateEDT', True)
+        self.generateEDT = True
 
 
     def setup(self):
         super(OctomapNode, self).setup()
+        self.generateEDT = rospy.get_param('/{}/generate_edt'.format(self.node_name), True)
         self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
         self.rate.sleep()
 
