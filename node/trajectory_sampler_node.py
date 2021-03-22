@@ -12,7 +12,7 @@ from motion_primitive import MotionPrimitiveLibrary, TrajectoryError, buildMotio
 from autopilot.msg import MotionPrimitive
 from controller_msgs.msg import FlatTarget
 
-TOLERANCE_FROM_GOAL = 1
+TOLERANCE_FROM_GOAL = .5
 IDLE_DURATION = 1
 
 NAV_PAUSE = 1

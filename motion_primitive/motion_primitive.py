@@ -165,8 +165,9 @@ class MotionPrimitive:
         t = np.linspace(0, self._tf, self.sampling_collision)
         pos = self.get_position(t).astype(np.double)
         vel = self.get_velocity(t)
+        vf = self.get_velocity(self._tf)
         distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
-        collisionCost = np.sum(1 / (distances * 20 + 1e-3)) * self._tf / self.sampling_collision
+        collisionCost = np.sum(np.linalg.norm(vf) / (distances * 10 + 1e-10)) * self._tf / self.sampling_collision
 
         # Low altitude cost
         # altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
