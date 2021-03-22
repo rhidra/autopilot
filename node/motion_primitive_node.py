@@ -12,11 +12,6 @@ from autopilot.msg import MotionPrimitive
 from autopilot.srv import LocalGoal, LocalGoalRequest
 
 
-TOLERANCE_FROM_WAYPOINT = .5
-TOLERANCE_FROM_GOAL = 1
-
-IDLE_DURATION = 1
-
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
@@ -30,6 +25,7 @@ class MotionPrimitiveNode(OctomapNode):
         self.trajectory_pub = rospy.Publisher('/autopilot/trajectory/response', MotionPrimitive, queue_size=10)
         self.get_local_goal_srv = rospy.ServiceProxy('/autopilot/local_goal', LocalGoal)
         rospy.loginfo('Waiting for trajectory request...')
+        self.send_trajectory(None) # Remove this once traj planning works
         rospy.spin()
     
     def send_trajectory(self, _):
