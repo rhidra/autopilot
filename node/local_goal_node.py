@@ -85,7 +85,7 @@ class LocalGoalNode(OctomapNode):
         if np.linalg.norm(posProj - self.path[-1]) < 1:
             proj = self.path[-1]
         else:
-            proj = forwardProject(posProj, segIdx, self.path, distance=4)#1*np.linalg.norm(vel))
+            proj = forwardProject(posProj, segIdx, self.path, distance=3)#1*np.linalg.norm(vel))
             if np.linalg.norm(proj - self.path[-1]) < 1:
                 proj = self.path[-1]
 

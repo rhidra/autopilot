@@ -158,7 +158,7 @@ class MotionPrimitive:
         this is a cheap way to compare two trajectories.
         """
         self.local_goal = goal_point
-        
+
         # Collision cost
         samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 10, 50, 1e100))
         t = np.linspace(0, self._tf, samplingCollision)
@@ -186,7 +186,7 @@ class MotionPrimitive:
         # Final cost
         self._distance_cost = 5 * distCost
         self._collision_cost = .1 * collisionCost
-        self._direction_cost = 1 * directionCost
+        self._direction_cost = 2 * directionCost
         self._cost = self._distance_cost + self._collision_cost + self._direction_cost
         return self._cost
 
