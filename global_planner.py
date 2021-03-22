@@ -23,7 +23,7 @@ def start(planning_algo, algo_name, start_pos, goal, situation, save_stats=False
     # Global Path planning
     rospy.loginfo('Start global path planning...')
     # path, processing_time = planning_algo(node, [0, 0, 1], [-6, -7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
-    path, processing_time = planning_algo(node, start_pos, goal, world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+    path, processing_time = planning_algo(node, start_pos, goal, world_dim=[-25, 25, -25, 25, 0, 4], display=display)
     # path, processing_time = planning_algo(node, [0, 0, 1], [0, -7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
     # path, processing_time = planning_algo(node, [0, 0, 1], [0, 7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
     rospy.loginfo('Global path found !')
@@ -41,7 +41,7 @@ def main(argv):
     algo = None
     situation = 'test'
     save_stats, send_local, display = False, False, False
-    start_pos = [rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0) + 2]
+    start_pos = [rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0) + 1]
     goal = [rospy.get_param('/goal/x', 6), rospy.get_param('/goal/y', -7), rospy.get_param('/goal/z', 1)]
 
     try:
