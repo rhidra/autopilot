@@ -134,6 +134,7 @@ class MotionPrimitive:
         self._tf = None
         self._cost = np.inf
         self.local_goal = None
+        self.sampling_collision = 0
         self.reset()
 
     def toMsg(self):
@@ -160,12 +161,12 @@ class MotionPrimitive:
         self.local_goal = goal_point
 
         # Collision cost
-        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 10, 50, 1e100))
-        t = np.linspace(0, self._tf, samplingCollision)
+        self.sampling_collision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 50, 50, 1e100))
+        t = np.linspace(0, self._tf, self.sampling_collision)
         pos = self.get_position(t).astype(np.double)
         vel = self.get_velocity(t)
         distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
-        collisionCost = np.sum(np.linalg.norm(vel, axis=1) / (distances * 10 + 1e-3)) * self._tf / samplingCollision
+        collisionCost = np.sum(1 / (distances * 20 + 1e-3)) * self._tf / self.sampling_collision
 
         # Low altitude cost
         # altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
@@ -185,7 +186,7 @@ class MotionPrimitive:
 
         # Final cost
         self._distance_cost = 5 * distCost
-        self._collision_cost = .1 * collisionCost
+        self._collision_cost = .5 * collisionCost
         self._direction_cost = 2 * directionCost
         self._cost = self._distance_cost + self._collision_cost + self._direction_cost
         return self._cost
@@ -503,8 +504,9 @@ class MotionPrimitive:
             return np.array([0,0,0])
     
     def print_cost(self):
-        return '\n| {}\n|\tdistance: {}\n|\tcollision: {}\n|\tdirection: {}\n|\tfinal velocity: {} ({})\n'\
-            .format(self._cost, self._distance_cost, self._collision_cost, self._direction_cost, self.get_velocity(self._tf), np.linalg.norm(self.get_velocity(self._tf)))
+        samplingCollision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 50, 50, 1e100))
+        return '\n| {}\n|\tdistance: {}\n|\tcollision: {} ({} samples)\n|\tdirection: {}\n|\tfinal velocity: {} ({})\n'\
+            .format(self._cost, self._distance_cost, self._collision_cost, self.sampling_collision, self._direction_cost, self.get_velocity(self._tf), np.linalg.norm(self.get_velocity(self._tf)))
     
     def get_param_alpha(self, axNum):
         """Return the three parameters alpha which defines the trajectory."""
