@@ -18,6 +18,7 @@ class BaseNode(object):
         self.yaw = 0.
         self.local_goal_point = None
         self.local_goal_direction = None
+        self.start_pos = np.array([0,0,0])
 
     def setup(self):
         rospy.init_node(self.node_name, anonymous=True)
@@ -53,6 +54,10 @@ class BaseNode(object):
         self.position_pub = rospy.Publisher('/mavros/setpoint_position/local', PoseStamped, queue_size=10)
         self.position_raw_pub = rospy.Publisher('/mavros/setpoint_raw/local', PositionTarget, queue_size=10)
 
+        # Params
+        self.start_pos = np.array([rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0)])
+        self.goal_pos = np.array([rospy.get_param('/goal/x', 6), rospy.get_param('/goal/y', -7), rospy.get_param('/goal/z', 1)])
+
         # 20Hz loop rate
         self.rate = rospy.Rate(20)
         self.rate.sleep()
@@ -76,6 +81,7 @@ class BaseNode(object):
     def local_position_cb(self, data):
         self.local_position = data
         self.pos = np.array([self.local_position.pose.position.x, self.local_position.pose.position.y, self.local_position.pose.position.z])
+        self.pos += self.start_pos
 
     def local_velocity_cb(self, data):
         self.local_velocity = data

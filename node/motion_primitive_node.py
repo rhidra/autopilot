@@ -50,6 +50,7 @@ class MotionPrimitiveNode(OctomapNode):
         rospy.loginfo('*'*30)
         traj = None
         for _ in range(10):
+            time.sleep(2)
             try:
                 traj = self.compute_optimal_traj(traj)
                 self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=traj, trajHistory=self.traj_history, tf=self.tf)

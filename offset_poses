@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+"""
+Add the start position offset to MAVROS position 
+and to the trajectory tracker command. Useful
+mainly for visualization.
+"""
+
+import rospy
+from geometry_msgs.msg import PoseStamped
+
+pub_ref = rospy.Publisher('/autopilot/reference', PoseStamped, queue_size=10)
+pub_pose = rospy.Publisher('/autopilot/pose', PoseStamped, queue_size=10)
+
+startx = rospy.get_param('/start/x', 0)
+starty = rospy.get_param('/start/y', 0)
+startz = rospy.get_param('/start/z', 0)
+
+def ref_cb(data):
+    data.pose.position.x += startx
+    data.pose.position.y += starty
+    data.pose.position.z += startz
+    pub_ref.publish(data)
+
+def pose_cb(data):
+    data.pose.position.x += startx
+    data.pose.position.y += starty
+    data.pose.position.z += startz
+    pub_pose.publish(data)
+
+rospy.init_node('offset_poses', anonymous=True)
+sub_ref = rospy.Subscriber('/reference/pose', PoseStamped, ref_cb)
+sub_pose = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, pose_cb)
+rospy.spin()

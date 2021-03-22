@@ -94,7 +94,7 @@ class TrajectorySamplerNode(OctomapNode):
                     self.rate.sleep()
                     continue
                 
-                pos = self.trajectory.get_position(t)
+                pos = self.trajectory.get_position(t) - self.start_pos
                 vel = self.trajectory.get_velocity(t)
                 acc = self.trajectory.get_acceleration(t)
 
@@ -123,7 +123,7 @@ class TrajectorySamplerNode(OctomapNode):
             self.traj_start = rospy.Time.now()
             rospy.loginfo('Entering NAV_FOLLOW mode')
 
-        msg = build_traj_tracker(self.pause_pos)
+        msg = build_traj_tracker(self.pause_pos - self.start_pos)
         self.traj_tracking_pub.publish(msg)
         self.rate.sleep()
 
