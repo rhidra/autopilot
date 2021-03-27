@@ -16,7 +16,6 @@ class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
         rospy.wait_for_service('/autopilot/local_goal')
-        self.tf = .5
         self.mpl = None
         self.trajectory = None
         self.current_traj = -1
