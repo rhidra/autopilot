@@ -57,7 +57,7 @@ class BaseNode(object):
         # Params
         self.start_pos = np.array([rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0)])
         self.goal_pos = np.array([rospy.get_param('/goal/x', 6), rospy.get_param('/goal/y', -7), rospy.get_param('/goal/z', 1)])
-        self.tf = rospy.get_param('/local_planner/tf', 1)
+        self.tf = float(rospy.get_param('/local_planner/tf', 1))
 
         # 20Hz loop rate
         self.rate = rospy.Rate(20)
