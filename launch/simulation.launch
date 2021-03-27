@@ -66,6 +66,6 @@
 
     <!-- Global planner -->
     <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -l">
-        <param name="generate_edt" value="False"/>
+        <param name="generate_edt" value="True"/>
     </node>
 </launch>

@@ -70,15 +70,17 @@ class OctomapNode(VisualizationNode):
         return False
 
 
-    def get_point_edt(self, point):
+    def get_point_edt(self, point, radius=.5):
+        # Find the closest distance to an obstacle from the point
+        # Add offset to account for the UAV radius (0.5m)
         pt = np.array([point[0], point[1], point[2]]).astype(np.double)
-        d = self.octree.dynamicEDT_getDistance(pt) - .5 # Add offset to account for the UAV radius (0.5m)
+        d = self.octree.dynamicEDT_getDistance(pt) - radius 
         return 0 if d < 0 else d
 
 
-    def cast_ray(self, origin, dest, radius=0., max_dist=-1, display=False):
+    def cast_ray(self, origin, dest, radius=0, max_dist=-1, display=False):
         self.collision_check += 1
-        
+
         origin = np.array(origin, dtype=np.double)
         dest = np.array(dest, dtype=np.double)
         direction = dest - origin + 1e-6
@@ -87,11 +89,24 @@ class OctomapNode(VisualizationNode):
         distance = distance if max_dist == -1 or distance < max_dist else max_dist
         end = dest if max_dist == -1 else origin + direction * max_dist
 
+        # Check the EDT if we are too close from an obstacle
+        if self.generateEDT and self.get_point_edt(end, radius=0) < radius:
+            return True, end
+
         hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=distance)
 
+        # The ray hit an obstacle
         if hit or radius == 0.:
             return hit, end
 
+        # To check if we are close from an obstacle,
+        # we first implement a method were we cast 4 additional rays
+        # in the shape of a cylinder of a specific radius.
+        # But this method does not really work.
+        # Instead, we decide to use the EDT, and we sample the main ray
+        # at some points and we check there for a collision with the EDT.
+        """
+        # Cylinder ray cast
         # To check the cylinder volume, we cast 4 additional rays
         # axis1 and 2 are in the plane perpendicular to the direction
         if direction[0] == 0 and direction[1] == 0:
@@ -120,6 +135,24 @@ class OctomapNode(VisualizationNode):
             h = self.octree.castRay(o, direction, end, ignoreUnknownCells=True, maxRange=distance)
             if h:
                 return h, end
+        """
+
+        # Ray sampling and EDT checks
+        if not self.generateEDT:
+            return hit, end
+
+        # Samples regularly the ray, every K*radius 
+        N = distance * 3 // radius
+        # N = distance // radius
+        # N = distance // (2 * radius)
+        # We also remove the starting and end points
+        for di in np.linspace(0, 1, N):
+            pt = origin + di * distance * direction
+            if self.get_point_edt(pt, radius=0) < radius:
+                return True, end
         
-        return hit, end
+        return False, end
+
+
+        
 

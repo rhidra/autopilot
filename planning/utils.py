@@ -1,7 +1,7 @@
 import numpy as np, math
 from decimal import Decimal, ROUND_HALF_UP
 
-UAV_THICKNESS = 1
+UAV_THICKNESS = .6
 
 class Node:
     def __repr__(self):
