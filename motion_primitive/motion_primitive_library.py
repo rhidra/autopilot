@@ -3,8 +3,10 @@ from motion_primitive import MotionPrimitive
 
 
 class TrajectoryError(Exception):
-    pass
+    def __init__(self, traj):
+        self.traj = traj
 
+FEASIBLE_TRAJ_THRESHOLD = 1000
 
 class MotionPrimitiveLibrary:
     def __init__(self, delta_yaw=21, delta_norm=15, delta_z=5, tf=1):
@@ -24,7 +26,7 @@ class MotionPrimitiveLibrary:
         # for zf in np.linspace(pos0[2] - 1, pos0[2] + 1, self.delta_z):
         zf = pos0[2]
         for yaw in np.linspace(yaw0 - np.pi*.4, yaw0 + np.pi*.4, self.delta_yaw):
-            for norm in np.linspace(np.clip(norm0 - 2/self.tf, .2, 1e5), norm0 + .5/self.tf, self.delta_norm):
+            for norm in np.linspace(np.clip(norm0 - 4/self.tf, .1, 1e5), norm0 + .5/self.tf, self.delta_norm):
                 self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw), norm * np.sin(yaw), 0], zf))
         print('Time for generating trajectories: {}'.format(time.time() - s))
 
@@ -47,7 +49,7 @@ class MotionPrimitiveLibrary:
         traj = min(self.trajs, key=lambda t: t._cost)
         rospy.loginfo('Time for selecting the best trajectory: {}'.format(time.time() - s))
         rospy.loginfo('Selected trajectory: {}'.format(traj.print_cost()))
-        if traj._cost > 1000:
-            raise TrajectoryError()
+        if traj._cost > FEASIBLE_TRAJ_THRESHOLD:
+            raise TrajectoryError(traj)
         return traj 
 

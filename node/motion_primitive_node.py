@@ -16,7 +16,7 @@ class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
         rospy.wait_for_service('/autopilot/local_goal')
-        self.tf = 1
+        self.tf = .5
         self.mpl = None
         self.trajectory = None
         self.current_traj = -1
@@ -41,7 +41,6 @@ class MotionPrimitiveNode(OctomapNode):
     def generate_trajectory(self):
         if self.local_goal_point is None or self.local_goal_direction is None:
             rospy.logerr('Cannot generate a trajectory: No local goal received !')
-            return
 
         rospy.loginfo('*'*30)
         traj = None
@@ -52,8 +51,9 @@ class MotionPrimitiveNode(OctomapNode):
                 self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=traj, trajHistory=self.traj_history, tf=self.tf)
                 self.rate.sleep()
                 self.traj_history.append(traj)
-            except TrajectoryError:
+            except TrajectoryError as e:
                 rospy.logerr('Cannot generate a trajectory: No feasible trajectory found')
+                rospy.logerr('Traj cost: {}'.format(e.traj.print_cost()))
                 break
         rospy.loginfo('Pre-generation done ! Generated {} trajectories'.format(len(self.traj_history)))
     
