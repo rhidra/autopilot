@@ -72,10 +72,8 @@ class OctomapNode(VisualizationNode):
 
     def get_point_edt(self, point):
         pt = np.array([point[0], point[1], point[2]]).astype(np.double)
-        d = self.octree.dynamicEDT_getDistance(pt) - .5
-        if d < 0:
-            return 0
-        return d
+        d = self.octree.dynamicEDT_getDistance(pt) - .5 # Add offset to account for the UAV radius (0.5m)
+        return 0 if d < 0 else d
 
 
     def cast_ray(self, origin, dest, radius=0., max_dist=-1, display=False):

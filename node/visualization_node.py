@@ -73,7 +73,7 @@ class VisualizationNode(BaseNode):
         for i, traj in enumerate(trajLibrary):
             pos = traj.get_position(t)
             vel = traj.get_velocity(t)
-            # maxCost = 1000
+            maxCost = 1000
             d = traj._cost / maxCost if traj._cost < maxCost else 1
             # d = np.linalg.norm(traj.get_velocity(traj._tf)) / maxVel
             # if traj._cost >= maxCost:
