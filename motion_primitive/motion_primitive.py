@@ -186,7 +186,7 @@ class MotionPrimitive:
         directionCost = np.linalg.norm(vf_unit - goal_direction)
 
         # Final cost
-        self._distance_cost = 5 * distCost
+        self._distance_cost = 5.2 * distCost
         self._collision_cost = .05 * collisionCost
         self._direction_cost = 2 * directionCost
         self._cost = self._distance_cost + self._collision_cost + self._direction_cost
