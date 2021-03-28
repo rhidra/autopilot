@@ -166,8 +166,8 @@ class MotionPrimitive:
         pos = self.get_position(t).astype(np.double)
         vel = self.get_velocity(t)
         vf = self.get_velocity(self._tf)
-        distances = np.vectorize(lambda x, y, z: edt([x, y, z]))(pos[:, 0], pos[:, 1], pos[:, 2])
-        collisionCost = np.sum(np.linalg.norm(vf) / (distances * 100 + 1e-10)) * self._tf / self.sampling_collision
+        distances = np.vectorize(lambda x, y, z: edt([x, y, z], radius=.3))(pos[:, 0], pos[:, 1], pos[:, 2])
+        collisionCost = np.sum(np.linalg.norm(vf) / (distances + 1e-10)) * self._tf / self.sampling_collision
 
         # Low altitude cost
         # altitudeCost = 0 if pos[-1, 2] > 1.5 else np.inf
@@ -177,8 +177,8 @@ class MotionPrimitive:
             self._cost = collisionCost
             return self._cost
 
-        # Local goal distance cost
-        distCost = np.linalg.norm((goal_point - pos[-1]) * np.array([1, 1, 10]))
+        # Local goal distance cost (weighted in z axis ?)
+        distCost = np.linalg.norm((goal_point - pos[-1]))# * np.array([1, 1, 10]))
 
         # Local goal direction cost
         vf = self.get_velocity(self._tf)
@@ -187,7 +187,7 @@ class MotionPrimitive:
 
         # Final cost
         self._distance_cost = 5 * distCost
-        self._collision_cost = .5 * collisionCost
+        self._collision_cost = .05 * collisionCost
         self._direction_cost = 2 * directionCost
         self._cost = self._distance_cost + self._collision_cost + self._direction_cost
         return self._cost
