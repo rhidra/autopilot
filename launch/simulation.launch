@@ -62,7 +62,7 @@
     <param name="/trajectory_sampler/generate_edt" value="False"/>
 
     <!-- Tf parameter: Time to fly one primitive -->
-    <param name="/local_planner/tf" value="0.5"/>
+    <param name="/local_planner/tf" value="1"/>
 
     <!-- Global planner -->
     <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -l">
