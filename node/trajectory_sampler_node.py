@@ -66,6 +66,7 @@ class TrajectorySamplerNode(OctomapNode):
             # tf = self.trajectory._tf - (rospy.Time.now() - self.traj_start).to_sec()
             # velf = self.vel + self.acc * tf / 2.
             # posf = self.pos + self.vel * tf + self.acc * tf * tf / 3.
+            # This estimation model does not work, so we use the ground truth values instead
             posf = self.trajectory.get_position(self.trajectory._tf)
             velf = self.trajectory.get_velocity(self.trajectory._tf)
         rospy.loginfo('Requesting trajectory with pos0={} and vel0={}...'.format(posf, velf))
