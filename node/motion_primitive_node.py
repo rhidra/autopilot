@@ -11,7 +11,7 @@ from motion_primitive import MotionPrimitiveLibrary, TrajectoryError
 from autopilot.msg import MotionPrimitive
 from autopilot.srv import LocalGoal, LocalGoalRequest
 
-
+TOLERANCE_FROM_GOAL = 0.5
 class MotionPrimitiveNode(OctomapNode):
     def setup(self):
         super(MotionPrimitiveNode, self).setup()
@@ -24,7 +24,7 @@ class MotionPrimitiveNode(OctomapNode):
         self.trajectory_pub = rospy.Publisher('/autopilot/trajectory/response', MotionPrimitive, queue_size=10)
         self.get_local_goal_srv = rospy.ServiceProxy('/autopilot/local_goal', LocalGoal)
         rospy.loginfo('Waiting for trajectory request...')
-        self.send_trajectory(None) # Remove this once traj planning works
+        # self.send_trajectory(None) # Remove this once traj planning works
         rospy.spin()
     
     def send_trajectory(self, _):
@@ -50,6 +50,9 @@ class MotionPrimitiveNode(OctomapNode):
                 self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=traj, trajHistory=self.traj_history, tf=self.tf)
                 self.rate.sleep()
                 self.traj_history.append(traj)
+
+                if np.linalg.norm(traj.get_position(self.tf) - self.goal_pos) < TOLERANCE_FROM_GOAL:
+                    break
             except TrajectoryError as e:
                 rospy.logerr('Cannot generate a trajectory: No feasible trajectory found')
                 rospy.logerr('Traj cost: {}'.format(e.traj.print_cost()))

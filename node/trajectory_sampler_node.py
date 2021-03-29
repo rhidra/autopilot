@@ -68,7 +68,7 @@ class TrajectorySamplerNode(OctomapNode):
                 self.pause_navigation()
                 continue
 
-            if self.dist_from(self.local_goal_point, vertical=False) < TOLERANCE_FROM_GOAL:
+            if self.dist_from(self.goal_pos, vertical=False) < TOLERANCE_FROM_GOAL:
                 rospy.loginfo('Goal attained !')
                 rospy.loginfo('Mission done !')
                 break
