@@ -33,7 +33,6 @@ class MotionPrimitiveLibrary:
                 # Velocity norm range
                 for norm in np.linspace(np.clip(norm0 - 4/self.tf, .1, 1e5), norm0 + .5/self.tf, self.delta_norm):
                     self.trajs.append(self.generate_traj(pos0, vel0, acc0, [norm * np.cos(yaw), norm * np.sin(yaw), 0], z))
-        print('Time for generating trajectories: {}'.format(time.time() - s))
 
     def generate_traj(self, pos0, vel0, acc0, velf, zf):
         traj = MotionPrimitive(pos0, vel0, acc0, [0, 0, -9.81])
@@ -47,14 +46,12 @@ class MotionPrimitiveLibrary:
         s = time.time()
         for traj in self.trajs:
             traj.compute_cost(goal_point, goal_direction, get_point_edt)
-        print('Time for ranking trajectories: {}'.format(time.time() - s))
     
     def get_best_traj(self):
         s = time.time()
         traj = min(self.trajs, key=lambda t: t._cost)
-        rospy.loginfo('Time for selecting the best trajectory: {}'.format(time.time() - s))
-        rospy.loginfo('Selected trajectory: {}'.format(traj.print_cost()))
         if traj._cost > FEASIBLE_TRAJ_THRESHOLD:
             raise TrajectoryError(traj)
+        rospy.loginfo('Selected trajectory: {}'.format(traj.print_cost()))
         return traj 
 

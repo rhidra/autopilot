@@ -24,40 +24,33 @@ class MotionPrimitiveNode(OctomapNode):
         self.trajectory_pub = rospy.Publisher('/autopilot/trajectory/response', MotionPrimitive, queue_size=10)
         self.get_local_goal_srv = rospy.ServiceProxy('/autopilot/local_goal', LocalGoal)
         rospy.loginfo('Waiting for trajectory request...')
-        # self.send_trajectory(None) # Remove this once traj planning works
         rospy.spin()
     
     def send_trajectory(self, _):
-        if self.current_traj == -1:
-            self.generate_trajectory()
-            self.current_traj = 0
-        rospy.loginfo('Sending traj = {}'.format(self.current_traj))
+        if not self.generate_trajectory():
+            return
+        self.current_traj += 1
+        rospy.loginfo('Sending traj {}'.format(self.current_traj))
         msg = self.traj_history[self.current_traj].toMsg()
         self.trajectory_pub.publish(msg)
         self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=self.traj_history[self.current_traj], trajHistory=self.traj_history, tf=self.tf)
-        self.current_traj += 1
 
     def generate_trajectory(self):
         if self.local_goal_point is None or self.local_goal_direction is None:
             rospy.logerr('Cannot generate a trajectory: No local goal received !')
 
-        rospy.loginfo('*'*30)
-        traj = None
-        for _ in range(20):
-            time.sleep(2)
-            try:
-                traj = self.compute_optimal_traj(traj)
-                self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=traj, trajHistory=self.traj_history, tf=self.tf)
-                self.rate.sleep()
-                self.traj_history.append(traj)
+        rospy.loginfo('*' * 30)
+        prev_traj = None if self.current_traj == -1 else self.traj_history[self.current_traj]
 
-                if np.linalg.norm(traj.get_position(self.tf) - self.goal_pos) < TOLERANCE_FROM_GOAL:
-                    break
-            except TrajectoryError as e:
-                rospy.logerr('Cannot generate a trajectory: No feasible trajectory found')
-                rospy.logerr('Traj cost: {}'.format(e.traj.print_cost()))
-                break
-        rospy.loginfo('Pre-generation done ! Generated {} trajectories'.format(len(self.traj_history)))
+        try:
+            traj = self.compute_optimal_traj(prev_traj)
+            self.traj_history.append(traj)
+            return True
+        except TrajectoryError as e:
+            rospy.logerr('Cannot generate a trajectory: No feasible trajectory found')
+            rospy.logerr('Traj cost: {}'.format(e.traj.print_cost()))
+            self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=e.traj, trajHistory=self.traj_history, tf=self.tf)
+            return False
     
 
     def compute_optimal_traj(self, traj_prev=None):
@@ -77,7 +70,7 @@ class MotionPrimitiveNode(OctomapNode):
             
         if np.linalg.norm(vel) < 0.2: 
             # When the UAV stopped, we artificially increase its 
-            # initial velocity to make move in the right direction
+            # initial velocity to make it move in the right direction
             vel = np.array([.1 * np.cos(yaw), .1 * np.sin(yaw), 0.])
             acc = np.array([0., 0., 0.])
 

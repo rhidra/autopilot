@@ -91,6 +91,7 @@ class TrajectorySamplerNode(OctomapNode):
                     t = 0
 
                 if self.trajectory is None and self.next_trajectory is None:
+                    rospy.logerr('No trajectory availaible !')
                     self.rate.sleep()
                     continue
                 
