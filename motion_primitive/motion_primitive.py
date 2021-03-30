@@ -47,7 +47,7 @@ VERSION
 
 """
 
-import numpy as np, rospy
+import numpy as np
 from single_axis_trajectory import SingleAxisTrajectory
 from autopilot.msg import MotionPrimitive as MotionPrimitiveMsg
 
@@ -139,7 +139,7 @@ class MotionPrimitive:
 
     def toMsg(self):
         msg = MotionPrimitiveMsg()
-        msg.header.stamp = rospy.Time.now()
+        # msg.header.stamp = rospy.Time.now()
         msg.header.frame_id = 'map'
         msg.pos0.x, msg.pos0.y, msg.pos0.z = self._axis[0]._p0, self._axis[1]._p0, self._axis[2]._p0
         msg.vel0.x, msg.vel0.y, msg.vel0.z = self._axis[0]._v0, self._axis[1]._v0, self._axis[2]._v0

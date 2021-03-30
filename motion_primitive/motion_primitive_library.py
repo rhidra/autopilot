@@ -1,4 +1,4 @@
-import numpy as np, time, rospy
+import numpy as np, time
 from motion_primitive import MotionPrimitive
 
 
@@ -21,7 +21,6 @@ class MotionPrimitiveLibrary:
         norm0 = np.linalg.norm(vel0)
         yaw0 = np.arctan2(vel0[1], vel0[0])
 
-        s = time.time()
         self.trajs = []
 
         # Final Z range
@@ -43,15 +42,12 @@ class MotionPrimitiveLibrary:
         return traj
     
     def rank_trajectories(self, goal_point, goal_direction, get_point_edt):
-        s = time.time()
         for traj in self.trajs:
             traj.compute_cost(goal_point, goal_direction, get_point_edt)
     
     def get_best_traj(self):
-        s = time.time()
         traj = min(self.trajs, key=lambda t: t._cost)
         if traj._cost > FEASIBLE_TRAJ_THRESHOLD:
             raise TrajectoryError(traj)
-        rospy.loginfo('Selected trajectory: {}'.format(traj.print_cost()))
         return traj 
 
