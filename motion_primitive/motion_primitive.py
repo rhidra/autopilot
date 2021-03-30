@@ -164,7 +164,6 @@ class MotionPrimitive:
         self.sampling_collision = np.int(np.clip(np.linalg.norm(self.get_position(self._tf) - self.get_position(0)) * 50, 50, 1e100))
         t = np.linspace(0, self._tf, self.sampling_collision)
         pos = self.get_position(t).astype(np.double)
-        vel = self.get_velocity(t)
         vf = self.get_velocity(self._tf)
         distances = np.vectorize(lambda x, y, z: edt([x, y, z], radius=.3))(pos[:, 0], pos[:, 1], pos[:, 2])
         collisionCost = np.sum(np.linalg.norm(vf) / (distances + 1e-10)) * self._tf / self.sampling_collision
@@ -181,7 +180,6 @@ class MotionPrimitive:
         distCost = np.linalg.norm((goal_point - pos[-1]))# * np.array([1, 1, 10]))
 
         # Local goal direction cost
-        vf = self.get_velocity(self._tf)
         vf_unit = vf / np.linalg.norm(vf)
         directionCost = np.linalg.norm(vf_unit - goal_direction)
 
