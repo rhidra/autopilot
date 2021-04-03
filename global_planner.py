@@ -7,7 +7,8 @@ from planning import dummy_path, main_rrt_star, main_a_star, main_rrt_star_witho
 help = """
 Usage: python global_planner.py -p <algo> -d
 
--b, --begin: start coordinate, comma sperated, e.g: --begin=6,-7,1
+-b, --begin: start coordinates, comma sperated, e.g: --begin=6,-7,1
+-e, --end: goal coordinates, comma sperated, e.g: --end=-6,7,1
 -p, --planning: (Mandatory) Planning algorithm. 
 Can be either: A*, RRT*, RRT_star_without_optim, Theta*, Phi* or dummy
 -t, --test: Name of the test. Used in the results JSON file.
