@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   octomap_ros
   message_generation
   dynamicEDT3D
+  controller_msgs
 )
 
 add_message_files(
@@ -47,7 +48,7 @@ catkin_install_python(PROGRAMS global_planner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-add_executable(local_planner src/local_planner.cpp)
+add_executable(local_planner src/localPlanner.cpp)
 target_link_libraries(local_planner 
     ${catkin_LIBRARIES}
     ${OCTOMAP_LIBRARIES}
