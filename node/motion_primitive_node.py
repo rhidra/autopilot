@@ -71,9 +71,10 @@ class MotionPrimitiveNode(OctomapNode):
             vel0 = np.array([.1 * np.cos(self.yaw), .1 * np.sin(self.yaw), 0.])
 
         self.mpl = MotionPrimitiveLibrary(tf=self.tf)
-        self.mpl.generate_traj_library(pos0, vel0, acc0, local_goal_point[2])
-        self.mpl.rank_trajectories(local_goal_point, local_goal_direction, self.get_point_edt)
-        traj = self.mpl.get_best_traj()
+        self.mpl.set_init_state(pos0, vel0, acc0)
+        self.mpl.set_local_goal(local_goal_point, local_goal_direction)
+        self.mpl.set_edt_function(self.get_point_edt)
+        traj = self.mpl.optimize()
         rospy.loginfo('Selected trajectory: {}'.format(traj.print_cost()))
         # self.mpls.append(self.mpl)
         rospy.loginfo('Generated a new trajectory in {}sec'.format(time.time() - start))
