@@ -23,8 +23,6 @@
 #include <algorithm>//For min/max
 #include <limits>//for max double
 
-using namespace MotionPrimitive;
-
 SingleAxisTrajectory::SingleAxisTrajectory(void)
   :_a(0),_b(0),_g(0),_cost(std::numeric_limits<double>::max())
 {

@@ -5,6 +5,9 @@ project(autopilot)
 # For some reason, catkin does not find it with the rest of the packages...
 set(dynamicEDT3D_DIR "/opt/ros/melodic/share/dynamicEDT3D/")
 
+# Debug build type
+set(CMAKE_BUILD_TYPE Debug)
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
@@ -48,7 +51,21 @@ catkin_install_python(PROGRAMS global_planner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-add_executable(local_planner src/LocalPlanner.cpp)
+set(LOCAL_PLANNER_SOURCE
+    src/LocalPlanner.cpp
+    src/MotionPrimitive.cpp
+    src/MotionPrimitiveLibrary.cpp
+    src/SingleAxisTrajectory.cpp
+)
+
+set(LOCAL_PLANNER_HEADER
+    src/MotionPrimitive.h
+    src/MotionPrimitiveLibrary.h
+    src/SingleAxisTrajectory.h
+    src/Vec3.h
+)
+
+add_executable(local_planner ${LOCAL_PLANNER_SOURCE} ${LOCAL_PLANNER_HEADER})
 target_link_libraries(local_planner 
     ${catkin_LIBRARIES}
     ${OCTOMAP_LIBRARIES}

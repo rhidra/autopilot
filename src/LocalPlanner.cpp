@@ -19,13 +19,12 @@ private:
     bool generateEDT;
     octomap::OcTree* tree;
     ros::ServiceClient getLocalGoalSrv;
+    double tf;
 
 public:
-    void run(int argc, char **argv) {
-        ros::init(argc, argv, "local_planner");
-        if (!nh.getParam("/local_planner/generate_edt", generateEDT)) {
-            generateEDT = true;
-        }
+    void run() {
+        nh.param<bool>("/local_planner/generate_edt", generateEDT, true);
+        nh.param<double>("/local_planner/tf", tf, 1);
 
         ros::Subscriber octomap_sub = nh.subscribe("/octomap_binary", 10, &LocalPlanner::octomap_cb, this);
         ros::Subscriber trajectory_sub = nh.subscribe("/autopilot/trajectory/request", 10, &LocalPlanner::sendTrajectory, this);
@@ -39,8 +38,8 @@ public:
     }
 
     void octomap_cb(const octomap_msgs::Octomap& msg) { 
-        // tree = new octomap::OcTree(0.1);
-        octomap::AbstractOcTree* temp = octomap_msgs::fullMsgToMap(msg);
+        tree = new octomap::OcTree(0.1);
+        octomap::AbstractOcTree* temp = octomap_msgs::binaryMsgToMap(msg);
         tree = dynamic_cast<octomap::OcTree*>(temp);
 
         if (generateEDT) {
@@ -50,9 +49,12 @@ public:
             octomap::point3d min(x,y,z);
             tree->getMetricMax(x,y,z);
             octomap::point3d max(x,y,z);
+            std::cout << min << std::endl;
+            std::cout << max << std::endl;
 
-            DynamicEDTOctomap distmap(50.0, tree, min, max, false);
+            DynamicEDTOctomap distmap(1.0, tree, min, max, false);
             distmap.update(true);
+            ROS_INFO("EDT generated");
         }
     }
 
@@ -60,12 +62,29 @@ public:
         Vec3 pos0(msg.position.x, msg.position.y, msg.position.z);
         Vec3 vel0(msg.velocity.x, msg.velocity.y, msg.velocity.z);
         Vec3 acc0(0, 0, 0);
-        MotionPrimitiveLibrary mpl();
+
+        autopilot::LocalGoal srv;
+        srv.request.position = msg.position;
+        srv.request.velocity = msg.velocity;
+        
+        if (!getLocalGoalSrv.call(srv)) {
+            ROS_ERROR("Cannot get local goal !");
+            exit(1);
+        }
+        Vec3 goalPoint(srv.response.local_goal_position.x, srv.response.local_goal_position.y, srv.response.local_goal_position.z);
+        Vec3 goalDir(srv.response.local_goal_direction.x, srv.response.local_goal_direction.y, srv.response.local_goal_direction.z);
+
+        MotionPrimitiveLibrary mpl(tf);
+        mpl.setInitState(pos0, vel0, acc0);
+        mpl.setLocalGoal(goalPoint, goalDir);
+        
+        mpl.optimize();
     }
 };
 
 int main(int argc, char **argv) {
+    ros::init(argc, argv, "local_planner");
     LocalPlanner node;
-    node.run(argc, argv);
+    node.run();
     return 0;
 }
