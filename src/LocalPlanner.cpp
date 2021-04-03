@@ -2,6 +2,8 @@
 #include "std_msgs/String.h"
 #include "autopilot/LocalGoal.h"
 #include "autopilot/MotionPrimitive.h"
+#include "Vec3.h"
+#include "MotionPrimitiveLibrary.h"
 #include <controller_msgs/FlatTarget.h>
 #include <dynamicEDT3D/dynamicEDTOctomap.h>
 #include <octomap/octomap.h>
@@ -55,14 +57,10 @@ public:
     }
 
     void sendTrajectory(const controller_msgs::FlatTarget& msg) {
-        std::vector<double> pos0, vec0;
-        pos0.push_back(msg.position.x);
-        pos0.push_back(msg.position.y);
-        pos0.push_back(msg.position.z);
-        vec0.push_back(msg.velocity.x);
-        vec0.push_back(msg.velocity.y);
-        vec0.push_back(msg.velocity.z);
-        
+        Vec3 pos0(msg.position.x, msg.position.y, msg.position.z);
+        Vec3 vel0(msg.velocity.x, msg.velocity.y, msg.velocity.z);
+        Vec3 acc0(0, 0, 0);
+        MotionPrimitiveLibrary mpl();
     }
 };
 

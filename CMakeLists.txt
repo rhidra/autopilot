@@ -48,7 +48,7 @@ catkin_install_python(PROGRAMS global_planner.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-add_executable(local_planner src/localPlanner.cpp)
+add_executable(local_planner src/LocalPlanner.cpp)
 target_link_libraries(local_planner 
     ${catkin_LIBRARIES}
     ${OCTOMAP_LIBRARIES}
