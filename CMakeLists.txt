@@ -63,6 +63,7 @@ set(LOCAL_PLANNER_HEADER
     src/MotionPrimitiveLibrary.h
     src/SingleAxisTrajectory.h
     src/Vec3.h
+    src/CostFunc.h
 )
 
 add_executable(local_planner ${LOCAL_PLANNER_SOURCE} ${LOCAL_PLANNER_HEADER})

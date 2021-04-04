@@ -19,6 +19,7 @@ private:
     bool generateEDT;
     octomap::OcTree* tree;
     ros::ServiceClient getLocalGoalSrv;
+    DynamicEDTOctomap* edt;
     double tf;
 
 public:
@@ -49,11 +50,9 @@ public:
             octomap::point3d min(x,y,z);
             tree->getMetricMax(x,y,z);
             octomap::point3d max(x,y,z);
-            std::cout << min << std::endl;
-            std::cout << max << std::endl;
 
-            DynamicEDTOctomap distmap(1.0, tree, min, max, false);
-            distmap.update(true);
+            edt = new DynamicEDTOctomap(1.0, tree, min, max, false);
+            edt->update(true);
             ROS_INFO("EDT generated");
         }
     }
@@ -77,7 +76,7 @@ public:
         MotionPrimitiveLibrary mpl(tf);
         mpl.setInitState(pos0, vel0, acc0);
         mpl.setLocalGoal(goalPoint, goalDir);
-        
+        mpl.setEDT(edt);
         mpl.optimize();
     }
 };

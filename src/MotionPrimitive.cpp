@@ -89,8 +89,8 @@ double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, Dynami
 
     Vec3 vfUnit = (1/vfNorm) * vf;
     double Edir = (vfUnit - goalDir).GetNorm2();
-
-    return 5.2 * Eep + 0.05 * Ec + 2 * Edir;
+    _cost = 5.2 * Eep + 0.05 * Ec + 2 * Edir;
+    return _cost;
 }
 
 MotionPrimitive::InputFeasibilityResult MotionPrimitive::CheckInputFeasibilitySection(double fminAllowed, double fmaxAllowed, double wmaxAllowed, double t1, double t2, double minTimeSection)

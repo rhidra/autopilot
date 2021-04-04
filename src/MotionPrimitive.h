@@ -180,4 +180,5 @@ private:
   SingleAxisTrajectory _axis[3];//!<The axes along the single trajectories
   Vec3 _grav;//!<gravity in the frame of the trajectory
   double _tf; //!<trajectory end time [s]
+  double _cost;
 };
