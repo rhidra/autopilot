@@ -15,6 +15,10 @@ void MotionPrimitiveLibrary::setLocalGoal(Vec3 goalPoint, Vec3 goalDir) {
     _goalDir = Vec3(goalDir);
 }
 
+void MotionPrimitiveLibrary::setEDT(DynamicEDTOctomap* edt) {
+    _edt = edt;
+}
+
 MotionPrimitive* MotionPrimitiveLibrary::getTrajectory() {
     return _traj;
 }
@@ -23,6 +27,8 @@ bool MotionPrimitiveLibrary::optimize() {
     double norm0 = _vel0.GetNorm2();
     double yaw0 = atan2(_vel0.y, _vel0.x);
 
+    MotionPrimitive traj = buildTrajectory(norm0, yaw0, 0);   
+    
 }
 
 MotionPrimitive MotionPrimitiveLibrary::buildTrajectory(const double normVelf, const double yawf, const double zf) {
