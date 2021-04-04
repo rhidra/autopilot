@@ -1,8 +1,8 @@
-#pragma once
+#ifndef MOTIONPRIMITIVELIBRARY_H_
+#define MOTIONPRIMITIVELIBRARY_H_
 
 #include "Vec3.h"
 #include "MotionPrimitive.h"
-#include "CostFunc.h"
 
 #include <dynamicEDT3D/dynamicEDTOctomap.h>
 #include <vector>
@@ -21,9 +21,12 @@ public:
     void setEDT(DynamicEDTOctomap* edt);
     bool optimize();
     
-    MotionPrimitive buildTrajectory(const double normVelf, const double yawf, const double zf);
+    static MotionPrimitive buildTrajectory(
+        const Vec3 pos0, const Vec3 vel0, const Vec3 acc0,
+        const double normVelf, const double yawf, const double zf, const double tf
+    );
 
-    MotionPrimitive* getTrajectory();
+    MotionPrimitive getTrajectory() { return _traj; };
     double getTf() { return _tf; };
     Vec3 getPos0() { return _pos0; };
     Vec3 getVel0() { return _vel0; };
@@ -38,5 +41,66 @@ private:
     Vec3 _goalPoint, _goalDir;
     DynamicEDTOctomap* _edt;
     std::vector<MotionPrimitive> _trajs;
-    MotionPrimitive* _traj;
+    MotionPrimitive _traj;
 };
+
+//* Cost functions *//
+
+// Final yaw cost function
+class yawCostFunc {
+public:
+    yawCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _norm, double _z, double _tf, DynamicEDTOctomap *_edt) 
+    :   pos0(_pos0), vel0(_vel0), acc0(_acc0), goalPoint(_goalPoint), goalDir(_goalDir), 
+        norm(_norm), z(_z), tf(_tf), edt(_edt) {}
+
+    double operator()(double yaw) const {
+        return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
+            .GetCost(goalPoint, goalDir, edt);
+    }
+    
+private:
+    Vec3 pos0, vel0, acc0;
+    Vec3 goalPoint, goalDir;
+    DynamicEDTOctomap* edt;
+    double norm, z, tf;
+};
+
+// Final velocity norm cost function
+class normCostFunc {
+public:
+    normCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _yaw, double _z, double _tf, DynamicEDTOctomap *_edt) 
+    :   pos0(_pos0), vel0(_vel0), acc0(_acc0), goalPoint(_goalPoint), goalDir(_goalDir), 
+        yaw(_yaw), z(_z), tf(_tf), edt(_edt) {}
+
+    double operator()(double norm) const {
+        return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
+            .GetCost(goalPoint, goalDir, edt);
+    }
+    
+private:
+    Vec3 pos0, vel0, acc0;
+    Vec3 goalPoint, goalDir;
+    DynamicEDTOctomap* edt;
+    double yaw, z, tf;
+};
+
+// Final Z position cost function
+class zCostFunc {
+public:
+    zCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _norm, double _yaw, double _tf, DynamicEDTOctomap *_edt) 
+    :   pos0(_pos0), vel0(_vel0), acc0(_acc0), goalPoint(_goalPoint), goalDir(_goalDir), 
+        norm(_norm), yaw(_yaw), tf(_tf), edt(_edt) {}
+
+    double operator()(double z) const {
+        return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
+            .GetCost(goalPoint, goalDir, edt);
+    }
+    
+private:
+    Vec3 pos0, vel0, acc0;
+    Vec3 goalPoint, goalDir;
+    DynamicEDTOctomap* edt;
+    double norm, yaw, tf;
+};
+
+#endif

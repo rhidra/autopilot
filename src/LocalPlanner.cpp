@@ -83,8 +83,8 @@ public:
             exit(1);
         }
 
-        MotionPrimitive* traj = mpl.getTrajectory();
-        trajectory_pub.publish(traj->toMsg());
+        MotionPrimitive traj = mpl.getTrajectory();
+        trajectory_pub.publish(traj.toMsg());
     }
 };
 

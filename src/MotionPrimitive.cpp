@@ -30,6 +30,8 @@ MotionPrimitive::MotionPrimitive(const Vec3 x0, const Vec3 v0, const Vec3 a0, co
   _grav = gravity;
 }
 
+MotionPrimitive::MotionPrimitive() {}
+
 void MotionPrimitive::SetGoalPosition(const Vec3 in)
 {
   for(unsigned i=0;i<3;i++) SetGoalPositionInAxis(i, in[i]);

@@ -69,6 +69,7 @@ public:
 
   //! Constructor, user must define initial state, and the direction of gravity.
   MotionPrimitive(const Vec3 x0, const Vec3 v0, const Vec3 a0, const Vec3 gravity);
+  MotionPrimitive();
 
   //set the final state for all axes:
   //! Fix the full position at the end time (see also the per-axis functions).
