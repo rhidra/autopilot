@@ -6,7 +6,8 @@
 #include "MotionPrimitiveLibrary.h"
 
 // Final yaw cost function
-struct yawCostFunc {
+class yawCostFunc {
+public:
     yawCostFunc(MotionPrimitiveLibrary* _mpl, double _norm, double _z) 
     : mpl(_mpl), norm(_norm), z(_z) {}
 
@@ -21,7 +22,8 @@ private:
 };
 
 // Final velocity norm cost function
-struct normCostFunc {
+class normCostFunc {
+public:
     normCostFunc(MotionPrimitiveLibrary* _mpl, double _yaw, double _z) 
     : mpl(_mpl), yaw(_yaw), z(_z) {}
 
@@ -36,7 +38,8 @@ private:
 };
 
 // Final Z position cost function
-struct zCostFunc {
+class zCostFunc {
+public:
     zCostFunc(MotionPrimitiveLibrary* _mpl, double _yaw, double _norm) 
     : mpl(_mpl), yaw(_yaw), norm(_norm) {}
 

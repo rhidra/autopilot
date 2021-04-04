@@ -97,7 +97,7 @@ autopilot::MotionPrimitive MotionPrimitive::toMsg() const {
     msg.gravity.y = _grav[1];
     msg.gravity.z = _grav[2];
 
-    msg.tf = _tf
+    msg.tf = _tf;
     return msg;
 }
 
