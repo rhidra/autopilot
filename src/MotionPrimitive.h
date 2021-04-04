@@ -20,6 +20,7 @@
 #pragma once
 #include "SingleAxisTrajectory.h"
 #include "Vec3.h"
+#include "autopilot/MotionPrimitive.h"
 #include <dynamicEDT3D/dynamicEDTOctomap.h>
 
 //! A quadrocopter state interception trajectory.
@@ -84,6 +85,8 @@ public:
   void SetGoalVelocityInAxis(const unsigned axNum, const double in){_axis[axNum].SetGoalVelocity(in);};
   //! Fix the acceleration at the end time in one axis. If not set, it is left free.
   void SetGoalAccelerationInAxis(const unsigned axNum, const double in){_axis[axNum].SetGoalAcceleration(in);};
+
+  autopilot::MotionPrimitive toMsg() const;
 
   //! Reset the trajectory, clearing any end state constraints.
   void Reset(void);

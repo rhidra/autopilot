@@ -19,6 +19,7 @@ private:
     bool generateEDT;
     octomap::OcTree* tree;
     ros::ServiceClient getLocalGoalSrv;
+    ros::Publisher trajectory_pub;
     DynamicEDTOctomap* edt;
     double tf;
 
@@ -29,7 +30,7 @@ public:
 
         ros::Subscriber octomap_sub = nh.subscribe("/octomap_binary", 10, &LocalPlanner::octomap_cb, this);
         ros::Subscriber trajectory_sub = nh.subscribe("/autopilot/trajectory/request", 10, &LocalPlanner::sendTrajectory, this);
-        ros::Publisher trajectory_pub = nh.advertise<autopilot::MotionPrimitive>("/autopilot/trajectory/response", 10);
+        trajectory_pub = nh.advertise<autopilot::MotionPrimitive>("/autopilot/trajectory/response", 10);
         getLocalGoalSrv = nh.serviceClient<autopilot::LocalGoal>("/autopilot/local_goal");
 
         getLocalGoalSrv.waitForExistence();
@@ -77,7 +78,13 @@ public:
         mpl.setInitState(pos0, vel0, acc0);
         mpl.setLocalGoal(goalPoint, goalDir);
         mpl.setEDT(edt);
-        mpl.optimize();
+        if (!mpl.optimize()) {
+            ROS_ERROR("Cannot optimize a feasible trajectory !");
+            exit(1);
+        }
+
+        MotionPrimitive* traj = mpl.getTrajectory();
+        trajectory_pub.publish(traj->toMsg());
     }
 };
 

@@ -64,6 +64,43 @@ void MotionPrimitive::Generate(const double timeToFinish)
   }
 }
 
+autopilot::MotionPrimitive MotionPrimitive::toMsg() const {
+    autopilot::MotionPrimitive msg;
+    msg.header.frame_id = "map";
+    msg.header.stamp = ros::Time::now();
+
+    msg.pos0.x = _axis[0].GetInitialPosition(); 
+    msg.pos0.y = _axis[1].GetInitialPosition(); 
+    msg.pos0.z = _axis[2].GetInitialPosition();
+    
+    msg.vel0.x = _axis[0].GetInitialVelocity(); 
+    msg.vel0.y = _axis[1].GetInitialVelocity(); 
+    msg.vel0.z = _axis[2].GetInitialVelocity();
+
+    msg.acc0.x = _axis[0].GetInitialAcceleration(); 
+    msg.acc0.y = _axis[1].GetInitialAcceleration(); 
+    msg.acc0.z = _axis[2].GetInitialAcceleration();
+    
+    msg.alpha.x = _axis[0].GetParamAlpha();
+    msg.alpha.y = _axis[1].GetParamAlpha();
+    msg.alpha.z = _axis[2].GetParamAlpha();
+
+    msg.beta.x = _axis[0].GetParamBeta();
+    msg.beta.y = _axis[1].GetParamBeta();
+    msg.beta.z = _axis[2].GetParamBeta();
+
+    msg.gamma.x = _axis[0].GetParamGamma();
+    msg.gamma.y = _axis[1].GetParamGamma();
+    msg.gamma.z = _axis[2].GetParamGamma();
+
+    msg.gravity.x = _grav[0];
+    msg.gravity.y = _grav[1];
+    msg.gravity.z = _grav[2];
+
+    msg.tf = _tf
+    return msg;
+}
+
 double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, DynamicEDTOctomap* edt) {
     // Collision cost
     Vec3 pf = GetPosition(_tf);
