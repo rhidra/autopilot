@@ -20,6 +20,7 @@
 #pragma once
 #include "SingleAxisTrajectory.h"
 #include "Vec3.h"
+#include <dynamicEDT3D/dynamicEDTOctomap.h>
 
 //! A quadrocopter state interception trajectory.
 /*!
@@ -163,7 +164,7 @@ public:
   Vec3   GetOmega(double t, double timeStep) const;
 
   //! Return the total cost of the trajectory.
-  double GetCost(void) const { return _axis[0].GetCost() + _axis[1].GetCost() + _axis[2].GetCost();};
+  double GetCost(const Vec3 goalPoint, const Vec3 goalDir, DynamicEDTOctomap* edt);
 
   //! Return the parameter defining the trajectory.
 	double GetAxisParamAlpha(int i)          const{return _axis[i].GetParamAlpha();};

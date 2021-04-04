@@ -64,6 +64,35 @@ void MotionPrimitive::Generate(const double timeToFinish)
   }
 }
 
+double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, DynamicEDTOctomap* edt) {
+    // Collision cost
+    Vec3 pf = GetPosition(_tf);
+    Vec3 p0 = GetPosition(0);
+    int n = (int) std::floor(std::max((pf - p0).GetNorm2() * 50, 50.));
+    
+    double sum = 1e-10;
+    for (double t = 0.; t < _tf; t += _tf/n) {
+        Vec3 p = GetPosition(t);
+        octomap::point3d pt(p.x, p.y, p.z);
+        sum += 1 / edt->getDistance_unsafe(pt);
+    }
+
+    Vec3 vf = GetVelocity(_tf);
+    double vfNorm = vf.GetNorm2();
+    double Ec = vfNorm * sum * _tf / n;
+
+    if (Ec > 1e8) {
+        return Ec;
+    }
+
+    double Eep = (goalPoint - pf).GetNorm2();
+
+    Vec3 vfUnit = (1/vfNorm) * vf;
+    double Edir = (vfUnit - goalDir).GetNorm2();
+
+    return 5.2 * Eep + 0.05 * Ec + 2 * Edir;
+}
+
 MotionPrimitive::InputFeasibilityResult MotionPrimitive::CheckInputFeasibilitySection(double fminAllowed, double fmaxAllowed, double wmaxAllowed, double t1, double t2, double minTimeSection)
 {
   if (t2 - t1 < minTimeSection) return InputIndeterminable;
