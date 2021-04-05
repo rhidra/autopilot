@@ -104,7 +104,7 @@ autopilot::MotionPrimitive MotionPrimitive::toMsg() const {
 }
 
 double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, DynamicEDTOctomap* edt) {
-    std::cout << "Traj cost: ";
+    // std::cout << "Traj cost: ";
 
     // Collision cost
     Vec3 pf = GetPosition(_tf);
@@ -115,29 +115,29 @@ double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, Dynami
     for (double t = 0.; t < _tf; t += _tf/n) {
         Vec3 p = GetPosition(t);
         octomap::point3d pt(p.x, p.y, p.z);
-        sum += 1 / edt->getDistance(pt);
+        sum += 1 / std::max(0., edt->getDistance(pt) - .3);
     }
 
     Vec3 vf = GetVelocity(_tf);
     double vfNorm = vf.GetNorm2();
     double Ec = vfNorm * sum * _tf / n;
-    std::cout << " Ec:" << Ec;
+    // std::cout << " Ec:" << Ec;
 
     if (Ec > 1e8) {
         _cost = Ec;
-        std::cout << "| Cost (early stop): " << _cost << std::endl;
+        // std::cout << "| Cost (early stop): " << _cost << std::endl;
         return _cost;
     }
 
     double Eep = (goalPoint - pf).GetNorm2();
-    std::cout << " Eep:" << Eep;
+    // std::cout << " Eep:" << Eep;
 
     Vec3 vfUnit = (1/vfNorm) * vf;
     double Edir = (vfUnit - goalDir).GetNorm2();
-    std::cout << " Edir:" << Edir;
+    // std::cout << " Edir:" << Edir;
 
     _cost = 5.2 * Eep + 0.05 * Ec + 2 * Edir;
-    std::cout << "| Cost: " << _cost << std::endl;
+    // std::cout << "| Cost: " << _cost << std::endl;
     return _cost;
 }
 

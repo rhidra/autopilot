@@ -57,7 +57,7 @@ public:
         norm(_norm), z(_z), tf(_tf), edt(_edt), trajs(_trajs) {}
 
     double operator()(double yaw) {
-        std::cout << "\tYaw: " << yaw << std::endl;
+        // std::cout << "\tYaw: " << yaw << std::endl;
         MotionPrimitive t = MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf);
         trajs.push_back(t);
         return t.GetCost(goalPoint, goalDir, edt);
@@ -80,7 +80,7 @@ public:
         yaw(_yaw), z(_z), tf(_tf), edt(_edt), trajs(_trajs) {}
 
     double operator()(double norm) {
-        std::cout << "\tNorm: " << yaw << std::endl;
+        // std::cout << "\tNorm: " << yaw << std::endl;
         MotionPrimitive t = MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf);
         trajs.push_back(t);
         return t.GetCost(goalPoint, goalDir, edt);
@@ -103,7 +103,7 @@ public:
         norm(_norm), yaw(_yaw), tf(_tf), edt(_edt), trajs(_trajs) {}
 
     double operator()(double z) const {
-        std::cout << "\tZ: " << yaw << std::endl;
+        // std::cout << "\tZ: " << yaw << std::endl;
         MotionPrimitive t = MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf);
         trajs.push_back(t);
         return t.GetCost(goalPoint, goalDir, edt);

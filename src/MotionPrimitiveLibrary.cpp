@@ -49,7 +49,6 @@ bool MotionPrimitiveLibrary::optimize() {
     // Optimize the z
     const double z = _pos0.z;
 
-    std::cout << "Building the trajectory" << std::endl;
     _traj = buildTrajectory(_pos0, _vel0, _acc0, norm, yaw, z, _tf);
     if (_traj.GetCost(_goalPoint, _goalDir, _edt) > FEASIBLE_TRAJ_THRESHOLD) {
         return false;

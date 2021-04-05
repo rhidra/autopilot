@@ -63,6 +63,7 @@ public:
     }
 
     void sendTrajectory(const controller_msgs::FlatTarget& msg) {
+        ros::Time start = ros::Time::now();
         Vec3 pos0(msg.position.x, msg.position.y, msg.position.z);
         Vec3 vel0(msg.velocity.x, msg.velocity.y, msg.velocity.z);
         Vec3 acc0(0, 0, 0);
@@ -90,20 +91,22 @@ public:
         MotionPrimitive traj = mpl.getTrajectory();
         trajectory_pub.publish(traj.toMsg());
 
+        std::cout << "Trajectory generated in " << (ros::Time::now() - start).toSec() << " sec" << std::endl;
+
         visualization_msgs::MarkerArray ma;
         int i = 0;
-        ma.markers.push_back(vizTraj(traj, 0, 1, 1, i));
+        ma.markers.push_back(vizTraj(traj, 0, 1, 1, 1, i));
 
         for (const MotionPrimitive& traj: mpl.getTrajs()) {
             i++;
             double d = std::min(traj._cost / 1000, 1.);
-            ma.markers.push_back(vizTraj(traj, d, 1-d, 0, i));
+            ma.markers.push_back(vizTraj(traj, d, 1-d, 0, .2, i));
         }
 
         viz_pub.publish(ma);
     }
 
-    visualization_msgs::Marker vizTraj(MotionPrimitive const traj, float r = 1, float g = 1, float b = 1, int id = 0) {
+    visualization_msgs::Marker vizTraj(MotionPrimitive const traj, float r = 1, float g = 1, float b = 1, float alpha = 1, int id = 0) {
         visualization_msgs::Marker m;
         m.header.frame_id = "/map";
         m.header.stamp = ros::Time::now();
@@ -115,7 +118,7 @@ public:
         m.color.r = r;
         m.color.g = g;
         m.color.b = b;
-        m.color.a = .2;
+        m.color.a = alpha;
         m.pose.orientation.x = 0.0;
         m.pose.orientation.y = 0.0;
         m.pose.orientation.z = 0.0;
