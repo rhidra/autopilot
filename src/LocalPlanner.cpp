@@ -25,9 +25,11 @@ private:
     ros::Publisher viz_pub;
     DynamicEDTOctomap* edt;
     double tf;
+    int i;
 
 public:
     void run() {
+        i = 0;
         nh.param<bool>("/local_planner/generate_edt", generateEDT, true);
         nh.param<double>("/local_planner/tf", tf, 1);
 
@@ -63,6 +65,7 @@ public:
     }
 
     void sendTrajectory(const controller_msgs::FlatTarget& msg) {
+        i++;
         ros::Time start = ros::Time::now();
         Vec3 pos0(msg.position.x, msg.position.y, msg.position.z);
         Vec3 vel0(msg.velocity.x, msg.velocity.y, msg.velocity.z);
@@ -85,6 +88,7 @@ public:
         mpl.setEDT(edt);
         if (!mpl.optimize()) {
             ROS_ERROR("Cannot optimize a feasible trajectory !");
+            viz_pub.publish(vizMPL(mpl, i));
             exit(1);
         }
 
@@ -93,17 +97,23 @@ public:
 
         std::cout << "Trajectory generated in " << (ros::Time::now() - start).toNSec()/1000000. << " ms" << std::endl;
 
+        viz_pub.publish(vizMPL(mpl, i, true));
+    }
+
+    visualization_msgs::MarkerArray vizMPL(MotionPrimitiveLibrary mpl, int id = 0, bool showSelectedTrajectory = false) {
         visualization_msgs::MarkerArray ma;
-        int i = 0;
-        ma.markers.push_back(vizTraj(traj, 0, 1, 1, 1, i));
+        int i = id*200;
+
+        if (showSelectedTrajectory) {
+            ma.markers.push_back(vizTraj(mpl.getTrajectory(), 0, 1, 1, 1, i));
+        }
 
         for (const MotionPrimitive& traj: mpl.getTrajs()) {
             i++;
-            double d = std::min(traj._cost / 1000, 1.);
+            double d = std::min(traj._cost / 100, 1.);
             ma.markers.push_back(vizTraj(traj, d, 1-d, 0, .2, i));
         }
-
-        viz_pub.publish(ma);
+        return ma;
     }
 
     visualization_msgs::Marker vizTraj(MotionPrimitive const traj, float r = 1, float g = 1, float b = 1, float alpha = 1, int id = 0) {
@@ -124,7 +134,7 @@ public:
         m.pose.orientation.z = 0.0;
         m.pose.orientation.w = 1.0;
 
-        for (int i = 0; i < 10-1; ++i) {
+        for (int i = 0; i < 10; ++i) {
             Vec3 pos1 = traj.GetPosition(i / 10. * tf);
             Vec3 pos2 = traj.GetPosition((i+1) / 10. * tf);
             geometry_msgs::Point pt1, pt2;
