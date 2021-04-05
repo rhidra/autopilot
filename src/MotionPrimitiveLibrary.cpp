@@ -32,32 +32,36 @@ bool MotionPrimitiveLibrary::optimize() {
     std::cout << "\tInitial yaw " << yaw0 << std::endl;
 
     // Optimize using the Brent's method, implemented in Boost
-    // Optimize the yaw
+    // Optimize the yaw as an approximation
     const yawCostFunc f1(_pos0, _vel0, _acc0, _goalPoint, _goalDir, std::max(.1, norm0 - 1/_tf), _pos0.z, _tf, _edt, _trajs);
     std::pair<double, double> r = brent_find_minima(f1, yaw0 - PI * .5, yaw0 + PI * .5, 10);
-    const double yaw = r.first;
+    const double tempYaw = r.first;
 
-    std::cout << "Yaw optimization result: " << r.first << std::endl;
+    std::cout << "Yaw approx. optimization result: " << r.first << std::endl;
 
     // Optimize the norm
-    const normCostFunc f2(_pos0, _vel0, _acc0, _goalPoint, _goalDir, yaw, _pos0.z, _tf, _edt, _trajs);
+    const normCostFunc f2(_pos0, _vel0, _acc0, _goalPoint, _goalDir, tempYaw, _pos0.z, _tf, _edt, _trajs);
     r = brent_find_minima(f2, std::max(norm0 - 4/_tf, .1), norm0 + .5/_tf, 10);
     const double norm = r.first;
     
     std::cout << "Norm optimization result: " << r.first << std::endl;
+
+    // Optimize the yaw for the second time
+    const yawCostFunc f3(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm, _pos0.z, _tf, _edt, _trajs);
+    r = brent_find_minima(f3, tempYaw - PI * .4, tempYaw + PI * .4, 10);
+    const double yaw = r.first;
+
+    std::cout << "Yaw optimization result: " << r.first << std::endl;
     
     // Optimize the z
-    const zCostFunc f3(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm, yaw, _tf, _edt, _trajs);
-    r = brent_find_minima(f3, std::min(_pos0.z, _goalPoint.z), std::max(_pos0.z, _goalPoint.z), 10);
+    const zCostFunc f4(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm, yaw, _tf, _edt, _trajs);
+    r = brent_find_minima(f4, std::min(_pos0.z, _goalPoint.z), std::max(_pos0.z, _goalPoint.z), 10);
     const double z = r.first;
 
     std::cout << "Z optimization result: " << r.first << std::endl;
 
     _traj = buildTrajectory(_pos0, _vel0, _acc0, norm, yaw, z, _tf);
-    if (_traj.GetCost(_goalPoint, _goalDir, _edt) > FEASIBLE_TRAJ_THRESHOLD) {
-        return false;
-    }
-    return true;
+    return _traj.GetCost(_goalPoint, _goalDir, _edt) <= FEASIBLE_TRAJ_THRESHOLD;
 }
 
 MotionPrimitive MotionPrimitiveLibrary::buildTrajectory(
