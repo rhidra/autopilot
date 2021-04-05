@@ -36,7 +36,7 @@ class TrajectorySamplerNode(OctomapNode):
     
 
     def load_trajectory(self, msg):
-        rospy.loginfo('Trajectory received !')
+        rospy.loginfo('Trajectory received in {}sec !'.format((rospy.Time.now() - self.start_request).to_sec()))
         self.next_trajectory = buildMotionPrimitiveFromMsg(msg)
         self.has_requested = False
 
@@ -45,6 +45,7 @@ class TrajectorySamplerNode(OctomapNode):
         if self.has_requested:
             return
         self.has_requested = True
+        self.start_request = rospy.Time.now()
 
         if self.trajectory is None:
             posf, velf = self.pos, self.vel
