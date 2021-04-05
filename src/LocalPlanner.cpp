@@ -104,14 +104,18 @@ public:
         visualization_msgs::MarkerArray ma;
         int i = id*200;
 
+        ma.markers.push_back(vizPoint(mpl.getPos0(), .05, 1, 1, 1, .7, i-1));
+
         if (showSelectedTrajectory) {
             ma.markers.push_back(vizTraj(mpl.getTrajectory(), 0, 1, 1, 1, i));
+            ma.markers.push_back(vizPoint(mpl.getTrajectory().GetPosition(tf), .05, 0, 1, 1, .3, i));
         }
 
         for (const MotionPrimitive& traj: mpl.getTrajs()) {
             i++;
             double d = std::min(traj._cost / 100, 1.);
             ma.markers.push_back(vizTraj(traj, d, 1-d, 0, .2, i));
+            ma.markers.push_back(vizPoint(traj.GetPosition(tf), .03, d, 1-d, 0, .2, i));
         }
         return ma;
     }
@@ -124,7 +128,7 @@ public:
         m.action = visualization_msgs::Marker::ADD;
         m.id = id;
         m.type = visualization_msgs::Marker::LINE_LIST;
-        m.scale.x = .03;
+        m.scale.x = .01;
         m.color.r = r;
         m.color.g = g;
         m.color.b = b;
@@ -144,6 +148,31 @@ public:
             m.points.push_back(pt2);
         }
 
+        return m;
+    }
+
+    visualization_msgs::Marker vizPoint(Vec3 p, float size, float r, float g, float b, float alpha = 1, int id = 0) {
+        visualization_msgs::Marker m;
+        m.header.frame_id = "/map";
+        m.header.stamp = ros::Time::now();
+        m.ns = "point";
+        m.action = visualization_msgs::Marker::ADD;
+        m.id = id;
+        m.type = visualization_msgs::Marker::SPHERE;
+        m.scale.x = size;
+        m.scale.y = size;
+        m.scale.z = size;
+        m.color.r = r;
+        m.color.g = g;
+        m.color.b = b;
+        m.color.a = alpha;
+        m.pose.position.x = p.x;
+        m.pose.position.y = p.y;
+        m.pose.position.z = p.z;
+        m.pose.orientation.x = 0.0;
+        m.pose.orientation.y = 0.0;
+        m.pose.orientation.z = 0.0;
+        m.pose.orientation.w = 1.0;
         return m;
     }
 };

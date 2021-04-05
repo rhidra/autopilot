@@ -21,7 +21,7 @@ NAV_FOLLOW = 2
 class TrajectorySamplerNode(OctomapNode):
     def setup(self):
         super(TrajectorySamplerNode, self).setup()
-        self.rate = rospy.Rate(50)
+        self.rate = rospy.Rate(200)
         self.trajectory_sub = rospy.Subscriber('/autopilot/trajectory/response', MotionPrimitive, self.load_trajectory)
         self.trajectory_pub = rospy.Publisher('/autopilot/trajectory/request', FlatTarget, queue_size=10)
         self.traj_tracking_pub = rospy.Publisher('/reference/flatsetpoint', FlatTarget, queue_size=10)
