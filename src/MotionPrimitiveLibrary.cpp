@@ -33,14 +33,14 @@ bool MotionPrimitiveLibrary::optimize() {
 
     // Optimize using the Brent's method, implemented in Boost
     // Optimize the yaw
-    const yawCostFunc f1(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm0, _pos0.z, _tf, _edt);
+    const yawCostFunc f1(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm0, _pos0.z, _tf, _edt, _trajs);
     std::pair<double, double> r = brent_find_minima(f1, yaw0 - PI * .5, yaw0 + PI * .5, 10);
     const double yaw = r.first;
 
     std::cout << "Yaw optimization result: " << r.first << std::endl;
 
     // Optimize the norm
-    const normCostFunc f2(_pos0, _vel0, _acc0, _goalPoint, _goalDir, yaw, _pos0.z, _tf, _edt);
+    const normCostFunc f2(_pos0, _vel0, _acc0, _goalPoint, _goalDir, yaw, _pos0.z, _tf, _edt, _trajs);
     r = brent_find_minima(f2, std::max(norm0 - 4/_tf, .1), norm0 + .5/_tf, 10);
     const double norm = r.first;
     

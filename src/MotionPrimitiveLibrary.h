@@ -35,6 +35,7 @@ public:
     Vec3 getGoalPoint() { return _goalPoint; };
     Vec3 getGoalDir() { return _goalDir; };
     DynamicEDTOctomap* getEDT() { return _edt; };
+    std::vector<MotionPrimitive> getTrajs() { return _trajs; };
 
 private:
     double _tf;
@@ -50,14 +51,16 @@ private:
 // Final yaw cost function
 class yawCostFunc {
 public:
-    yawCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _norm, double _z, double _tf, DynamicEDTOctomap *_edt) 
+    yawCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _norm, double _z, 
+                double _tf, DynamicEDTOctomap *_edt, std::vector<MotionPrimitive> &_trajs) 
     :   pos0(_pos0), vel0(_vel0), acc0(_acc0), goalPoint(_goalPoint), goalDir(_goalDir), 
-        norm(_norm), z(_z), tf(_tf), edt(_edt) {}
+        norm(_norm), z(_z), tf(_tf), edt(_edt), trajs(_trajs) {}
 
-    double operator()(double yaw) const {
-        std::cout << "Yaw: " << yaw << std::endl;
-        return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
-            .GetCost(goalPoint, goalDir, edt);
+    double operator()(double yaw) {
+        std::cout << "\tYaw: " << yaw << std::endl;
+        MotionPrimitive t = MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf);
+        trajs.push_back(t);
+        return t.GetCost(goalPoint, goalDir, edt);
     }
     
 private:
@@ -65,19 +68,22 @@ private:
     Vec3 goalPoint, goalDir;
     DynamicEDTOctomap* edt;
     double norm, z, tf;
+    std::vector<MotionPrimitive> &trajs;
 };
 
 // Final velocity norm cost function
 class normCostFunc {
 public:
-    normCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _yaw, double _z, double _tf, DynamicEDTOctomap *_edt) 
+    normCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _yaw, double _z, 
+                double _tf, DynamicEDTOctomap *_edt, std::vector<MotionPrimitive> &_trajs) 
     :   pos0(_pos0), vel0(_vel0), acc0(_acc0), goalPoint(_goalPoint), goalDir(_goalDir), 
-        yaw(_yaw), z(_z), tf(_tf), edt(_edt) {}
+        yaw(_yaw), z(_z), tf(_tf), edt(_edt), trajs(_trajs) {}
 
-    double operator()(double norm) const {
-        std::cout << "Norm: " << yaw << std::endl;
-        return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
-            .GetCost(goalPoint, goalDir, edt);
+    double operator()(double norm) {
+        std::cout << "\tNorm: " << yaw << std::endl;
+        MotionPrimitive t = MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf);
+        trajs.push_back(t);
+        return t.GetCost(goalPoint, goalDir, edt);
     }
     
 private:
@@ -85,19 +91,22 @@ private:
     Vec3 goalPoint, goalDir;
     DynamicEDTOctomap* edt;
     double yaw, z, tf;
+    std::vector<MotionPrimitive> &trajs;
 };
 
 // Final Z position cost function
 class zCostFunc {
 public:
-    zCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _norm, double _yaw, double _tf, DynamicEDTOctomap *_edt) 
+    zCostFunc(Vec3 _pos0, Vec3 _vel0, Vec3 _acc0, Vec3 _goalPoint, Vec3 _goalDir, double _norm, double _yaw, 
+                double _tf, DynamicEDTOctomap *_edt, std::vector<MotionPrimitive> &_trajs) 
     :   pos0(_pos0), vel0(_vel0), acc0(_acc0), goalPoint(_goalPoint), goalDir(_goalDir), 
-        norm(_norm), yaw(_yaw), tf(_tf), edt(_edt) {}
+        norm(_norm), yaw(_yaw), tf(_tf), edt(_edt), trajs(_trajs) {}
 
     double operator()(double z) const {
-        std::cout << "Z: " << yaw << std::endl;
-        return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
-            .GetCost(goalPoint, goalDir, edt);
+        std::cout << "\tZ: " << yaw << std::endl;
+        MotionPrimitive t = MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf);
+        trajs.push_back(t);
+        return t.GetCost(goalPoint, goalDir, edt);
     }
     
 private:
@@ -105,6 +114,7 @@ private:
     Vec3 goalPoint, goalDir;
     DynamicEDTOctomap* edt;
     double norm, yaw, tf;
+    std::vector<MotionPrimitive> &trajs;
 };
 
 #endif
