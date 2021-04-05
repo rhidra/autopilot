@@ -91,7 +91,7 @@ public:
         MotionPrimitive traj = mpl.getTrajectory();
         trajectory_pub.publish(traj.toMsg());
 
-        std::cout << "Trajectory generated in " << (ros::Time::now() - start).toSec() << " sec" << std::endl;
+        std::cout << "Trajectory generated in " << (ros::Time::now() - start).toNSec()/1000000. << " ms" << std::endl;
 
         visualization_msgs::MarkerArray ma;
         int i = 0;
