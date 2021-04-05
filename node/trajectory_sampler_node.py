@@ -105,7 +105,7 @@ class TrajectorySamplerNode(OctomapNode):
 
             try:
                 # Only try to generate a new trajectory before a few milliseconds before reaching the primitive end
-                if self.next_trajectory is None and t >= self.trajectory._tf - .7:
+                if self.next_trajectory is None and t >= self.trajectory._tf - .1:
                     self.request_trajectory()
 
                 # If no trajectory or if we reached the end, we change trajectory
