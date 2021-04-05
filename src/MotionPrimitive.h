@@ -177,6 +177,7 @@ public:
   //! Return the parameter defining the trajectory.
 	double GetAxisParamGamma(int i)          const{return _axis[i].GetParamGamma();};
 
+  double _cost;
 private:
 	//! Test a section of the trajectory for input feasibility (recursion).
   InputFeasibilityResult CheckInputFeasibilitySection(double fminAllowed, double fmaxAllowed, double wmaxAllowed, double t1, double t2, double minTimeSection);
@@ -184,5 +185,4 @@ private:
   SingleAxisTrajectory _axis[3];//!<The axes along the single trajectories
   Vec3 _grav;//!<gravity in the frame of the trajectory
   double _tf; //!<trajectory end time [s]
-  double _cost;
 };

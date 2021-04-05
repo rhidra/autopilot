@@ -10,6 +10,9 @@
 #include <octomap_msgs/conversions.h>
 #include <sstream>
 #include <boost/numeric/ublas/vector.hpp>
+#include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/Marker.h>
+#include <geometry_msgs/Point.h>
 
 
 class LocalPlanner {
@@ -19,6 +22,7 @@ private:
     octomap::OcTree* tree;
     ros::ServiceClient getLocalGoalSrv;
     ros::Publisher trajectory_pub;
+    ros::Publisher viz_pub;
     DynamicEDTOctomap* edt;
     double tf;
 
@@ -30,6 +34,7 @@ public:
         ros::Subscriber octomap_sub = nh.subscribe("/octomap_binary", 10, &LocalPlanner::octomap_cb, this);
         ros::Subscriber trajectory_sub = nh.subscribe("/autopilot/trajectory/request", 10, &LocalPlanner::sendTrajectory, this);
         trajectory_pub = nh.advertise<autopilot::MotionPrimitive>("/autopilot/trajectory/response", 10);
+        viz_pub = nh.advertise<visualization_msgs::MarkerArray>("/autopilot/viz/local", 10);
         getLocalGoalSrv = nh.serviceClient<autopilot::LocalGoal>("/autopilot/local_goal");
 
         getLocalGoalSrv.waitForExistence();
@@ -84,6 +89,49 @@ public:
 
         MotionPrimitive traj = mpl.getTrajectory();
         trajectory_pub.publish(traj.toMsg());
+
+        visualization_msgs::MarkerArray ma;
+        int i = 0;
+        ma.markers.push_back(vizTraj(traj, 0, 1, 1, i));
+
+        for (const MotionPrimitive& traj: mpl.getTrajs()) {
+            i++;
+            double d = std::min(traj._cost / 1000, 1.);
+            ma.markers.push_back(vizTraj(traj, d, 1-d, 0, i));
+        }
+
+        viz_pub.publish(ma);
+    }
+
+    visualization_msgs::Marker vizTraj(MotionPrimitive const traj, float r = 1, float g = 1, float b = 1, int id = 0) {
+        visualization_msgs::Marker m;
+        m.header.frame_id = "/map";
+        m.header.stamp = ros::Time::now();
+        m.ns = "path";
+        m.action = visualization_msgs::Marker::ADD;
+        m.id = id;
+        m.type = visualization_msgs::Marker::LINE_LIST;
+        m.scale.x = .03;
+        m.color.r = r;
+        m.color.g = g;
+        m.color.b = b;
+        m.color.a = .2;
+        m.pose.orientation.x = 0.0;
+        m.pose.orientation.y = 0.0;
+        m.pose.orientation.z = 0.0;
+        m.pose.orientation.w = 1.0;
+
+        for (int i = 0; i < 10-1; ++i) {
+            Vec3 pos1 = traj.GetPosition(i / 10. * tf);
+            Vec3 pos2 = traj.GetPosition((i+1) / 10. * tf);
+            geometry_msgs::Point pt1, pt2;
+            pt1.x = pos1.x; pt1.y = pos1.y; pt1.z = pos1.z;
+            pt2.x = pos2.x; pt2.y = pos2.y; pt2.z = pos2.z;
+            m.points.push_back(pt1);
+            m.points.push_back(pt2);
+        }
+
+        return m;
     }
 };
 
