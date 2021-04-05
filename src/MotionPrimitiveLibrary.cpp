@@ -47,7 +47,11 @@ bool MotionPrimitiveLibrary::optimize() {
     std::cout << "Norm optimization result: " << r.first << std::endl;
     
     // Optimize the z
-    const double z = _pos0.z;
+    const zCostFunc f3(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm, yaw, _tf, _edt, _trajs);
+    r = brent_find_minima(f3, std::min(_pos0.z, _goalPoint.z), std::max(_pos0.z, _goalPoint.z), 10);
+    const double z = r.first;
+
+    std::cout << "Z optimization result: " << r.first << std::endl;
 
     _traj = buildTrajectory(_pos0, _vel0, _acc0, norm, yaw, z, _tf);
     if (_traj.GetCost(_goalPoint, _goalDir, _edt) > FEASIBLE_TRAJ_THRESHOLD) {
