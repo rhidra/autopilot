@@ -1,5 +1,4 @@
 #include "ros/ros.h"
-#include "std_msgs/String.h"
 #include "autopilot/LocalGoal.h"
 #include "autopilot/MotionPrimitive.h"
 #include "Vec3.h"

@@ -19,22 +19,37 @@ void MotionPrimitiveLibrary::setEDT(DynamicEDTOctomap* edt) {
 
 bool MotionPrimitiveLibrary::optimize() {
     using boost::math::tools::brent_find_minima;
-    
-    double norm0 = _vel0.GetNorm2();
-    double yaw0 = atan2(_vel0.y, _vel0.x);
+
+    const double norm0 = _vel0.GetNorm2();
+    const double yaw0 = atan2(_vel0.y, _vel0.x);
+
+    std::cout << "*******************************" << std::endl;
+    std::cout << "Optimizing..." << std::endl;
+    std::cout << "\tInitial position " << _pos0 << std::endl;
+    std::cout << "\tInitial velocity " << _vel0 << std::endl;
+    std::cout << "\tInitial acceleration " << _acc0 << std::endl;
+    std::cout << "\tInitial norm " << norm0 << std::endl;
+    std::cout << "\tInitial yaw " << yaw0 << std::endl;
 
     // Optimize using the Brent's method, implemented in Boost
     // Optimize the yaw
-    std::pair<double, double> r = brent_find_minima(yawCostFunc(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm0, _pos0.z, _tf, _edt), yaw0 - PI * .5, yaw0 + PI * .5, 3);
-    double yaw = r.first;
+    const yawCostFunc f1(_pos0, _vel0, _acc0, _goalPoint, _goalDir, norm0, _pos0.z, _tf, _edt);
+    std::pair<double, double> r = brent_find_minima(f1, yaw0 - PI * .5, yaw0 + PI * .5, 10);
+    const double yaw = r.first;
+
+    std::cout << "Yaw optimization result: " << r.first << std::endl;
 
     // Optimize the norm
-    r = brent_find_minima(normCostFunc(_pos0, _vel0, _acc0, _goalPoint, _goalDir, yaw, _pos0.z, _tf, _edt), std::max(norm0 - 4/_tf, .1), norm0 + .5/_tf, 3);
-    double norm = r.first;
+    const normCostFunc f2(_pos0, _vel0, _acc0, _goalPoint, _goalDir, yaw, _pos0.z, _tf, _edt);
+    r = brent_find_minima(f2, std::max(norm0 - 4/_tf, .1), norm0 + .5/_tf, 10);
+    const double norm = r.first;
+    
+    std::cout << "Norm optimization result: " << r.first << std::endl;
     
     // Optimize the z
-    double z = _pos0.z;
+    const double z = _pos0.z;
 
+    std::cout << "Building the trajectory" << std::endl;
     _traj = buildTrajectory(_pos0, _vel0, _acc0, norm, yaw, z, _tf);
     if (_traj.GetCost(_goalPoint, _goalDir, _edt) > FEASIBLE_TRAJ_THRESHOLD) {
         return false;

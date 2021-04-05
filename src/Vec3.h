@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <math.h>
 #include <limits>
+#include <iostream>
 
 //! 3D vector class
 /*!
@@ -86,6 +87,7 @@ public:
 	inline Vec3 operator+(const Vec3 rhs)const {return Vec3(x+rhs.x,y+rhs.y,z+rhs.z);};
 	inline Vec3 operator-(const Vec3 rhs)const {return Vec3(x-rhs.x,y-rhs.y,z-rhs.z);};
 	inline Vec3 operator/(const double rhs)const {return Vec3(x/rhs,y/rhs,z/rhs);};
+    friend std::ostream& operator<<(std::ostream& os, const Vec3& d){os<<"("<<d.x<<","<<d.y<<","<<d.z<<")";return os;}
 };
 
 //Some operator overloading:

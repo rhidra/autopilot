@@ -3,6 +3,7 @@
 
 #include "Vec3.h"
 #include "MotionPrimitive.h"
+#include "ros/ros.h"
 
 #include <dynamicEDT3D/dynamicEDTOctomap.h>
 #include <vector>
@@ -54,6 +55,7 @@ public:
         norm(_norm), z(_z), tf(_tf), edt(_edt) {}
 
     double operator()(double yaw) const {
+        std::cout << "Yaw: " << yaw << std::endl;
         return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
             .GetCost(goalPoint, goalDir, edt);
     }
@@ -73,6 +75,7 @@ public:
         yaw(_yaw), z(_z), tf(_tf), edt(_edt) {}
 
     double operator()(double norm) const {
+        std::cout << "Norm: " << yaw << std::endl;
         return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
             .GetCost(goalPoint, goalDir, edt);
     }
@@ -92,6 +95,7 @@ public:
         norm(_norm), yaw(_yaw), tf(_tf), edt(_edt) {}
 
     double operator()(double z) const {
+        std::cout << "Z: " << yaw << std::endl;
         return MotionPrimitiveLibrary::buildTrajectory(pos0, vel0, acc0, norm, yaw, z, tf)
             .GetCost(goalPoint, goalDir, edt);
     }
