@@ -115,7 +115,7 @@ double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, Dynami
     for (double t = 0.; t < _tf; t += _tf/n) {
         Vec3 p = GetPosition(t);
         octomap::point3d pt(p.x, p.y, p.z);
-        sum += 1 / std::max(0., edt->getDistance(pt) - .2);
+        sum += 1 / std::max(0., edt->getDistance(pt) - .3);
     }
 
     Vec3 vf = GetVelocity(_tf);

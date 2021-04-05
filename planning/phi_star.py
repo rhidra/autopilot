@@ -8,7 +8,7 @@ from utils import dist, Node_phistar as Node, UAV_THICKNESS, pointToCell, NoPath
 INCREMENT_DISTANCE = .4
 
 # F(s) = G(s) + H_COST_WEIGHT * H(s)
-H_COST_WEIGHT = 1.5
+H_COST_WEIGHT = 1.8
 
 # Global variables
 openset = set()
