@@ -40,7 +40,7 @@ def children(node, ros_node, world_dim, grid):
 
 
 def theta_star(ros_node, start, goal, world_dim, grid, display=True):
-    rospy.loginfo('Computing A* algorithm...')
+    rospy.loginfo('Computing Theta* algorithm...')
     
     openset = set()
     closedset = set()
@@ -88,7 +88,7 @@ def theta_star(ros_node, start, goal, world_dim, grid, display=True):
                     node.parent = current
 
         if display and i % 10 == 0:
-            ros_node.visualize_path(nodes=openset.union(closedset), start=start, goal=goal)
+            ros_node.visualize_global_path(nodes=openset.union(closedset), start=start, goal=goal)
             ros_node.rate.sleep()
 
     raise ValueError('No Path Found')
