@@ -66,11 +66,16 @@ class TrajectorySamplerNode(OctomapNode):
 
             # tf = self.trajectory._tf - (rospy.Time.now() - self.traj_start).to_sec()
             # velf = self.vel + self.acc * tf / 2.
+            # velf[2] = 0 # Force z velocity at 0
             # posf = self.pos + self.vel * tf + self.acc * tf * tf / 3.
+
+            # posf = self.pos
+            # velf = self.vel
+
             # This estimation model does not work, so we use the ground truth values instead
             posf = self.trajectory.get_position(self.trajectory._tf)
             velf = self.trajectory.get_velocity(self.trajectory._tf)
-        rospy.loginfo('Requesting trajectory with pos0={} and vel0={}...'.format(posf, velf))
+            # rospy.loginfo('Requesting trajectory \ntf={}\nfrom \tpos={} vel={}\nto \tpos={} vel={}\nexpect\tpos={} vel={}...'.format(tf, self.pos, self.vel, posf, velf, posf_expected, velf_expected))
         self.trajectory_pub.publish(build_traj_tracker(pos=posf, vel=velf))
 
 
@@ -106,7 +111,7 @@ class TrajectorySamplerNode(OctomapNode):
 
             try:
                 # Only try to generate a new trajectory before a few milliseconds before reaching the primitive end
-                if self.next_trajectory is None and t >= self.trajectory._tf - .1:
+                if self.next_trajectory is None and t >= self.trajectory._tf - .04:
                     self.request_trajectory()
 
                 # If no trajectory or if we reached the end, we change trajectory
@@ -125,7 +130,7 @@ class TrajectorySamplerNode(OctomapNode):
                 vel = self.trajectory.get_velocity(t)
                 acc = self.trajectory.get_acceleration(t)
 
-                rospy.loginfo('Pos={} | Vel={} | Acc={}'.format(pos, vel, acc))
+                # rospy.loginfo('Pos={} | Vel={} | Acc={}'.format(pos, vel, acc))
 
                 msg = build_traj_tracker(pos, vel, acc)
                 msg_yaw = Float32()
