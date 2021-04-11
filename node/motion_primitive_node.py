@@ -18,7 +18,6 @@ class MotionPrimitiveNode(OctomapNode):
         super(MotionPrimitiveNode, self).setup()
         rospy.wait_for_service('/autopilot/local_goal')
         self.mpl = None
-        # self.mpls = []
         self.trajectory = None
         self.current_traj = -1
         self.traj_history = []
@@ -38,7 +37,6 @@ class MotionPrimitiveNode(OctomapNode):
         msg = self.traj_history[self.current_traj].toMsg()
         self.trajectory_pub.publish(msg)
         self.visualize_local_path(trajLibrary=self.mpl.trajs, trajSelected=self.traj_history[self.current_traj], trajHistory=self.traj_history, tf=self.tf)
-        # self.saveMPLs()
 
     def generate_trajectory(self, pos0, vel0):
         if self.local_goal_point is None or self.local_goal_direction is None:
@@ -76,7 +74,6 @@ class MotionPrimitiveNode(OctomapNode):
         self.mpl.set_edt_function(self.get_point_edt)
         traj = self.mpl.optimize()
         rospy.loginfo('Selected trajectory: {}'.format(traj.print_cost()))
-        # self.mpls.append(self.mpl)
         rospy.loginfo('Generated a new trajectory in {}sec'.format(time.time() - start))
         return traj
 
@@ -88,19 +85,3 @@ class MotionPrimitiveNode(OctomapNode):
         local_goal_pos = np.array([msg.local_goal_position.x, msg.local_goal_position.y, msg.local_goal_position.z])
         local_goal_dir = np.array([msg.local_goal_direction.x, msg.local_goal_direction.y, msg.local_goal_direction.z])
         return local_goal_pos, local_goal_dir
-
-    # def saveMPLs(self):
-    #     data = []
-    #     for mpl in self.mpls:
-    #         data.append([])
-    #         for traj in mpl.trajs:
-    #             data[-1].append([
-    #                 traj._axis[0]._p0, traj._axis[1]._p0, traj._axis[2]._p0, 
-    #                 traj._axis[0]._v0, traj._axis[1]._v0, traj._axis[2]._v0, 
-    #                 traj._axis[0]._a0, traj._axis[1]._a0, traj._axis[2]._a0,
-    #                 traj._axis[0]._pf, traj._axis[1]._pf, traj._axis[2]._pf, 
-    #                 traj._axis[0]._vf, traj._axis[1]._vf, traj._axis[2]._vf, 
-    #                 traj._axis[0]._af, traj._axis[1]._af, traj._axis[2]._af,
-    #                 traj._cost
-    #             ])
-    #     np.save('mpls2.npy', np.array(data))
