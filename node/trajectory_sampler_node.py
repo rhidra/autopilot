@@ -69,11 +69,11 @@ class TrajectorySamplerNode(OctomapNode):
             # velf[2] = 0 # Force z velocity at 0
             # posf = self.pos + self.vel * tf + self.acc * tf * tf / 3.
 
-            # posf = self.pos
+            posf = self.pos
             # velf = self.vel
 
             # This estimation model does not work, so we use the ground truth values instead
-            posf = self.trajectory.get_position(self.trajectory._tf)
+            # posf = self.trajectory.get_position(self.trajectory._tf)
             velf = self.trajectory.get_velocity(self.trajectory._tf)
             # rospy.loginfo('Requesting trajectory \ntf={}\nfrom \tpos={} vel={}\nto \tpos={} vel={}\nexpect\tpos={} vel={}...'.format(tf, self.pos, self.vel, posf, velf, posf_expected, velf_expected))
         self.trajectory_pub.publish(build_traj_tracker(pos=posf, vel=velf))
