@@ -5,6 +5,7 @@ from mavros_msgs.msg import Altitude, ExtendedState, HomePosition, State, Waypoi
 from mavros_msgs.srv import CommandBool, ParamGet, SetMode, WaypointClear, WaypointPush
 from sensor_msgs.msg import NavSatFix, Imu
 from nav_msgs.msg import Path
+from path_utils import rotate_by_quaternion
 
 
 class BaseNode(object):
@@ -85,8 +86,11 @@ class BaseNode(object):
         self.pos += self.start_pos
 
     def local_velocity_cb(self, data):
+        # Local velocity conversion to global frame
         self.local_velocity = data
-        self.vel = np.array([self.local_velocity.twist.linear.x, self.local_velocity.twist.linear.y, self.local_velocity.twist.linear.z])
+        v = [self.local_velocity.twist.linear.x, self.local_velocity.twist.linear.y, self.local_velocity.twist.linear.z]
+        q = [self.local_position.pose.orientation.w, self.local_position.pose.orientation.x, self.local_position.pose.orientation.y, self.local_position.pose.orientation.z]
+        self.vel = np.array(rotate_by_quaternion(v, q))
 
     def local_goal_pt_cb(self, data):
         self.local_goal_point = np.array([data.x, data.y, data.z])

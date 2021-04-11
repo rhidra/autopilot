@@ -196,3 +196,17 @@ def build_traj_tracker(pos=[0., 0., 2.], vel=[0., 0., 0.], acc=[0., 0., 0.]):
     msg.acceleration.z = acc[2]
 
     return msg
+
+
+# Convention quaternion [w, x, y, z]
+def quaternion_mult(q,r):
+    return [r[0]*q[0]-r[1]*q[1]-r[2]*q[2]-r[3]*q[3],
+            r[0]*q[1]+r[1]*q[0]-r[2]*q[3]+r[3]*q[2],
+            r[0]*q[2]+r[1]*q[3]+r[2]*q[0]-r[3]*q[1],
+            r[0]*q[3]-r[1]*q[2]+r[2]*q[1]+r[3]*q[0]]
+
+# Convention quaternion [w, x, y, z]
+def rotate_by_quaternion(pt, q):
+    r = [0, pt[0], pt[1], pt[2]]
+    q_conj = [q[0], - q[1], - q[2], - q[3]]
+    return quaternion_mult(quaternion_mult(q, r), q_conj)[1:]
