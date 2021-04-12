@@ -33,6 +33,9 @@ class TrajectorySamplerNode(OctomapNode):
         self.pause_pos = None
         self.traj_start = rospy.Time.now()
         self.has_requested = False
+
+        self.data = []
+        self.req = []
     
 
     def load_trajectory(self, msg):
@@ -76,6 +79,13 @@ class TrajectorySamplerNode(OctomapNode):
             # posf = self.trajectory.get_position(self.trajectory._tf)
             velf = self.trajectory.get_velocity(self.trajectory._tf)
             # rospy.loginfo('Requesting trajectory \ntf={}\nfrom \tpos={} vel={}\nto \tpos={} vel={}\nexpect\tpos={} vel={}...'.format(tf, self.pos, self.vel, posf, velf, posf_expected, velf_expected))
+        self.req.append([
+            rospy.Time.now().to_sec(),
+            self.pos[0], self.pos[1], self.pos[2], 
+            posf[0], posf[1], posf[2], 
+            self.vel[0], self.vel[1], self.vel[2],
+            velf[0], velf[1], velf[2], 
+        ])
         self.trajectory_pub.publish(build_traj_tracker(pos=posf, vel=velf))
 
 
@@ -101,6 +111,7 @@ class TrajectorySamplerNode(OctomapNode):
             if self.dist_from(self.goal_pos, vertical=False) < TOLERANCE_FROM_GOAL:
                 rospy.loginfo('Goal attained !')
                 rospy.loginfo('Mission done !')
+                self.saveData()
                 break
 
             if self.trajectory is None and self.next_trajectory is None:
@@ -125,10 +136,18 @@ class TrajectorySamplerNode(OctomapNode):
                     rospy.logerr('No trajectory availaible !')
                     self.rate.sleep()
                     continue
+
                 
                 pos = self.trajectory.get_position(t) - self.start_pos
                 vel = self.trajectory.get_velocity(t)
                 acc = self.trajectory.get_acceleration(t)
+
+                self.data.append([rospy.Time.now().to_sec(), 
+                    self.pos[0], self.pos[1], self.pos[2], 
+                    pos[0]+self.start_pos[0], pos[1]+self.start_pos[1], pos[2]+self.start_pos[2],
+                    self.vel[0], self.vel[1], self.vel[2],
+                    vel[0], vel[1], vel[2] 
+                ])
 
                 # rospy.loginfo('Pos={} | Vel={} | Acc={}'.format(pos, vel, acc))
 
@@ -164,3 +183,7 @@ class TrajectorySamplerNode(OctomapNode):
         print('Waiting for local goal instructions...')
         while (self.local_goal_point is None or self.local_goal_direction is None) and not rospy.is_shutdown():
             self.rate.sleep()
+
+    def saveData(self):
+        np.save('pos2.npy', np.array(self.data))
+        np.save('req2.npy', np.array(self.req))
