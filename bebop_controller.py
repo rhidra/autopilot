@@ -49,10 +49,10 @@ class BebopController:
         self.last = rospy.Time.now()
 
         # PID declarations
-        self.x = PID(Kp_x, Ki_x, Kd_x, setpoint=self.command[0], output_limits=(-1, 1))
-        self.y = PID(Kp_y, Ki_y, Kd_y, setpoint=self.command[1], output_limits=(-1, 1))
-        self.z = PID(Kp_z, Ki_z, Kd_z, setpoint=self.command[2], output_limits=(-1, 1))
-        self.yaw = PID(Kp_yaw, Ki_yaw, Kd_yaw, setpoint=self.command[3], output_limits=(-1, 1))
+        self.x = PID(Kp_x, Ki_x, Kd_x, setpoint=0, output_limits=(-1, 1))
+        self.y = PID(Kp_y, Ki_y, Kd_y, setpoint=0, output_limits=(-1, 1))
+        self.z = PID(Kp_z, Ki_z, Kd_z, setpoint=0, output_limits=(-1, 1))
+        self.yaw = PID(Kp_yaw, Ki_yaw, Kd_yaw, setpoint=0, output_limits=(-1, 1))
 
         # ROS
         rospy.init_node('bebop_controller', anonymous=True)
