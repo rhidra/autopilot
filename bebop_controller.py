@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import rospy, numpy as np
+import rospy, numpy as np, sys
 from simple_pid import PID
 from geometry_msgs.msg import Twist, PoseStamped
-from geographic_msgs.msg import FlatTarget
+from controller_msgs.msg import FlatTarget
 from std_msgs.msg import Float32
 
 """
@@ -19,24 +19,25 @@ Output:
 """
 
 # PID parameters
-Kp_x = 1
-Ki_x = 0.1
-Kd_x = 0.05
+Kp_x = .1
+Ki_x = 1e-9
+Kd_x = 1e-9
 
-Kp_y = 1
-Ki_y = 0.1
-Kd_y = 0.05
+Kp_y = .1
+Ki_y = 1e-9
+Kd_y = 1e-9
 
-Kp_z = 1
-Ki_z = 0.1
-Kd_z = 0.05
+Kp_z = .1
+Ki_z = 1e-9
+Kd_z = 1e-9
 
-Kp_yaw = 1
-Ki_yaw = 0.1
-Kd_yaw = 0.05
+Kp_yaw = .1
+Ki_yaw = 1e-9
+Kd_yaw = 1e-9
 
 # Rate of command publishing (in Hz) (must be > 10Hz)
 rate = 1 / 0.005
+# rate = 1
 
 # Rotate a 3D vector by a specific yaw angle
 def rotate(v, yaw):
@@ -44,6 +45,8 @@ def rotate(v, yaw):
 
 class BebopController:
     def __init__(self):
+        rospy.init_node('bebop_controller', anonymous=True)
+
         # State vector = [x, y, z, yaw]
         self.state = [0, 0, 0, 0]
         self.last = rospy.Time.now()
@@ -55,7 +58,6 @@ class BebopController:
         self.yaw = PID(Kp_yaw, Ki_yaw, Kd_yaw, setpoint=0, output_limits=(-1, 1))
 
         # ROS
-        rospy.init_node('bebop_controller', anonymous=True)
         self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.sub_state = rospy.Subscriber('/openvslam/camera_pose', PoseStamped, self.state_cb)
         self.sub_cmd = rospy.Subscriber('/reference/flatsetpoint', FlatTarget, self.cmd_pos_cb)
@@ -98,6 +100,10 @@ class BebopController:
             msg.linear.y = dy
             msg.linear.z = dz
             msg.angular.z = dyaw
+
+
+            sys.stdout.write('\r[{:2.2f}, {:2.2f}, {:2.2f}] x [{:2.2f}]  '.format(dx, dy, dz, dyaw))
+            sys.stdout.flush()
 
             self.pub.publish(msg)
 
