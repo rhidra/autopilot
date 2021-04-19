@@ -193,6 +193,20 @@ You have to run that script everytime you connect to the WiFi access point.
 sudo ip route add 192.168.42.1/32 dev wlp3s0
 ```
 
+### Setup the autopilot
+
+Clone this repository in `catkin_ws/src/`. You also have to compile the C++ local planner.
+You can use:
+
+```shell script
+# Compile all ROS modules
+catkin build
+
+# Only compile this module
+cd src/autopilot
+catkin build --this
+```
+
 ## Launch simulation
 
 To launch all necessary nodes, a launch file is available in `autopilot/launch/simulation.launch`.
@@ -202,6 +216,11 @@ The `/autopilot/viz/global` and `/autopilot/viz/local` topics are used by the au
 You can also specify a vehicle, and a starting position.
 ```shell script
 roslaunch autopilot simulation.launch vehicle:=iris world:=test_zone
+```
+
+You should also provide a starting position (`x`, `y`, `z`) and a goal position (`goal_x`, `goal_y`, `goal_z`). *You probably shouldn't specify the starting `z` variable. 
+```shell script
+roslaunch autopilot simulation.launch x:=0 y:=0 goal_x:=5 goal_y:=-7.5
 ```
 
 ## Use a Bebop UAV
@@ -226,21 +245,14 @@ and run the global planner ROS node with the following command.
 
 Currently, the launch simulation file also starts the global planner, using the Phi* algorithm.
 
-You can specify a few different parameters, like the algorithms used,
-if an advanced display should be used, or to record data for later analysis.
+You can specify a few different parameters, like if the ROS node should keep 
+running in the background (`-l`), the algorithm used,
+if a debug display should be used (`-d`), or to record data for later analysis.
 You can use the `--help` option to learn more. 
 
 ```shell script
-rosrun autopilot global_planner.py -p <planning_algorithm>
+rosrun autopilot global_planner.py -p <planning_algorithm> -l
 ```
-
-`<planning_algorithm>` can be:
-- a_star
-- ~~RRT~~
-- rrt_star
-- theta_star
-- phi_star
-- dummy (Dummy planning algorithm, for testing purposes)
 
 The global planner computes a global path only **once**, then broadcast
 continuously a potential _local goal_ position to use as an objective for the
@@ -253,14 +265,21 @@ The message type is defined in `srv/LocalGoal.srv`.
 
 ### Local planner
 
+We implemented two local planners, a Python planner and a C++ planner. 
+Both are equivalent and should ideally lead to the same result.
+The C++ module should be used for better performances.
+After compilation, it is reachable with the `local_planner` executable file.
+The Python version is accesible with the `local_planner.py` file.
+Both executable receive no arguments.
+
 To launch the local planner, launch the simulation and the global planner.
 Then run the local planner ROS node with the following command.
 
 ```shell script
-rosrun autopilot local_planner.py
+rosrun autopilot local_planner
 ```
 
-The local planner listens to messages on `/autopilot/trajectory/request` (`std_msgs/Empty`),
+The local planner listens to messages on `/autopilot/trajectory/request` (`controller_msgs/FlatTarget`),
 then computes a potential trajectory and sends it to `/autopilot/trajectory/response` (msg defined in `msg/MotionPrimitive`).
 
 ### Trajectory sampler
@@ -270,6 +289,6 @@ To sample the generated trajectory and send it to the MAVROS trajectory tracker,
 rosrun autopilot sampler.py
 ```
 
-The node is writing at 50Hz UAV poses in `/reference/flatsetpoint` and `/reference/yaw`
-(respectively `controller_msgs/FlatTarget` and `std_msgs/Float32`).
+The node is writing at a high frequency UAV poses in `/reference/flatsetpoint` and 
+`/reference/yaw` (respectively `controller_msgs/FlatTarget` and `std_msgs/Float32`).
 Those are read by the mavros_controller `geometric_controller` node.
