@@ -42,7 +42,7 @@ def main(argv):
     algo = None
     situation = 'test'
     save_stats, send_local, display = False, False, False
-    start_pos = [rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0) + 1]
+    start_pos = [rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0) + 2]
     goal = [rospy.get_param('/goal/x', 6), rospy.get_param('/goal/y', -7), rospy.get_param('/goal/z', 1)]
 
     try:

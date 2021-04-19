@@ -209,6 +209,8 @@ def main_phi_star(ros_node, start, goal, world_dim, display=True):
     assert world_dim[0] <= start[0] and start[0] <= world_dim[1] and world_dim[0] < world_dim[1]
     assert world_dim[2] <= start[1] and start[1] <= world_dim[3] and world_dim[2] < world_dim[3]
     assert world_dim[4] <= start[2] and start[2] <= world_dim[5] and world_dim[4] < world_dim[5]
+    assert ros_node.get_point_edt(start, UAV_THICKNESS) > .1
+    assert ros_node.get_point_edt(goal, UAV_THICKNESS) > .1
     
     path, duration = phi_star(ros_node, start, goal, world_dim, display)
 

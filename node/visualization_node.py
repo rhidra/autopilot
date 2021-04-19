@@ -156,7 +156,7 @@ def viz_nodes(nodes):
     return marker
 
 
-def viz_point(point, color=(1., 1., 1.), id=0, size=1, alpha=1, ns=''):
+def viz_point(point, color=(1., 1., 1.), id=0, size=.5, alpha=1, ns=''):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
