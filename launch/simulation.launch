@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
     <!-- Starting position and orientation -->
-    <arg name="x" default="6"/>
+    <arg name="x" default="0"/>
     <arg name="y" default="0"/>
-    <arg name="z" default="0"/>
+    <arg name="z" default="1"/>
     <arg name="R" default="0"/>
     <arg name="P" default="0"/>
     <arg name="Y" default="0"/>
@@ -12,6 +12,15 @@
     <arg name="goal_x" default="0"/>
     <arg name="goal_y" default="-7"/>
     <arg name="goal_z" default="2"/>
+
+    <!-- 
+        Override the z pose given to MAVROS to spawn the UAV (default: 0)
+        The arg z is used by the global planner and the traj tracker.
+        The arg init_z is used by MAVROS to set the initial UAV pose, and by
+        the offet_poses utility.
+    -->
+    <arg name="init_z" default="0"/>
+    <param name="/start/init_z" value="$(arg init_z)"/>
 
     <!-- Global ROS parameters for starting and goal position -->
     <param name="/start/x" value="$(arg x)"/>
@@ -31,7 +40,7 @@
     <include file="$(find px4)/launch/mavros_posix_sitl.launch">
         <arg name="x" default="$(arg x)"/>
         <arg name="y" default="$(arg y)"/>
-        <arg name="z" default="$(arg z)"/>
+        <arg name="z" default="$(arg init_z)"/>
         <arg name="R" default="$(arg R)"/>
         <arg name="P" default="$(arg P)"/>
         <arg name="Y" default="$(arg Y)"/>
@@ -65,7 +74,7 @@
     <param name="/local_planner/tf" value="1.2"/>
 
     <!-- Global planner -->
-    <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -l">
+    <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -dl">
         <param name="generate_edt" value="True"/>
     </node>
 </launch>

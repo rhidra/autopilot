@@ -14,7 +14,7 @@ pub_pose = rospy.Publisher('/autopilot/pose', PoseStamped, queue_size=10)
 
 startx = rospy.get_param('/start/x', 0)
 starty = rospy.get_param('/start/y', 0)
-startz = rospy.get_param('/start/z', 0)
+startz = rospy.get_param('/start/init_z', 0)
 
 def ref_cb(data):
     data.pose.position.x += startx

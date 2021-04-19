@@ -218,7 +218,7 @@ You can also specify a vehicle, and a starting position.
 roslaunch autopilot simulation.launch vehicle:=iris world:=test_zone
 ```
 
-You should also provide a starting position (`x`, `y`, `z`) and a goal position (`goal_x`, `goal_y`, `goal_z`). *You probably shouldn't specify the starting `z` variable. 
+You should also provide a starting position (`x`, `y`, `z`) and a goal position (`goal_x`, `goal_y`, `goal_z`). 
 ```shell script
 roslaunch autopilot simulation.launch x:=0 y:=0 goal_x:=5 goal_y:=-7.5
 ```

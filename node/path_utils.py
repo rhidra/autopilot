@@ -175,7 +175,7 @@ build_traj_tracker()
 Build a TwistStamped message.
 To be used as a trajectory tracker with the mavors_controllers package.
 """
-def build_traj_tracker(pos=[0., 0., 2.], vel=[0., 0., 0.], acc=[0., 0., 0.]):
+def build_traj_tracker(pos=[0., 0., 1.], vel=[0., 0., 0.], acc=[0., 0., 0.]):
     msg = FlatTarget()
 
     msg.header.stamp = rospy.Time.now()

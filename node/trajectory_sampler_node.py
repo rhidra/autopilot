@@ -81,9 +81,10 @@ class TrajectorySamplerNode(OctomapNode):
 
     def execute_trajectory(self):
         self.wait_local_goal()
+        init_z = rospy.get_param('/start/z', default=1.)
 
-        for _ in range(100):
-            self.traj_tracking_pub.publish(build_traj_tracker())
+        for _ in range(200*2):
+            self.traj_tracking_pub.publish(build_traj_tracker(pos=[0., 0., init_z]))
             self.rate.sleep()
 
         self.request_trajectory()
