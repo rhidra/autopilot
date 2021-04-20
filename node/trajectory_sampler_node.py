@@ -18,10 +18,17 @@ IDLE_DURATION = 1
 NAV_PAUSE = 1
 NAV_FOLLOW = 2
 
+# Delay before requesting to generate new trajectory before reaching the end
+# Should be as small as possible but higher than the running time of the local planner algorithm
+TRAJ_GENERATION_DELAY = .02
+
+# ROS node rate (in Hz)
+RATE = 500
+
 class TrajectorySamplerNode(OctomapNode):
     def setup(self):
         super(TrajectorySamplerNode, self).setup()
-        self.rate = rospy.Rate(200)
+        self.rate = rospy.Rate(RATE)
         self.trajectory_sub = rospy.Subscriber('/autopilot/trajectory/response', MotionPrimitive, self.load_trajectory)
         self.trajectory_pub = rospy.Publisher('/autopilot/trajectory/request', FlatTarget, queue_size=10)
         self.traj_tracking_pub = rospy.Publisher('/reference/flatsetpoint', FlatTarget, queue_size=10)
@@ -48,7 +55,11 @@ class TrajectorySamplerNode(OctomapNode):
         self.start_request = rospy.Time.now()
 
         if self.trajectory is None:
-            posf, velf = self.pos, self.vel
+            # On the first iteration, we can simply give the initial position
+            # for the speed, we artificially create a speed from the yaw angle
+            posf = self.pos
+            init_vel = 0.05
+            velf = np.array([init_vel * np.cos(self.yaw), init_vel * np.sin(self.yaw), 0])
         else:    
             # Estimate the final position and velocity from the current real world data
             # We could use the trajectory final pose, but it would not consider real world uncertainties
@@ -68,8 +79,10 @@ class TrajectorySamplerNode(OctomapNode):
             # velf = self.vel + self.acc * tf / 2.
             # velf[2] = 0 # Force z velocity at 0
             # posf = self.pos + self.vel * tf + self.acc * tf * tf / 3.
+            # posf[2] = posfExpected[2]
 
             posf = self.pos
+            posf[2] = self.trajectory.get_position(self.trajectory._tf)[2]
             # velf = self.vel
 
             # This estimation model does not work, so we use the ground truth values instead
@@ -83,8 +96,11 @@ class TrajectorySamplerNode(OctomapNode):
         self.wait_local_goal()
         init_z = rospy.get_param('/start/z', default=1.)
 
-        for _ in range(200*2):
+        msg_yaw = Float32()
+        msg_yaw.data = np.arctan2(self.local_goal_point[1] - self.start_pos[1], self.local_goal_point[0] - self.start_pos[0])
+        for _ in range(RATE*2):
             self.traj_tracking_pub.publish(build_traj_tracker(pos=[0., 0., init_z]))
+            self.yaw_tracking_pub.publish(msg_yaw)
             self.rate.sleep()
 
         self.request_trajectory()
@@ -112,18 +128,19 @@ class TrajectorySamplerNode(OctomapNode):
 
             try:
                 # Only try to generate a new trajectory before a few milliseconds before reaching the primitive end
-                if self.next_trajectory is None and t >= self.trajectory._tf - .04:
+                if self.next_trajectory is None and t >= self.trajectory._tf - TRAJ_GENERATION_DELAY:
                     self.request_trajectory()
 
                 # If no trajectory or if we reached the end, we change trajectory
                 if self.trajectory is None or t >= self.trajectory._tf:
                     self.trajectory = self.next_trajectory
                     self.next_trajectory = None
-                    self.traj_start = rospy.Time.now()
-                    t = 0
+                    # self.traj_start = rospy.Time.now() - rospy.Duration(secs=TRAJ_GENERATION_DELAY)
+                    self.traj_start = self.start_request - rospy.Duration(secs=.06)
+                    t = (rospy.Time.now() - self.traj_start).to_sec()
 
                 if self.trajectory is None and self.next_trajectory is None:
-                    rospy.logerr('No trajectory availaible !')
+                    rospy.logerr('No trajectory available !')
                     self.rate.sleep()
                     continue
                 
