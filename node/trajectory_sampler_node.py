@@ -15,9 +15,6 @@ from controller_msgs.msg import FlatTarget
 TOLERANCE_FROM_GOAL = .5
 IDLE_DURATION = 1
 
-NAV_PAUSE = 1
-NAV_FOLLOW = 2
-
 # Delay before requesting to generate new trajectory before reaching the end
 # Should be as small as possible but higher than the running time of the local planner algorithm
 TRAJ_GENERATION_DELAY = .02
@@ -35,9 +32,6 @@ class TrajectorySamplerNode(OctomapNode):
         self.yaw_tracking_pub = rospy.Publisher('/reference/yaw', Float32, queue_size=10)
         self.trajectory = None
         self.next_trajectory = None
-        self.nav_state = NAV_PAUSE
-        self.pause_start = None
-        self.pause_pos = None
         self.traj_start = rospy.Time.now()
         self.has_requested = False
     
@@ -104,16 +98,11 @@ class TrajectorySamplerNode(OctomapNode):
             self.rate.sleep()
 
         self.request_trajectory()
-        self.nav_state = NAV_PAUSE
         rospy.loginfo('Entering NAV_PAUSE mode')
 
         while not rospy.is_shutdown():
             self.try_set_mode('OFFBOARD')
             self.try_set_arm(True)
-
-            if self.nav_state == NAV_PAUSE:
-                self.pause_navigation()
-                continue
 
             if self.dist_from(self.goal_pos, vertical=False) < TOLERANCE_FROM_GOAL:
                 rospy.loginfo('Goal attained !')
@@ -157,25 +146,8 @@ class TrajectorySamplerNode(OctomapNode):
                 self.yaw_tracking_pub.publish(msg_yaw)
                 self.rate.sleep()
             except TrajectoryError:
-                self.nav_state = NAV_PAUSE
                 rospy.loginfo('No feasible trajectory found')
-                rospy.loginfo('Entering NAV_PAUSE mode')
                 continue
-
-
-    def pause_navigation(self):
-        if self.pause_pos is None or self.pause_start is None:
-            self.pause_start = rospy.Time.now()
-            self.pause_pos = self.pos
-
-        if (rospy.Time.now() - self.pause_start).to_sec() > 1:
-            self.nav_state = NAV_FOLLOW
-            self.traj_start = rospy.Time.now()
-            rospy.loginfo('Entering NAV_FOLLOW mode')
-
-        msg = build_traj_tracker(self.pause_pos - self.start_pos)
-        self.traj_tracking_pub.publish(msg)
-        self.rate.sleep()
 
 
     def wait_local_goal(self):
