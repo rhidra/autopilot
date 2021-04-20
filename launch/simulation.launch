@@ -74,7 +74,7 @@
     <param name="/local_planner/tf" value="1.2"/>
 
     <!-- Global planner -->
-    <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -dl">
+    <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -l">
         <param name="generate_edt" value="True"/>
     </node>
 </launch>
