@@ -31,6 +31,13 @@
     <param name="/goal/y" value="$(arg goal_y)"/>
     <param name="/goal/z" value="$(arg goal_z)"/>
 
+    <!-- Monitoring (0: not done, 1: success, 2: failure) -->
+    <param name="/autopilot/done" value="0"/>
+    <param name="/log/active" value="true"/>
+    <param name="/log/trialId" value="0"/>
+    <param name="/log/configId" value="0"/>
+    <param name="/log/mapId" value="0"/>
+
     <!-- World, vehicle and octomap configuration -->
     <arg name="world" default="test_zone"/>
     <arg name="vehicle" default="iris"/>
@@ -74,6 +81,7 @@
     <!-- Set EDT generation config -->
     <param name="/local_planner/generate_edt" value="True"/>
     <param name="/trajectory_sampler/generate_edt" value="False"/>
+    <param name="/logger/generate_edt" value="False"/>
 
     <!-- Tf parameter: Time to fly one primitive -->
     <param name="/local_planner/tf" value="1.2"/>
@@ -88,4 +96,7 @@
 
     <!-- Main navigation controller -->
     <node pkg="autopilot" type="sampler.py" name="sampler"/>
+
+    <!-- Logger -->
+    <node pkg="autopilot" type="logger.py" name="logger"/>
 </launch>

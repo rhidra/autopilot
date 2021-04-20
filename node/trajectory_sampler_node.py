@@ -99,12 +99,12 @@ class TrajectorySamplerNode(OctomapNode):
             self.rate.sleep()
 
         self.request_trajectory()
-        rospy.loginfo('Entering NAV_PAUSE mode')
 
         while not rospy.is_shutdown():
             if self.dist_from(self.goal_pos, vertical=False) < TOLERANCE_FROM_GOAL:
                 rospy.loginfo('Goal attained !')
                 rospy.loginfo('Mission done !')
+                rospy.set_param('/autopilot/done', 1)
                 break
 
             if self.trajectory is None and self.next_trajectory is None:
@@ -128,6 +128,8 @@ class TrajectorySamplerNode(OctomapNode):
 
                 if self.trajectory is None and self.next_trajectory is None:
                     rospy.logerr('No trajectory available !')
+                    if rospy.get_param('/autopilot/done', 0) == 2:
+                        break
                     self.rate.sleep()
                     continue
                 
