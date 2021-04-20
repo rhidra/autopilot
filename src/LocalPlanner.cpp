@@ -88,12 +88,14 @@ public:
         mpl.setEDT(edt);
         if (!mpl.optimize()) {
             ROS_ERROR("Cannot optimize a feasible trajectory !");
+            nh.setParam("/autopilot/done", 2);
             viz_pub.publish(vizMPL(mpl, i));
             exit(1);
         }
 
         MotionPrimitive traj = mpl.getTrajectory();
-        trajectory_pub.publish(traj.toMsg());
+        float generationTime = (ros::Time::now() - start).toNSec()/1000000.;
+        trajectory_pub.publish(traj.toMsg(generationTime));
 
         std::cout << "Trajectory generated in " << (ros::Time::now() - start).toNSec()/1000000. << " ms" << std::endl;
 

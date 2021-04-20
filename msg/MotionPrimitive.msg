@@ -6,4 +6,6 @@ geometry_msgs/Vector3 alpha
 geometry_msgs/Vector3 beta
 geometry_msgs/Vector3 gamma
 geometry_msgs/Vector3 gravity
+float32 cost
+float32 generationTime
 float32 tf

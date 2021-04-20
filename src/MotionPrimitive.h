@@ -87,7 +87,7 @@ public:
   //! Fix the acceleration at the end time in one axis. If not set, it is left free.
   void SetGoalAccelerationInAxis(const unsigned axNum, const double in){_axis[axNum].SetGoalAcceleration(in);};
 
-  autopilot::MotionPrimitive toMsg() const;
+  autopilot::MotionPrimitive toMsg(float generationTime) const;
 
   //! Reset the trajectory, clearing any end state constraints.
   void Reset(void);

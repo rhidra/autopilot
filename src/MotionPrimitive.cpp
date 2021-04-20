@@ -66,7 +66,7 @@ void MotionPrimitive::Generate(const double timeToFinish)
   }
 }
 
-autopilot::MotionPrimitive MotionPrimitive::toMsg() const {
+autopilot::MotionPrimitive MotionPrimitive::toMsg(float generationTime) const {
     autopilot::MotionPrimitive msg;
     msg.header.frame_id = "map";
     msg.header.stamp = ros::Time::now();
@@ -100,6 +100,9 @@ autopilot::MotionPrimitive MotionPrimitive::toMsg() const {
     msg.gravity.z = _grav[2];
 
     msg.tf = _tf;
+    msg.cost = _cost;
+    msg.generationTime = generationTime;
+
     return msg;
 }
 
