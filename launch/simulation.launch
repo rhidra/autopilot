@@ -31,12 +31,16 @@
     <param name="/goal/y" value="$(arg goal_y)"/>
     <param name="/goal/z" value="$(arg goal_z)"/>
 
-    <!-- Monitoring (0: not done, 1: success, 2: failure) -->
-    <param name="/autopilot/done" value="0"/>
-    <param name="/log/active" value="true"/>
-    <param name="/log/trialId" value="0"/>
-    <param name="/log/configId" value="0"/>
-    <param name="/log/mapId" value="0"/>
+    <!-- Monitoring -->
+    <arg name="monitoring" default="false"/>
+    <arg name="trialId" default="0"/>
+    <arg name="configId" default="0"/>
+    <arg name="mapId" default="0"/>
+    <param name="/autopilot/done" value="0"/> <!-- (0: not done, 1: success, 2: failure) -->
+    <param name="/log/active" value="$(arg monitoring)"/>
+    <param name="/log/trialId" value="$(arg trialId)"/>
+    <param name="/log/configId" value="$(arg configId)"/>
+    <param name="/log/mapId" value="$(arg mapId)"/>
 
     <!-- World, vehicle and octomap configuration -->
     <arg name="world" default="test_zone"/>
