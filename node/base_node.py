@@ -17,6 +17,7 @@ class BaseNode(object):
         self.vel = np.array([0, 0, 0])
         self.acc = np.array([0, 0, 0])
         self.yaw = 0.
+        self.local_position = None
         self.local_goal_point = None
         self.local_goal_direction = None
         self.start_pos = np.array([0,0,0])
@@ -88,6 +89,8 @@ class BaseNode(object):
     def local_velocity_cb(self, data):
         # Local velocity conversion to global frame
         self.local_velocity = data
+        if self.local_position is None:
+            return
         v = [self.local_velocity.twist.linear.x, self.local_velocity.twist.linear.y, self.local_velocity.twist.linear.z]
         q = [self.local_position.pose.orientation.w, self.local_position.pose.orientation.x, self.local_position.pose.orientation.y, self.local_position.pose.orientation.z]
         self.vel = np.array(rotate_by_quaternion(v, q))
