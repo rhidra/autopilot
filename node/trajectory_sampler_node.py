@@ -88,6 +88,7 @@ class TrajectorySamplerNode(OctomapNode):
 
     def execute_trajectory(self):
         self.wait_local_goal()
+        self.wait_for_armed()
         init_z = rospy.get_param('/start/z', default=1.)
 
         msg_yaw = Float32()
@@ -101,9 +102,6 @@ class TrajectorySamplerNode(OctomapNode):
         rospy.loginfo('Entering NAV_PAUSE mode')
 
         while not rospy.is_shutdown():
-            self.try_set_mode('OFFBOARD')
-            self.try_set_arm(True)
-
             if self.dist_from(self.goal_pos, vertical=False) < TOLERANCE_FROM_GOAL:
                 rospy.loginfo('Goal attained !')
                 rospy.loginfo('Mission done !')
@@ -154,3 +152,9 @@ class TrajectorySamplerNode(OctomapNode):
         print('Waiting for local goal instructions...')
         while (self.local_goal_point is None or self.local_goal_direction is None) and not rospy.is_shutdown():
             self.rate.sleep()
+    
+    def wait_for_armed(self):
+        print('Waiting for arming...')
+        while not self.state.armed or self.state.mode != 'OFFBOARD':
+            self.rate.sleep()
+        rospy.sleep(rospy.Duration(secs=1))
