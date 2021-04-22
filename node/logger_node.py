@@ -127,7 +127,7 @@ class LoggerNode(OctomapNode):
                 "trialId": self.trialId,
                 "configId": self.configId,
                 "mapId": self.mapId,
-                "start": [rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0)],
+                "start": [float(rospy.get_param('/start/x', 0)), float(rospy.get_param('/start/y', 0)), float(rospy.get_param('/start/z', 0))],
                 "goal": [self.goal_pos[0], self.goal_pos[1], self.goal_pos[2]],
                 "success": isSuccess,
                 "tf": self.tf,

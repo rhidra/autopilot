@@ -42,8 +42,8 @@ def main(argv):
     algo = None
     situation = 'test'
     save_stats, send_local, display = False, False, False
-    start_pos = [rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 1)]
-    goal = [rospy.get_param('/goal/x', 6), rospy.get_param('/goal/y', -7), rospy.get_param('/goal/z', 1)]
+    start_pos = [float(rospy.get_param('/start/x', 0)), float(rospy.get_param('/start/y', 0)), float(rospy.get_param('/start/z', 1))]
+    goal = [float(rospy.get_param('/goal/x', 6)), float(rospy.get_param('/goal/y', -7)), float(rospy.get_param('/goal/z', 1))]
 
     try:
         opts, _ = getopt.getopt(argv,'hb:e:p:t:sld',['help', 'begin=', 'end=', 'planning=', 'test=', 'stats', 'local', 'display'])

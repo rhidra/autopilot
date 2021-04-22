@@ -57,8 +57,8 @@ class BaseNode(object):
         self.position_raw_pub = rospy.Publisher('/mavros/setpoint_raw/local', PositionTarget, queue_size=10)
 
         # Params
-        self.start_pos = np.array([rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/init_z', 0)])
-        self.goal_pos = np.array([rospy.get_param('/goal/x', 6), rospy.get_param('/goal/y', -7), rospy.get_param('/goal/z', 1)])
+        self.start_pos = np.array([float(rospy.get_param('/start/x', 0)), float(rospy.get_param('/start/y', 0)), float(rospy.get_param('/start/init_z', 0))])
+        self.goal_pos = np.array([float(rospy.get_param('/goal/x', 6)), float(rospy.get_param('/goal/y', -7)), float(rospy.get_param('/goal/z', 1))])
         self.tf = float(rospy.get_param('/local_planner/tf', 1))
 
         self.isLogging = rospy.get_param('/log/active', False)

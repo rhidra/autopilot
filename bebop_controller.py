@@ -62,7 +62,7 @@ class BebopController:
         self.sub_state = rospy.Subscriber('/openvslam/camera_pose', PoseStamped, self.state_cb)
         self.sub_cmd = rospy.Subscriber('/reference/flatsetpoint', FlatTarget, self.cmd_pos_cb)
         self.sub_cmd = rospy.Subscriber('/reference/yaw', Float32, self.cmd_yaw_cb)
-        self.start_pos = np.array([rospy.get_param('/start/x', 0), rospy.get_param('/start/y', 0), rospy.get_param('/start/z', 0)])
+        self.start_pos = np.array([float(rospy.get_param('/start/x', 0)), float(rospy.get_param('/start/y', 0)), float(rospy.get_param('/start/z', 0))])
         self.rate = rospy.Rate(rate)
 
     def state_cb(self, msg):

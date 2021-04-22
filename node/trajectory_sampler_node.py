@@ -89,7 +89,7 @@ class TrajectorySamplerNode(OctomapNode):
     def execute_trajectory(self):
         self.wait_local_goal()
         self.wait_for_armed()
-        init_z = rospy.get_param('/start/z', default=1.)
+        init_z = float(rospy.get_param('/start/z', default=1.))
 
         msg_yaw = Float32()
         msg_yaw.data = np.arctan2(self.local_goal_point[1] - self.start_pos[1], self.local_goal_point[0] - self.start_pos[0])
