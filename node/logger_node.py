@@ -103,9 +103,16 @@ class LoggerNode(OctomapNode):
                 rospy.loginfo('Trajectory done successfully !')
                 self.writeData(True)
                 exit(0)
-            elif done == 2: # Failure
-                rospy.loginfo('Trajectory done unsuccessfully !')
-                self.writeData(False)
+            elif done == 2: # Local planner failure
+                rospy.loginfo('Trajectory generation failure !')
+                self.writeData(False, 'local_planner')
+                exit(0)
+            elif done == 3: # Global planner failure
+                rospy.loginfo('Path planning failure !')
+                self.writeData(False, 'global_planner')
+            elif done == 4: # Invalid map
+                rospy.loginfo('The map is invalid !')
+                self.writeData(False, 'invalid_map')
                 exit(0)
             self.rate.sleep()
 
@@ -118,8 +125,9 @@ class LoggerNode(OctomapNode):
             self.rate.sleep()
         print('Starts logging !')
 
-    def writeData(self, isSuccess):
-        totalTime = (rospy.Time.now() - self.start_traj_time).to_sec()
+    def writeData(self, isSuccess, failureType=''):
+        trajTime = (rospy.Time.now() - self.start_traj_time).to_sec()
+        nodeTime = (rospy.Time.now() - self.start_node_time).to_sec()
 
         with open('/home/rhidra/research_data/test_m{}_c{}_t{}.json'.format(self.mapId, self.configId, self.trialId), 'w') as f:
             rospy.loginfo('Writing data')
@@ -130,8 +138,10 @@ class LoggerNode(OctomapNode):
                 "start": [float(rospy.get_param('/start/x', 0)), float(rospy.get_param('/start/y', 0)), float(rospy.get_param('/start/z', 0))],
                 "goal": [self.goal_pos[0], self.goal_pos[1], self.goal_pos[2]],
                 "success": isSuccess,
+                "failureType": failureType,
                 "tf": self.tf,
-                "totalTime": totalTime,
+                "trajTime": trajTime,
+                "nodeTime": nodeTime,
                 "trajs": self.trajs,
 
                 "time": self.log_time,

@@ -23,10 +23,20 @@ def start(planning_algo, algo_name, start_pos, goal, situation, save_stats=False
 
     # Global Path planning
     rospy.loginfo('Start global path planning...')
-    # path, processing_time = planning_algo(node, [0, 0, 1], [-6, -7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
-    path, processing_time = planning_algo(node, start_pos, goal, world_dim=[-25, 25, -25, 25, 0, 4], display=display)
-    # path, processing_time = planning_algo(node, [0, 0, 1], [0, -7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
-    # path, processing_time = planning_algo(node, [0, 0, 1], [0, 7, 1], world_dim=[-20, 20, -10, 10, 0, 3], display=display)
+
+    try:
+        path, processing_time = planning_algo(node, start_pos, goal, world_dim=[-20, 20, -20, 20, 0, 4], display=display)
+    except ValueError as e:
+        # No path found
+        rospy.logerr(e)
+        rospy.set_param('/autopilot/done', 3)
+        exit(1)
+    except AssertionError as e:
+        # The goal is not valid
+        rospy.logerr(e)
+        rospy.set_param('/autopilot/done', 4)
+        exit(1)
+    
     rospy.loginfo('Global path found !')
 
     node.load_local_path(path)

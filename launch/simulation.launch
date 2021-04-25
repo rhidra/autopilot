@@ -36,7 +36,7 @@
     <arg name="trialId" default="0"/>
     <arg name="configId" default="0"/>
     <arg name="mapId" default="0"/>
-    <param name="/autopilot/done" value="0"/> <!-- (0: not done, 1: success, 2: failure) -->
+    <param name="/autopilot/done" value="0"/> <!-- (0: not done, 1: success, 2: failure local planner, 3: failure global planner, 4: invalid map) -->
     <param name="/log/active" value="$(arg monitoring)"/>
     <param name="/log/trialId" value="$(arg trialId)"/>
     <param name="/log/configId" value="$(arg configId)"/>
