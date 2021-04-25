@@ -45,12 +45,18 @@ def main():
                                 'mapId:={}'.format(mapId)])
         pid = proc.pid
 
+        print('*'*30)
         print('Pipeline launched for trialId: {} | configId: {} | mapId: {}'.format(trialId, configId, mapId))
+        print('*'*30)
 
+        start = time.time()
         while not os.path.exists('/home/rhidra/research_data/{}'.format(filename)):
+            if time.time() > start + 5 * 60:
+                print('****** TIMEOUT ******')
+                break
             time.sleep(5)
 
-        print('Pipeline completed. Killing roslaunch...')
+        print('Killing roslaunch...')
         os.kill(pid, signal.SIGINT)
         time.sleep(15)
 
