@@ -92,9 +92,10 @@ class TrajectorySamplerNode(OctomapNode):
         init_z = float(rospy.get_param('/start/z', default=1.))
 
         msg_yaw = Float32()
-        msg_yaw.data = np.arctan2(self.local_goal_point[1] - self.start_pos[1], self.local_goal_point[0] - self.start_pos[0])
-        for _ in range(RATE*2):
+        yaw = np.arctan2(self.local_goal_point[1] - self.start_pos[1], self.local_goal_point[0] - self.start_pos[0])
+        for i in range(RATE*3):
             self.traj_tracking_pub.publish(build_traj_tracker(pos=[0., 0., init_z]))
+            msg_yaw.data = min(yaw * i/(RATE*2.7), yaw)
             self.yaw_tracking_pub.publish(msg_yaw)
             self.rate.sleep()
 
