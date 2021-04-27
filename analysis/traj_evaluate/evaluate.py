@@ -59,7 +59,7 @@ def main():
 
         print('Killing roslaunch...')
         os.kill(pid, signal.SIGINT)
-        time.sleep(5)
+        time.sleep(15)
 
 
 if __name__ == '__main__':
