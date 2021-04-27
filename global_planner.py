@@ -2,7 +2,7 @@
 from node import LocalGoalNode
 import rospy, numpy as np, sys, getopt
 from evaluation import evaluate_path
-from planning import dummy_path, main_rrt_star, main_a_star, main_rrt_star_without_optim, main_theta_star, main_phi_star
+from planning import dummy_path, main_rrt_star, main_a_star, main_rrt_star_without_optim, main_theta_star, main_phi_star, NoPathFound
 
 help = """
 Usage: python global_planner.py -p <algo> -d
@@ -26,13 +26,15 @@ def start(planning_algo, algo_name, start_pos, goal, situation, save_stats=False
 
     try:
         path, processing_time = planning_algo(node, start_pos, goal, world_dim=[-20, 20, -20, 20, 0, 4], display=display)
-    except ValueError as e:
+    except NoPathFound as e:
         # No path found
+        rospy.logerr('No path found')
         rospy.logerr(e)
         rospy.set_param('/autopilot/done', 3)
         exit(1)
     except AssertionError as e:
         # The goal is not valid
+        rospy.logerr('Configuration not valid')
         rospy.logerr(e)
         rospy.set_param('/autopilot/done', 4)
         exit(1)

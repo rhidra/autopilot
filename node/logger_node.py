@@ -99,6 +99,7 @@ class LoggerNode(OctomapNode):
             self.log_time.append(self.now())
 
             done = rospy.get_param('/autopilot/done', 0)
+            print('status: {}'.format(done))
             if done == 1: # Success
                 rospy.loginfo('Trajectory done successfully !')
                 self.writeData(True)
@@ -119,9 +120,9 @@ class LoggerNode(OctomapNode):
 
     def wait(self):
         print('Waiting until ready...')
-        while (self.local_goal_point is None or self.local_goal_direction is None) and not rospy.is_shutdown():
+        while (self.local_goal_point is None or self.local_goal_direction is None) and not rospy.is_shutdown() and not rospy.get_param('/autopilot/done', 0) != 0:
             self.rate.sleep()
-        while not self.state.armed or self.state.mode != 'OFFBOARD':
+        while (not self.state.armed or self.state.mode != 'OFFBOARD') and not rospy.get_param('/autopilot/done', 0) != 0:
             self.rate.sleep()
         print('Starts logging !')
 
