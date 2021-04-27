@@ -13,6 +13,9 @@ def trialGenerator():
                 start = [float(row[2]), float(row[3]), float(row[4])]
                 goal = [float(row[5]), float(row[6]), float(row[7])]
 
+                if mapId == 2:
+                    raise StopIteration
+
                 for i in range(N_TRIAL):
                     yield i, configId, mapId, start, goal
 
@@ -21,27 +24,34 @@ def trialGenerator():
 
 def main():
     success = np.zeros(100*2)
-    failure = np.zeros(100*2)
-    empty = np.zeros(100*2)
+    failureLocal = np.zeros(100*2)
+    failureGlobal = np.zeros(100*2)
+    failureMap = np.zeros(100*2)
+    invalid = np.zeros(100*2)
 
     for trialId, configId, mapId, start, goal in trialGenerator():
         filename = 'test_m{}_c{}_t{}.json'.format(mapId, configId, trialId)
         path = '/home/rhidra/research_data/{}'.format(filename)
 
-        if not os.path.exists(path):
-            # success[configId] = -1
-            continue
-
         i = mapId * 100 + configId
-        
+
+        if not os.path.exists(path):
+            invalid[i] += 1
+            continue
         
         try:
             with open(path, 'r') as f:
                 data = json.load(f)
                 if data['success']:
                     success[i] += 1
+                elif data['failureType'] == 'local_planner':
+                    failureLocal[i] += 1
+                elif data['failureType'] == 'global_planner':
+                    failureGlobal[i] += 1
+                elif data['failureType'] == 'invalid_map':
+                    failureMap[i] += 1
                 else:
-                    failure[i] += 1
+                    invalid[i] += 1
                 print('\rAnalysing: [trialId: {:3} | configId: {:3} | mapId: {:3}]'.format(trialId, configId, mapId), end='')
         except Exception as e:
             print('\r', end='')
@@ -49,12 +59,9 @@ def main():
             print('Error:     [trialId: {:3} | configId: {:3} | mapId: {:3}]'.format(trialId, configId, mapId))
             print(e)
             print('*'*10)
-            empty[i] += 1
-            # success[configId] = -1
+            invalid[i] += 1
             continue
-    np.save('save2_success.npy', success)
-    np.save('save2_failure.npy', failure)
-    np.save('save2_empty.npy', empty)
+    np.save('save2.npy', (success, failureLocal, failureGlobal, failureMap, invalid))
 
 
 if __name__ == '__main__':
