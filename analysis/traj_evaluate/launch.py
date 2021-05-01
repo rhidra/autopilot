@@ -52,7 +52,7 @@ def main(expectedMapId, expectedConfigId):
         print('*'*30, end='\n'*5)
 
         start = time.time()
-        while time.time() <= start + 2 * 60:
+        while True:
             time.sleep(5)
 
         print('\n\n\n*********** TIMEOUT ***********\n\n\n')

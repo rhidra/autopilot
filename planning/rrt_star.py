@@ -5,6 +5,8 @@ from smoothing import over_sampling, filter_path, bezier
 
 # Radius of closeness for rerouting a node
 NEIGHBOR_RADIUS = 2
+
+# Resolution of the grid
 INCREMENT_DISTANCE = .7
 
 MAX_ITERATIONS = 100000
