@@ -211,11 +211,9 @@ def phi_star(ros_node, start, goal, world_dim, display=True):
 # Move the goal or start position to a more appropriate one, further from the obstacles
 def make_valid_point(ros_node, point, world_dim):
     # Move the goal by this distance
-    print('For goal: {}'.format(point))
     for d in np.arange(.1, 1.5, .1):
         l = []
         for yaw in np.arange(0, 2 * np.pi, 2*np.pi/16.):
-            print('d={} | yaw={}'.format(d, yaw))
             new_point = np.array([d * np.cos(yaw) + point[0], d * np.sin(yaw) + point[1], point[2]])
             c = ros_node.get_point_edt(new_point, UAV_THICKNESS)
             if  c > GOAL_SAFETY_MARGIN and \
