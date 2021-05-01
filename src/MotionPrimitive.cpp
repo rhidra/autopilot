@@ -132,6 +132,7 @@ double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, Dynami
         return _cost;
     }
 
+    // Final point distance cost
     double Eep = (goalPoint - pf).GetNorm2();
     // std::cout << " Eep:" << Eep;
 
@@ -139,7 +140,7 @@ double MotionPrimitive::GetCost(const Vec3 goalPoint, const Vec3 goalDir, Dynami
     double Edir = (vfUnit - goalDir).GetNorm2();
     // std::cout << " Edir:" << Edir;
 
-    _cost = 5.2 * Eep + .05 * Ec + 2 * Edir;
+    _cost = 5 * Eep + .1 * Ec + 1 * Edir;
     // std::cout << "| Cost: " << _cost << std::endl;
     return _cost;
 }
