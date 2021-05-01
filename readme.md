@@ -207,22 +207,6 @@ cd src/autopilot
 catkin build --this
 ```
 
-## Launch simulation
-
-To launch all necessary nodes, a launch file is available in `autopilot/launch/simulation.launch`.
-It launches ROS, MAVROS, PX4, Gazebo and the Octomap server using a `.bt` file.
-It also start Rviz with the `./config.rviz` configuration file, to visualize the octomap and the algorithms.
-The `/autopilot/viz/global` and `/autopilot/viz/local` topics are used by the autopilot to display data on Rviz.
-You can also specify a vehicle, and a starting position.
-```shell script
-roslaunch autopilot simulation.launch vehicle:=iris world:=test_zone
-```
-
-You should also provide a starting position (`x`, `y`, `z`) and a goal position (`goal_x`, `goal_y`, `goal_z`). 
-```shell script
-roslaunch autopilot simulation.launch x:=0 y:=0 goal_x:=5 goal_y:=-7.5
-```
-
 ## Use a Bebop UAV
 
 To use a Bebop as the autonomous UAV, you first need to make a map of the environment.
@@ -235,6 +219,26 @@ Once done, the OpenVSLAM creates a map database, located be default at `autopilo
 You can now run the autopilot in fly mode, with `roslaunch autopilot fly.launch`.
 It launches the Bebop driver, the OpenVSLAM localization module, the image processing bridge module,
 the Rviz visualization tool and the octomap server.
+
+## Launch simulation
+
+To launch all necessary nodes, a launch file is available in `autopilot/launch/simulation.launch`.
+It launches ROS, MAVROS, PX4, Gazebo, the Octomap server using a `.bt` file, the MAVROS trajectory tracker and the autopilot.
+It also start Rviz with the `./config.rviz` configuration file, to visualize the octomap and the algorithms.
+The `/autopilot/viz/global` and `/autopilot/viz/local` topics are used by the autopilot to display data on Rviz.
+You can also specify a vehicle, and a starting position.
+```shell script
+roslaunch autopilot simulation.launch vehicle:=iris world:=test_zone
+```
+
+You should also provide a starting position (`x`, `y`, `z`) and a goal position (`goal_x`, `goal_y`, `goal_z`). 
+```shell script
+roslaunch autopilot simulation.launch x:=0 y:=0 goal_x:=5 goal_y:=-7.5
+```
+
+The autopilot launched is made of a global planner, a local planner, a trajectory sampler, and some various
+utility nodes, like a small rostopic publisher to initialize the trajectory tracker, an `offset_poses` node to
+pre-process some data for Rviz and a logger node used in case of monitoring for testing.
 
 ## Autopilot
 
