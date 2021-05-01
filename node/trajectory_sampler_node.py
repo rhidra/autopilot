@@ -91,11 +91,12 @@ class TrajectorySamplerNode(OctomapNode):
         self.wait_for_armed()
         init_z = float(rospy.get_param('/start/z', default=1.))
 
+        # Initialize the UAV to the starting position, with a linear control for the yaw to avoid a sharp move
         msg_yaw = Float32()
         yaw = np.arctan2(self.local_goal_point[1] - self.start_pos[1], self.local_goal_point[0] - self.start_pos[0])
         for i in range(RATE*3):
             self.traj_tracking_pub.publish(build_traj_tracker(pos=[0., 0., init_z]))
-            msg_yaw.data = min(yaw * i/(RATE*2.7), yaw)
+            msg_yaw.data = yaw * min(i / (RATE*2.7), 1.)
             self.yaw_tracking_pub.publish(msg_yaw)
             self.rate.sleep()
 
