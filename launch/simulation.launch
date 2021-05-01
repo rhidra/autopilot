@@ -91,15 +91,15 @@
     <param name="/local_planner/tf" value="1.2"/>
 
     <!-- Global planner -->
-    <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -l">
+    <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -l" output="screen">
         <param name="generate_edt" value="True"/>
     </node>
 
     <!-- Local planner -->
-    <node pkg="autopilot" type="local_planner" name="local_planner"/>
+    <node pkg="autopilot" type="local_planner" name="local_planner" output="screen"/>
 
     <!-- Main navigation controller -->
-    <node pkg="autopilot" type="sampler.py" name="sampler"/>
+    <node pkg="autopilot" type="sampler.py" name="sampler" output="screen"/>
 
     <!-- Logger -->
     <node pkg="autopilot" type="logger.py" name="logger"/>

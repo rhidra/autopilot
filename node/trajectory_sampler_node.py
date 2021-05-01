@@ -153,12 +153,12 @@ class TrajectorySamplerNode(OctomapNode):
 
 
     def wait_local_goal(self):
-        print('Waiting for local goal instructions...')
+        print('Sampler waiting for local goal instructions...')
         while (self.local_goal_point is None or self.local_goal_direction is None) and not rospy.is_shutdown():
             self.rate.sleep()
     
     def wait_for_armed(self):
-        print('Waiting for arming...')
+        print('Sampler waiting for arming...')
         while not self.state.armed or self.state.mode != 'OFFBOARD':
             self.rate.sleep()
         rospy.sleep(rospy.Duration(secs=1))
