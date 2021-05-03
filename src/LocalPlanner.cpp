@@ -52,11 +52,11 @@ public:
 
         if (generateEDT) {
             ROS_INFO("Generating EDT...");
-            double x,y,z;
-            tree->getMetricMin(x,y,z);
-            octomap::point3d min(x,y,z);
-            tree->getMetricMax(x,y,z);
-            octomap::point3d max(x,y,z);
+            // double x,y,z;
+            // tree->getMetricMin(x,y,z);
+            octomap::point3d min(-25., -25., 0.);
+            // tree->getMetricMax(x,y,z);
+            octomap::point3d max(25., 25., 3.);
 
             edt = new DynamicEDTOctomap(1.0, tree, min, max, false);
             edt->update(true);

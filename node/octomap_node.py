@@ -38,8 +38,10 @@ class OctomapNode(VisualizationNode):
         # Euclidean Distance Transform generation
         if self.generateEDT:
             print('Generating EDT...')
-            bbmin = self.octree.getMetricMin() - 2
-            bbmax = self.octree.getMetricMax() + 2
+            # bbmin = self.octree.getMetricMin() - 2
+            # bbmax = self.octree.getMetricMax() + 2
+            bbmin = np.array([-25, -25, 0], dtype=np.double)
+            bbmax = np.array([25, 25, 3], dtype=np.double)
             self.octree.dynamicEDT_generate(50, bbmin, bbmax)
             # The update computes distances in real unit (with sqrt)
             # This step can be faster if we use squared distances instead
