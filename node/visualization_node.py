@@ -31,7 +31,7 @@ class VisualizationNode(BaseNode):
         if len(path) > 0:
             marker_array.markers.append(viz_path(path))
             for i, pt in enumerate(path):
-                m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.3)
+                m = viz_point(pt, color=(0, 1, 1), id=10 + i, size=.1)
                 self.temp_marker.append(m)
                 marker_array.markers.append(m)
         if len(path2) > 0:
@@ -39,15 +39,15 @@ class VisualizationNode(BaseNode):
         if len(nodes) > 0:
             marker_array.markers.append(viz_nodes(nodes))
             for i, node in enumerate(nodes):
-                m = viz_point(node.pos, color=(0, 1, .5), id=100 + i, size=.1)
+                m = viz_point(node.pos, color=(0, 1, .5), id=100 + i, size=.05)
                 self.temp_marker.append(m)
                 marker_array.markers.append(m)
         if start is not None:
-            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0, size=.6))
+            marker_array.markers.append(viz_point(start, color=(0, 1, 0), id=0, size=.3))
         if goal is not None:
-            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1, size=.6))
+            marker_array.markers.append(viz_point(goal, color=(0, 0, 1), id=1, size=.3))
         if point is not None:
-            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2, size=.6))
+            marker_array.markers.append(viz_point(point, color=(1, 0, 1), id=2, size=.3))
 
         self.viz_global_pub.publish(marker_array)
 
@@ -98,7 +98,7 @@ class VisualizationNode(BaseNode):
         self.viz_local_pub.publish(marker_array)
 
 
-def viz_path(path, color=(0, 1, 0), id=0, width=.13, alpha=1, ns=''):
+def viz_path(path, color=(0, 1, 0), id=0, width=.06, alpha=1, ns=''):
     marker = Marker()
     marker.header.frame_id = '/map'
     marker.header.stamp = rospy.Time.now()
