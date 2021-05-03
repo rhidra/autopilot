@@ -61,7 +61,7 @@ def main():
             print('*'*10)
             invalid[i] += 1
             continue
-    np.save('save3.npy', (success, failureLocal, failureGlobal, failureMap, invalid))
+    np.save('save4.npy', (success, failureLocal, failureGlobal, failureMap, invalid))
 
 
 if __name__ == '__main__':
