@@ -11,7 +11,7 @@ INCREMENT_DISTANCE = .4
 H_COST_WEIGHT = 1.8
 
 # Max tolerable distance between the goal/start and an obstacle (without the size of the UAV) 
-GOAL_SAFETY_MARGIN = .1
+GOAL_SAFETY_MARGIN = .15
 
 # Global variables
 openset = set()
@@ -211,9 +211,9 @@ def phi_star(ros_node, start, goal, world_dim, display=True):
 # Move the goal or start position to a more appropriate one, further from the obstacles
 def make_valid_point(ros_node, point, world_dim):
     # Move the goal by this distance
-    for d in np.arange(.1, 1.5, .1):
+    for d in np.arange(.1, 2.5, .1):
         l = []
-        for yaw in np.arange(0, 2 * np.pi, 2*np.pi/16.):
+        for yaw in np.arange(0, 2 * np.pi, 2*np.pi/100.):
             new_point = np.array([d * np.cos(yaw) + point[0], d * np.sin(yaw) + point[1], point[2]])
             c = ros_node.get_point_edt(new_point, UAV_THICKNESS)
             if  c > GOAL_SAFETY_MARGIN and \
