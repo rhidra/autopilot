@@ -1,6 +1,7 @@
 import csv, time, os, signal, json, numpy as np, matplotlib.pyplot as plt
 
 N_TRIAL = 10
+N_MAPS = 10
 
 def trialGenerator():
     with open('/home/rhidra/forest_gen/start_and_end.csv', 'r') as f:
@@ -13,7 +14,7 @@ def trialGenerator():
                 start = [float(row[2]), float(row[3]), float(row[4])]
                 goal = [float(row[5]), float(row[6]), float(row[7])]
 
-                if mapId == 2:
+                if mapId > N_MAPS - 1:
                     raise StopIteration
 
                 for i in range(N_TRIAL):
@@ -23,11 +24,11 @@ def trialGenerator():
             print(e)
 
 def main():
-    success = np.zeros(100*2)
-    failureLocal = np.zeros(100*2)
-    failureGlobal = np.zeros(100*2)
-    failureMap = np.zeros(100*2)
-    invalid = np.zeros(100*2)
+    success = np.zeros(100 * N_MAPS)
+    failureLocal = np.zeros(100 * N_MAPS)
+    failureGlobal = np.zeros(100 * N_MAPS)
+    failureMap = np.zeros(100 * N_MAPS)
+    invalid = np.zeros(100 * N_MAPS)
 
     for trialId, configId, mapId, start, goal in trialGenerator():
         filename = 'test_m{}_c{}_t{}.json'.format(mapId, configId, trialId)
