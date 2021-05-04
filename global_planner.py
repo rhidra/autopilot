@@ -26,6 +26,7 @@ def start(planning_algo, algo_name, start_pos, goal, situation, save_stats=False
 
     try:
         path, processing_time = planning_algo(node, start_pos, goal, world_dim=[-20, 20, -20, 20, 0, 4], display=display)
+        path[-1][0], path[-1][1], path[-1][2] = goal[0], goal[1], goal[2]
     except NoPathFound as e:
         # No path found
         rospy.logerr('No path found')
