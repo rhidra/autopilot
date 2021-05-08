@@ -101,7 +101,8 @@ def find_path(ros_node, start, goal, grid, world_dim, openset=set(), closedset=s
         openset.add(start)
 
     i = 0
-    while openset and min(map(lambda o: o.G + H_COST_WEIGHT * o.H, openset)) < goal.G + H_COST_WEIGHT * goal.H:
+    startTime = time.time()
+    while openset and min(map(lambda o: o.G + H_COST_WEIGHT * o.H, openset)) < goal.G + H_COST_WEIGHT * goal.H and time.time() - startTime <= 60*1.7:
         i = i + 1
         current = min(openset, key=lambda o: o.G + H_COST_WEIGHT * o.H)
 
