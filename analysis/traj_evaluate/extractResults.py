@@ -63,6 +63,7 @@ def main():
             invalid[i] += 1
             continue
     np.save('save4.npy', (success, failureLocal, failureGlobal, failureMap, invalid))
+    print()
 
 
 if __name__ == '__main__':
