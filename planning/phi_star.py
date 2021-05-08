@@ -41,7 +41,7 @@ def children(node, ros_node, world_dim, grid, crossbar=True, checkLOS=True):
                 child = Node(c)
                 grid[cell[0], cell[1], cell[2]] = child
             
-            if not checkLOS or not ros_node.cast_ray(node.pos, c, radius=UAV_THICKNESS)[0]:
+            if not checkLOS or not ros_node.cast_ray(node.pos, child.pos, radius=UAV_THICKNESS)[0]:
                 children.append(child)
     return children
 
@@ -173,6 +173,7 @@ def phi_star(ros_node, start, goal, world_dim, display=True):
     grid = np.full(grid_shape, None)
     cells = pointToCell(start, world_dim, grid.shape, INCREMENT_DISTANCE)
     cellg = pointToCell(goal, world_dim, grid.shape, INCREMENT_DISTANCE)
+
     grid[cells[0],cells[1],cells[2]], grid[cellg[0],cellg[1],cellg[2]] = Node(start), Node(goal)
     start, goal = grid[cells[0],cells[1],cells[2]], grid[cellg[0],cellg[1],cellg[2]]
 
