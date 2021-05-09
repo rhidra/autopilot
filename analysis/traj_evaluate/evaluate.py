@@ -15,6 +15,9 @@ def trialGenerator():
                 start = [float(row[2]), float(row[3]), float(row[4])]
                 goal = [float(row[5]), float(row[6]), float(row[7])]
 
+                if mapId != 4:
+                    continue
+                
                 if mapId > N_MAPS - 1:
                     print('Reached mapId: {}'.format(mapId))
                     print('Exiting')
