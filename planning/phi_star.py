@@ -5,13 +5,16 @@ from utils import dist, Node_phistar as Node, UAV_THICKNESS, pointToCell, NoPath
 
 
 # Grid resolution
-INCREMENT_DISTANCE = .4
+INCREMENT_DISTANCE = .2
 
 # F(s) = G(s) + H_COST_WEIGHT * H(s)
-H_COST_WEIGHT = 1.8
+H_COST_WEIGHT = 3
 
 # Max tolerable distance between the goal/start and an obstacle (without the size of the UAV) 
 GOAL_SAFETY_MARGIN = .15
+
+# Cost of the heuristic distance in the Z axis
+W_Z = 10
 
 # Global variables
 openset = set()
@@ -117,7 +120,7 @@ def find_path(ros_node, start, goal, grid, world_dim, openset=set(), closedset=s
 
             if node not in openset:
                 node.reset()
-                node.H = dist(node, goal)
+                node.H = dist(node, goal, w_z=W_Z)
                 openset.add(node)
             
             updateVertex(ros_node, current, node, grid, world_dim)

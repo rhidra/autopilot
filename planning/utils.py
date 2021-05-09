@@ -58,14 +58,14 @@ def random_position(world_dim):
     return [rand(xmin, xmax), rand(ymin, ymax), rand(zmin, zmax)]
 
 
-def dist(p1, p2, sqrt=True):
+def dist(p1, p2, sqrt=True, w_z=1.):
     if p1 is None or p2 is None:
         return float('inf')
 
     p1 = p1.pos if isinstance(p1, Node) else p1
     p2 = p2.pos if isinstance(p2, Node) else p2
 
-    sqr = (p1[0] - p2[0])**2 + (p1[1]-p2[1])**2 + (p1[2]-p2[2])**2
+    sqr = (p1[0] - p2[0])**2 + (p1[1]-p2[1])**2 + (w_z * (p1[2]-p2[2]))**2
     return math.sqrt(sqr) if sqrt else sqr
 
 
