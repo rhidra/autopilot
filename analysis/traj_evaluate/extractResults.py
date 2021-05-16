@@ -62,7 +62,7 @@ def main():
             print('*'*10)
             invalid[i] += 1
             continue
-    np.save('save5.npy', (success, failureLocal, failureGlobal, failureMap, invalid))
+    np.save('save6.npy', (success, failureLocal, failureGlobal, failureMap, invalid))
     print()
 
 
