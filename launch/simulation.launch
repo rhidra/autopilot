@@ -67,7 +67,7 @@
     <node pkg="autopilot" type="offset_poses" name="offset_poses"></node>
 
     <!-- Rviz visualization tool -->
-    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find autopilot)/config.rviz"></node> -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find autopilot)/config.rviz"></node>
 
     <!-- Trajectory tracker -->  
     <node pkg="geometric_controller" type="geometric_controller_node" name="geometric_controller" output="screen">
