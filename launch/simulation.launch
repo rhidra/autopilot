@@ -32,10 +32,10 @@
     <param name="/goal/z" value="$(arg goal_z)"/>
 
     <!-- World dimensions for global planner and EDT computation -->
-    <param name="/world/x/min" value="-25"/>
-    <param name="/world/x/max" value="25"/>
-    <param name="/world/y/min" value="-25"/>
-    <param name="/world/y/max" value="25"/>
+    <param name="/world/x/min" value="-27"/>
+    <param name="/world/x/max" value="27"/>
+    <param name="/world/y/min" value="-27"/>
+    <param name="/world/y/max" value="27"/>
     <param name="/world/z/min" value="0"/>
     <param name="/world/z/max" value="4"/>
 
