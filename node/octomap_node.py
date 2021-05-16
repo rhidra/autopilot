@@ -40,8 +40,8 @@ class OctomapNode(VisualizationNode):
             print('Generating EDT...')
             # bbmin = self.octree.getMetricMin() - 2
             # bbmax = self.octree.getMetricMax() + 2
-            bbmin = np.array([-25, -25, 0], dtype=np.double)
-            bbmax = np.array([25, 25, 3], dtype=np.double)
+            bbmin = np.array([rospy.get_param('/world/x/min', -20) - 5, rospy.get_param('/world/y/min', -20) - 5, rospy.get_param('/world/z/min', 0)], dtype=np.double)
+            bbmax = np.array([rospy.get_param('/world/x/max', 20) + 5, rospy.get_param('/world/y/max', 20) + 5, rospy.get_param('/world/z/max', 4)], dtype=np.double)
             self.octree.dynamicEDT_generate(50, bbmin, bbmax)
             # The update computes distances in real unit (with sqrt)
             # This step can be faster if we use squared distances instead

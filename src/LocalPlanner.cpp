@@ -25,6 +25,7 @@ private:
     ros::Publisher viz_pub;
     DynamicEDTOctomap* edt;
     double tf;
+    double xmin, xmax, ymin, ymax, zmin, zmax;
     int i;
 
 public:
@@ -32,6 +33,12 @@ public:
         i = 0;
         nh.param<bool>("/local_planner/generate_edt", generateEDT, true);
         nh.param<double>("/local_planner/tf", tf, 1);
+        nh.param<double>("/world/x/min", xmin, -20);
+        nh.param<double>("/world/x/max", xmax, 20);
+        nh.param<double>("/world/y/min", ymin, -20);
+        nh.param<double>("/world/y/max", ymax, 20);
+        nh.param<double>("/world/z/min", zmin, 0);
+        nh.param<double>("/world/z/max", zmax, 4);
 
         ros::Subscriber octomap_sub = nh.subscribe("/octomap_binary", 10, &LocalPlanner::octomap_cb, this);
         ros::Subscriber trajectory_sub = nh.subscribe("/autopilot/trajectory/request", 10, &LocalPlanner::sendTrajectory, this);
@@ -54,9 +61,9 @@ public:
             ROS_INFO("Generating EDT...");
             // double x,y,z;
             // tree->getMetricMin(x,y,z);
-            octomap::point3d min(-25., -25., 0.);
+            octomap::point3d min(xmin, ymin, zmin);
             // tree->getMetricMax(x,y,z);
-            octomap::point3d max(25., 25., 3.);
+            octomap::point3d max(xmax, ymax, zmax);
 
             edt = new DynamicEDTOctomap(1.0, tree, min, max, false);
             edt->update(true);

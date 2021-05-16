@@ -21,11 +21,17 @@ def start(planning_algo, algo_name, start_pos, goal, situation, save_stats=False
     node = LocalGoalNode(node_name='global_planner')
     node.setup()
 
+    world_dim = [
+        rospy.get_param('/world/x/min', -20), rospy.get_param('/world/x/max', 20),
+        rospy.get_param('/world/y/min', -20), rospy.get_param('/world/y/max', 20),
+        rospy.get_param('/world/z/min', 0), rospy.get_param('/world/z/max', 4),
+    ]
+
     # Global Path planning
     rospy.loginfo('Start global path planning...')
 
     try:
-        path, processing_time = planning_algo(node, start_pos, goal, world_dim=[-20, 20, -20, 20, 0, 4], display=display)
+        path, processing_time = planning_algo(node, start_pos, goal, world_dim=world_dim, display=display)
         path[-1][0], path[-1][1], path[-1][2] = goal[0], goal[1], goal[2]
     except NoPathFound as e:
         # No path found

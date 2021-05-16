@@ -11,7 +11,7 @@
     <!-- Goal position -->
     <arg name="goal_x" default="0"/>
     <arg name="goal_y" default="-7"/>
-    <arg name="goal_z" default="2"/>
+    <arg name="goal_z" default="1"/>
 
     <!-- 
         Override the z pose given to MAVROS to spawn the UAV (default: 0)
@@ -30,6 +30,14 @@
     <param name="/goal/x" value="$(arg goal_x)"/>
     <param name="/goal/y" value="$(arg goal_y)"/>
     <param name="/goal/z" value="$(arg goal_z)"/>
+
+    <!-- World dimensions for global planner and EDT computation -->
+    <param name="/world/x/min" value="-20"/>
+    <param name="/world/x/max" value="20"/>
+    <param name="/world/y/min" value="-20"/>
+    <param name="/world/y/max" value="20"/>
+    <param name="/world/z/min" value="0"/>
+    <param name="/world/z/max" value="4"/>
 
     <!-- Monitoring -->
     <arg name="monitoring" default="false"/>
