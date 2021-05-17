@@ -2,6 +2,8 @@
 import rospy, math, octomap, numpy as np
 from visualization_node import VisualizationNode
 from octomap_msgs.msg import Octomap
+from std_msgs.msg import Empty
+from autopilot.msg import BoundingBox
 
 
 class OctomapNode(VisualizationNode):
@@ -10,7 +12,6 @@ class OctomapNode(VisualizationNode):
         self.octree = octomap.OcTree(0.1)
         self.collision_check = 0
         self.generateEDT = True
-        self.init_octomap = False
 
 
     def setup(self):
@@ -18,6 +19,7 @@ class OctomapNode(VisualizationNode):
         self.generateEDT = rospy.get_param('/{}/generate_edt'.format(self.node_name), True)
         self.computeOctomapDiff = rospy.get_param('/{}/octomap_diff'.format(self.node_name), False)
         self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
+        self.octomap_update_sub = rospy.Subscriber('/autopilot/octomap_update', BoundingBox, self.octomap_update_cb)
         self.rate.sleep()
 
 
@@ -35,34 +37,10 @@ class OctomapNode(VisualizationNode):
         # header. We did not find a way to extract the tree size from the octomap msg
         tree = octomap.OcTree(self.octomap.resolution)
         tree.readBinary(s)
-
-        if self.init_octomap and (self.computeOctomapDiff or True):
-            # If we receive new data from an updated octomap, we compute the difference
-            # It is then transmitted to the global planning algorithm
-            occupancyThreshold = tree.getOccupancyThres()
-            diff = []
-
-            for i in tree.begin_tree():
-                if i.getOccupancy() >= occupancyThreshold:
-                    pt = i.getCoordinate()
-                    node = self.octree.search(pt)
-                    try:
-                        prevOccupied = self.octree.isNodeOccupied(node)
-                    except octomap.NullPointerException:
-                        prevOccupied = False
-                    if not prevOccupied:
-                        print(pt)
-                    
-                    if not prevOccupied:
-                        diff.append([pt[0], pt[1], pt[2]])
-            diff = np.array(diff)
-            print(diff.shape, diff)
-
-        self.init_octomap = True
         self.octree = tree
 
         # Euclidean Distance Transform generation
-        if self.generateEDT and False:
+        if self.generateEDT:
             print('Generating EDT...')
             # bbmin = self.octree.getMetricMin() - 2
             # bbmax = self.octree.getMetricMax() + 2
@@ -73,6 +51,20 @@ class OctomapNode(VisualizationNode):
             # This step can be faster if we use squared distances instead
             self.octree.dynamicEDT_update(True)
         print('Done octomap processing !')
+
+
+    def octomap_update_cb(self, msg):
+        bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
+        bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
+        x = np.linspace(bbmin[0], bbmax[0], msg.n)
+        y = np.linspace(bbmin[1], bbmax[1], msg.n)
+        z = np.linspace(bbmin[2], bbmax[2], msg.n)
+        points = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
+        self.octree.updateNodes(points, True)
+
+        if self.generateEDT:
+            self.octree.dynamicEDT_update(True)
+        print('Done octomap update')
 
 
     def is_point_occupied(self, point, radius=.5):
@@ -104,7 +96,7 @@ class OctomapNode(VisualizationNode):
         # Add offset to account for the UAV radius (0.5m)
         pt = np.array([point[0], point[1], point[2]]).astype(np.double)
         d = self.octree.dynamicEDT_getDistance(pt) - radius 
-        return 0 if d < 0 else d
+        return max(0, d)
 
 
     def cast_ray(self, origin, dest, radius=0, max_dist=-1, display=False):

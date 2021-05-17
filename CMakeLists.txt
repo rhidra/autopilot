@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
     FILES
     MotionPrimitive.msg
+    BoundingBox.msg
 )
 
 add_service_files(
