@@ -10,11 +10,13 @@ class OctomapNode(VisualizationNode):
         self.octree = octomap.OcTree(0.1)
         self.collision_check = 0
         self.generateEDT = True
+        self.init_octomap = False
 
 
     def setup(self):
         super(OctomapNode, self).setup()
         self.generateEDT = rospy.get_param('/{}/generate_edt'.format(self.node_name), True)
+        self.computeOctomapDiff = rospy.get_param('/{}/octomap_diff'.format(self.node_name), False)
         self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
         self.rate.sleep()
 
@@ -33,10 +35,34 @@ class OctomapNode(VisualizationNode):
         # header. We did not find a way to extract the tree size from the octomap msg
         tree = octomap.OcTree(self.octomap.resolution)
         tree.readBinary(s)
+
+        if self.init_octomap and (self.computeOctomapDiff or True):
+            # If we receive new data from an updated octomap, we compute the difference
+            # It is then transmitted to the global planning algorithm
+            occupancyThreshold = tree.getOccupancyThres()
+            diff = []
+
+            for i in tree.begin_tree():
+                if i.getOccupancy() >= occupancyThreshold:
+                    pt = i.getCoordinate()
+                    node = self.octree.search(pt)
+                    try:
+                        prevOccupied = self.octree.isNodeOccupied(node)
+                    except octomap.NullPointerException:
+                        prevOccupied = False
+                    if not prevOccupied:
+                        print(pt)
+                    
+                    if not prevOccupied:
+                        diff.append([pt[0], pt[1], pt[2]])
+            diff = np.array(diff)
+            print(diff.shape, diff)
+
+        self.init_octomap = True
         self.octree = tree
 
         # Euclidean Distance Transform generation
-        if self.generateEDT:
+        if self.generateEDT and False:
             print('Generating EDT...')
             # bbmin = self.octree.getMetricMin() - 2
             # bbmax = self.octree.getMetricMax() + 2
@@ -46,6 +72,7 @@ class OctomapNode(VisualizationNode):
             # The update computes distances in real unit (with sqrt)
             # This step can be faster if we use squared distances instead
             self.octree.dynamicEDT_update(True)
+        print('Done octomap processing !')
 
 
     def is_point_occupied(self, point, radius=.5):

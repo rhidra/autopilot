@@ -21,14 +21,13 @@ pub = rospy.Publisher('/autopilot/point_cloud', PointCloud2, queue_size=2)
 
 rate.sleep()
 
-bbmin = np.array([2, -2, 2])
-bbmax = np.array([3, -4, 3])
+bbmin = np.array([0, -2, 0])
+bbmax = np.array([1, -1, 1])
 n = 20 * np.max(np.abs(bbmax - bbmin))
 x = np.linspace(bbmin[0], bbmax[0], n)
 y = np.linspace(bbmin[1], bbmax[1], n)
 z = np.linspace(bbmin[2], bbmax[2], n)
 points = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
-# points = np.concatenate((x.reshape(-1, 1), y.reshape(-1, 1), z.reshape(-1, 1)), axis=1)
 
 fields = [
     PointField('x', 0, PointField.FLOAT32, 1),
