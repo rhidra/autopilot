@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "autopilot/LocalGoal.h"
 #include "autopilot/MotionPrimitive.h"
+#include "autopilot/BoundingBox.h"
 #include "Vec3.h"
 #include "MotionPrimitiveLibrary.h"
 #include <controller_msgs/FlatTarget.h>
@@ -41,6 +42,7 @@ public:
         nh.param<double>("/world/z/max", zmax, 4);
 
         ros::Subscriber octomap_sub = nh.subscribe("/octomap_binary", 10, &LocalPlanner::octomap_cb, this);
+        ros::Subscriber octomap_update_sub = nh.subscribe("/autopilot/octomap_update", 10, &LocalPlanner::octomap_update_cb, this);
         ros::Subscriber trajectory_sub = nh.subscribe("/autopilot/trajectory/request", 10, &LocalPlanner::sendTrajectory, this);
         trajectory_pub = nh.advertise<autopilot::MotionPrimitive>("/autopilot/trajectory/response", 10);
         viz_pub = nh.advertise<visualization_msgs::MarkerArray>("/autopilot/viz/local", 10);
@@ -69,6 +71,24 @@ public:
             edt->update(true);
             ROS_INFO("EDT generated");
         }
+    }
+
+    void octomap_update_cb(const autopilot::BoundingBox& msg) {
+        ROS_INFO("Updating the octomap");
+        for (int i = 0; i < msg.n; i++) {
+            double c2 = i / ((double) msg.n);
+            double c1 = 1. - c2;
+            double x =  c1 * msg.min.x + c2 * msg.max.x;
+            double y =  c1 * msg.min.y + c2 * msg.max.y;
+            double z =  c1 * msg.min.z + c2 * msg.max.z;
+            tree->updateNode(x, y, z, true);
+        }
+
+        if (generateEDT) {
+            ROS_INFO("Updating EDT...");
+            edt->update(true);
+        }
+        ROS_INFO("Done updating the octomap");
     }
 
     void sendTrajectory(const controller_msgs::FlatTarget& msg) {
