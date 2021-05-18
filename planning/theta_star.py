@@ -4,11 +4,14 @@ from smoothing import over_sampling, filter_path, bezier
 from decimal import Decimal, ROUND_HALF_UP
 
 EPSILON_NODE = .05 ** 2
-INCREMENT_DISTANCE = .4
+INCREMENT_DISTANCE = .2
+H_COST_WEIGHT = 3
+W_Z = 10
 
-children_directions = np.array([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [-1, 1, 1], [-1, 0, 1], [-1, -1, 1], [0, -1, 1], [1, -1, 1], 
-                                           [1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], 
-                                [0, 0,-1], [1, 0,-1], [1, 1,-1], [0, 1,-1], [-1, 1,-1], [-1, 0,-1], [-1, -1,-1], [0, -1,-1], [1, -1,-1]])
+# children_directions = np.array([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [-1, 1, 1], [-1, 0, 1], [-1, -1, 1], [0, -1, 1], [1, -1, 1], 
+#                                            [1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], 
+#                                 [0, 0,-1], [1, 0,-1], [1, 1,-1], [0, 1,-1], [-1, 1,-1], [-1, 0,-1], [-1, -1,-1], [0, -1,-1], [1, -1,-1]])
+children_directions = np.array([[1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0]])
 
 
 # Return all the children (neighbors) of a specific node
@@ -52,7 +55,7 @@ def theta_star(ros_node, start, goal, world_dim, grid, display=True):
     while openset:
         i = i+1
 
-        current = min(openset, key=lambda o:o.G + o.H)
+        current = min(openset, key=lambda o:o.G + H_COST_WEIGHT * o.H)
 
         if dist(current, goal, sqrt=False) <= INCREMENT_DISTANCE * INCREMENT_DISTANCE:
             path = [list(goal)]
@@ -73,7 +76,7 @@ def theta_star(ros_node, start, goal, world_dim, grid, display=True):
             
             if node not in openset:
                 node.G = float('inf')
-                node.H = dist(node, goal)
+                node.H = dist(node, goal, w_z=W_Z)
                 node.parent = None
                 openset.add(node)
             
@@ -87,7 +90,7 @@ def theta_star(ros_node, start, goal, world_dim, grid, display=True):
                     node.G = current.G + dist(current, node)
                     node.parent = current
 
-        if display and i % 10 == 0:
+        if display and i % 100 == 0:
             ros_node.visualize_global_path(nodes=openset.union(closedset), start=start, goal=goal)
             ros_node.rate.sleep()
 
