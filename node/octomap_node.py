@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import rospy, math, octomap, numpy as np
+import rospy, math, octomap, numpy as np, time
 from visualization_node import VisualizationNode
 from octomap_msgs.msg import Octomap
 from std_msgs.msg import Empty
@@ -17,7 +17,6 @@ class OctomapNode(VisualizationNode):
     def setup(self):
         super(OctomapNode, self).setup()
         self.generateEDT = rospy.get_param('/{}/generate_edt'.format(self.node_name), True)
-        self.computeOctomapDiff = rospy.get_param('/{}/octomap_diff'.format(self.node_name), False)
         self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
         self.octomap_update_sub = rospy.Subscriber('/autopilot/octomap_update', BoundingBox, self.octomap_update_cb)
         self.rate.sleep()
@@ -54,17 +53,18 @@ class OctomapNode(VisualizationNode):
 
 
     def octomap_update_cb(self, msg):
+        t1 = time.time()
         bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
         bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
-        x = np.linspace(bbmin[0], bbmax[0], msg.n)
-        y = np.linspace(bbmin[1], bbmax[1], msg.n)
-        z = np.linspace(bbmin[2], bbmax[2], msg.n)
+        x = np.linspace(bbmin[0], bbmax[0], np.abs(bbmax[0]-bbmin[0]) * 20)
+        y = np.linspace(bbmin[1], bbmax[1], np.abs(bbmax[1]-bbmin[1]) * 20)
+        z = np.linspace(bbmin[2], bbmax[2], np.abs(bbmax[2]-bbmin[2]) * 20)
         points = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
         self.octree.updateNodes(points, True)
 
         if self.generateEDT:
             self.octree.dynamicEDT_update(True)
-        print('Done octomap update')
+        print('Done octomap update in {}sec'.format(time.time() - t1))
 
 
     def is_point_occupied(self, point, radius=.5):

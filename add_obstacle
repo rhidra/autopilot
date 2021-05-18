@@ -62,7 +62,7 @@ pt.x, pt.y, pt.z = (bbmax + bbmin) / 2.
 marker.points.append(pt)
 
 start = rospy.Time.now()
+pub.publish(msg)
 while not rospy.is_shutdown() and (rospy.Time.now() - start).to_sec() < 2:
-    pub.publish(msg)
     viz_pub.publish(marker)
     rate.sleep()

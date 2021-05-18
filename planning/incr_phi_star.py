@@ -198,9 +198,9 @@ class PhiStarPathFinder:
         cmin = min(max(0, cmin[0]-1), self.grid.shape[0]-1), min(max(0, cmin[1]-1), self.grid.shape[1]-1), min(max(0, cmin[2]-1), self.grid.shape[2]-1)
         cmax = min(max(0, cmax[0]+1), self.grid.shape[0]-1), min(max(0, cmax[1]+1), self.grid.shape[1]-1), min(max(0, cmax[2]+1), self.grid.shape[2]-1)
 
-        for i in range(cmin[0], cmax[0]+1):
-            for j in range(cmin[1], cmax[1]+1):
-                for k in range(cmin[2], cmax[2]+1):
+        for i in range(min(cmin[0], cmax[0]), max(cmin[0], cmax[0])+1):
+            for j in range(min(cmin[1], cmax[1]), max(cmin[1], cmax[1])+1):
+                for k in range(min(cmin[2], cmax[2]), max(cmin[2], cmax[2])+1):
                     if (self.grid[i,j,k] in self.openset or self.grid[i,j,k] in self.closedset) and self.grid[i,j,k] != self.start:
                         self.clearSubtree(self.grid[i,j,k])
 

@@ -17,7 +17,7 @@ IDLE_DURATION = 1
 
 # Delay before requesting to generate new trajectory before reaching the end
 # Should be as small as possible but higher than the running time of the local planner algorithm
-TRAJ_GENERATION_DELAY = .04
+TRAJ_GENERATION_DELAY = .05
 
 # ROS node rate (in Hz)
 RATE = 500
