@@ -19,7 +19,7 @@
 class LocalPlanner {
 private:
     ros::NodeHandle nh;
-    bool generateEDT;
+    bool generateEDT, updateOctomap;
     octomap::OcTree* tree;
     ros::ServiceClient getLocalGoalSrv;
     ros::Publisher trajectory_pub;
@@ -33,6 +33,7 @@ public:
     void run() {
         i = 0;
         nh.param<bool>("/local_planner/generate_edt", generateEDT, true);
+        nh.param<bool>("/local_planner/update_octomap", updateOctomap, true);
         nh.param<double>("/local_planner/tf", tf, 1);
         nh.param<double>("/world/x/min", xmin, -20);
         nh.param<double>("/world/x/max", xmax, 20);
@@ -74,21 +75,23 @@ public:
     }
 
     void octomap_update_cb(const autopilot::BoundingBox& msg) {
-        ROS_INFO("Updating the octomap");
-        for (int i = 0; i < msg.n; i++) {
-            double c2 = i / ((double) msg.n);
-            double c1 = 1. - c2;
-            double x =  c1 * msg.min.x + c2 * msg.max.x;
-            double y =  c1 * msg.min.y + c2 * msg.max.y;
-            double z =  c1 * msg.min.z + c2 * msg.max.z;
-            tree->updateNode(x, y, z, true);
-        }
+        if (updateOctomap) {
+            ROS_INFO("Updating the octomap");
+            for (int i = 0; i < msg.n; i++) {
+                double c2 = i / ((double) msg.n);
+                double c1 = 1. - c2;
+                double x =  c1 * msg.min.x + c2 * msg.max.x;
+                double y =  c1 * msg.min.y + c2 * msg.max.y;
+                double z =  c1 * msg.min.z + c2 * msg.max.z;
+                tree->updateNode(x, y, z, true);
+            }
 
-        if (generateEDT) {
-            ROS_INFO("Updating EDT...");
-            edt->update(true);
+            if (generateEDT) {
+                ROS_INFO("Updating EDT...");
+                edt->update(true);
+            }
+            ROS_INFO("Done updating the octomap");
         }
-        ROS_INFO("Done updating the octomap");
     }
 
     void sendTrajectory(const controller_msgs::FlatTarget& msg) {
