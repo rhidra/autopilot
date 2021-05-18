@@ -48,14 +48,17 @@ class PhiStarPathFinder:
     # crossbar: Only considers the 12 extremities of the vertical and horizontal face from which the point is the corner
     # otherwise considers the 26 possible neighbors in every direction
     def children(self, node, crossbar=True, checkLOS=True):
+        # The comments are to disable looking at 3D path. The performances will be improved greatly
         if crossbar:
-            directions = np.array([[0,1,1], [0,1,-1], [0,-1,-1], [0,-1,1], 
-                                [1,1,0], [-1,1,0], [-1,-1,0], [1,-1,0],
-                                [1,0,1], [-1,0,1], [-1,0,-1], [1,0,-1]])
+            # directions = np.array([[0,1,1], [0,1,-1], [0,-1,-1], [0,-1,1], 
+            #                     [1,1,0], [-1,1,0], [-1,-1,0], [1,-1,0],
+            #                     [1,0,1], [-1,0,1], [-1,0,-1], [1,0,-1]])
+            directions = np.array([[1,1,0], [-1,1,0], [-1,-1,0], [1,-1,0]])
         else:
-            directions = np.array([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [-1, 1, 1], [-1, 0, 1], [-1, -1, 1], [0, -1, 1], [1, -1, 1], 
-                                            [1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], 
-                                [0, 0,-1], [1, 0,-1], [1, 1,-1], [0, 1,-1], [-1, 1,-1], [-1, 0,-1], [-1, -1,-1], [0, -1,-1], [1, -1,-1]])
+            # directions = np.array([[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [-1, 1, 1], [-1, 0, 1], [-1, -1, 1], [0, -1, 1], [1, -1, 1], 
+            #                                 [1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0], 
+            #                     [0, 0,-1], [1, 0,-1], [1, 1,-1], [0, 1,-1], [-1, 1,-1], [-1, 0,-1], [-1, -1,-1], [0, -1,-1], [1, -1,-1]])
+            directions = np.array([[1, 0, 0], [1, 1, 0], [0, 1, 0], [-1, 1, 0], [-1, 0, 0], [-1, -1, 0], [0, -1, 0], [1, -1, 0]])
         potential_children = node.pos + directions * INCREMENT_DISTANCE
         children = []
         for c in potential_children:
