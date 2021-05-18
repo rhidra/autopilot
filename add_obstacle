@@ -20,8 +20,8 @@ viz_pub = rospy.Publisher('/autopilot/octomap_update_viz', Marker, queue_size=2)
 
 rate.sleep()
 
-bbmin = np.array([3, -5, 0])
-bbmax = np.array([6, -4, 2])
+bbmin = np.array([-10, 14, 0])
+bbmax = np.array([-12, 16, 3])
 
 msg = BoundingBox()
 
