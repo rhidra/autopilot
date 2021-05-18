@@ -196,11 +196,18 @@ class PhiStarPathFinder:
     # Incremental execution of the find path algorithm
     # bbmin and bbmax are the bounding box of a newly added obstacle
     def update_graph(self, bbmin, bbmax):
-        cmin = pointToCell(bbmin, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
-        cmax = pointToCell(bbmax, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
-        cmin = min(max(0, cmin[0]-1), self.grid.shape[0]-1), min(max(0, cmin[1]-1), self.grid.shape[1]-1), min(max(0, cmin[2]-1), self.grid.shape[2]-1)
-        cmax = min(max(0, cmax[0]+1), self.grid.shape[0]-1), min(max(0, cmax[1]+1), self.grid.shape[1]-1), min(max(0, cmax[2]+1), self.grid.shape[2]-1)
+        a, b = np.minimum(bbmin, bbmax), np.maximum(bbmin, bbmax)
+        cmin = pointToCell(a, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
+        cmin = cmin[0]-1-int(UAV_THICKNESS/INCREMENT_DISTANCE), cmin[1]-1-int(UAV_THICKNESS/INCREMENT_DISTANCE), cmin[2]-1-int(UAV_THICKNESS/INCREMENT_DISTANCE)
+        cmin = max(0, cmin[0]), max(0, cmin[1]), max(0, cmin[2])
+        cmin = min(cmin[0], self.grid.shape[0]-1), min(cmin[1], self.grid.shape[1]-1), min(cmin[2], self.grid.shape[2]-1)
 
+        cmax = pointToCell(b, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
+        cmax = cmax[0]+1+int(UAV_THICKNESS/INCREMENT_DISTANCE), cmax[1]+1+int(UAV_THICKNESS/INCREMENT_DISTANCE), cmax[2]+1+int(UAV_THICKNESS/INCREMENT_DISTANCE)
+        cmax = max(0, cmax[0]), max(0, cmax[1]), max(0, cmax[2])
+        cmax = min(cmax[0], self.grid.shape[0]-1), min(cmax[1], self.grid.shape[1]-1), min(cmax[2], self.grid.shape[2]-1)
+
+        print(a, cmin, b, cmax)
         for i in range(min(cmin[0], cmax[0]), max(cmin[0], cmax[0])+1):
             for j in range(min(cmin[1], cmax[1]), max(cmin[1], cmax[1])+1):
                 for k in range(min(cmin[2], cmax[2]), max(cmin[2], cmax[2])+1):
