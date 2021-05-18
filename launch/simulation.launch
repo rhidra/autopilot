@@ -101,7 +101,7 @@
     <param name="/local_planner/tf" value="1.2"/>
 
     <!-- Global planner -->
-    <node pkg="autopilot" type="global_planner.py" name="global_planner" args="-p phi_star -l" output="screen">
+    <node pkg="autopilot" type="incr_global_planner.py" name="global_planner" args="" output="screen">
         <param name="generate_edt" value="True"/>
     </node>
 

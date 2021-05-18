@@ -42,9 +42,10 @@ def start(start_pos, goal, display=True):
         rospy.logerr(e)
         rospy.set_param('/autopilot/done', 4)
         exit(1)
-    
-    rospy.loginfo('Global path found !')
 
+    rospy.loginfo('Global path found !')
+    
+    node.load_solver(solver)
     node.load_local_path(path)
     node.send_local_goal()
 

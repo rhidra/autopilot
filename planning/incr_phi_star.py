@@ -129,7 +129,7 @@ class PhiStarPathFinder:
 
         i = 0
         startTime = time.time()
-        while self.openset and min(map(lambda o: o.G + H_COST_WEIGHT * o.H, self.openset)) < self.goal.G + H_COST_WEIGHT * self.goal.H and time.time() - startTime <= 60*1.7:
+        while self.openset and min(map(lambda o: o.G + H_COST_WEIGHT * o.H, self.openset)) < self.goal.G + H_COST_WEIGHT * self.goal.H and time.time() - startTime <= 60*2:
             i = i + 1
             current = min(self.openset, key=lambda o: o.G + H_COST_WEIGHT * o.H)
 
@@ -164,32 +164,6 @@ class PhiStarPathFinder:
         path.append(current.pos)
         return path[::-1]
 
-    """
-    def clearSubtree(ros_node, node, grid, world_dim, openset, closedset):
-        under, over = deque(), deque()
-        under.append(node)
-
-        while under:
-            node = under.popleft()
-            over.append(node)
-            node.reset()
-
-            openset.discard(node)
-            closedset.discard(node)
-
-            for neigh in children(node, ros_node, world_dim, grid, crossbar=False, checkLOS=False):
-                if neigh.local == node:
-                    under.append(neigh)
-        
-        while over:
-            node = over.popleft()
-            for neigh in children(node, ros_node, world_dim, grid, crossbar=False, checkLOS=True):
-                if neigh in closedset:
-                    g_old = node.G
-                    updateVertex(ros_node, neigh, node, grid, world_dim)
-                    if node.G < g_old:
-                        openset.add(node)
-    """
 
     def build_graph(self):
         grid_shape = (int((self.world_dim[1] - self.world_dim[0]) // INCREMENT_DISTANCE),
@@ -210,31 +184,57 @@ class PhiStarPathFinder:
         self.closedset = set()
 
         start_time = time.time()
+        path = self.find_path()
+        duration = abs(time.time() - start_time)
 
-        i = 0
-        while True:
-            i += 1
-            path = self.find_path()
-            duration = abs(time.time() - start_time)
-            break
-
-            """
-            if DISPLAY_END and WAIT_INPUT:
-                blockedCells = plot.waitForInput(grid_obs, lambda: plot.display(start, goal, grid, grid_obs))
-            else:
-                try:
-                    blockedCells = next(newBlockedCells)
-                    updateGridBlockedCells(blockedCells, grid_obs)
-                except StopIteration:
-                    break
-                
-            t1 = time.time()
-
-            for pt in corners(blockedCells):
-                if (grid[pt] in openset or grid[pt] in closedset) and grid[pt] != start:
-                    clearSubtree(grid[pt], grid, grid_obs, openset, closedset)
-            """
         return path, duration
+    
+
+    # Incremental execution of the find path algorithm
+    # bbmin and bbmax are the bounding box of a newly added obstacle
+    def update_graph(self, bbmin, bbmax):
+        cmin = pointToCell(bbmin, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
+        cmax = pointToCell(bbmax, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
+        cmin = min(max(0, cmin[0]-1), self.grid.shape[0]-1), min(max(0, cmin[1]-1), self.grid.shape[1]-1), min(max(0, cmin[2]-1), self.grid.shape[2]-1)
+        cmax = min(max(0, cmax[0]+1), self.grid.shape[0]-1), min(max(0, cmax[1]+1), self.grid.shape[1]-1), min(max(0, cmax[2]+1), self.grid.shape[2]-1)
+
+        for i in range(cmin[0], cmax[0]+1):
+            for j in range(cmin[1], cmax[1]+1):
+                for k in range(cmin[2], cmax[2]+1):
+                    if (self.grid[i,j,k] in self.openset or self.grid[i,j,k] in self.closedset) and self.grid[i,j,k] != self.start:
+                        self.clearSubtree(self.grid[i,j,k])
+
+        start_time = time.time()
+        path = self.find_path()
+        duration = abs(time.time() - start_time)
+
+        return path, duration
+
+
+    def clearSubtree(self, node):
+        under, over = deque(), deque()
+        under.append(node)
+
+        while under:
+            node = under.popleft()
+            over.append(node)
+            node.reset()
+
+            self.openset.discard(node)
+            self.closedset.discard(node)
+
+            for neigh in self.children(node, crossbar=False, checkLOS=False):
+                if neigh.local == node:
+                    under.append(neigh)
+        
+        while over:
+            node = over.popleft()
+            for neigh in self.children(node, crossbar=False, checkLOS=True):
+                if neigh in self.closedset:
+                    g_old = node.G
+                    self.updateVertex(neigh, node)
+                    if node.G < g_old:
+                        self.openset.add(node)
 
 
     # Move the goal or start position to a more appropriate one, further from the obstacles

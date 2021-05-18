@@ -22,8 +22,25 @@ class LocalGoalNode(OctomapNode):
         self.goal_point_pub = rospy.Publisher('/autopilot/local_goal/point', Point, queue_size=10) # Local goal extractor
         self.goal_dir_pub = rospy.Publisher('/autopilot/local_goal/direction', Vector3, queue_size=10) # Local goal extractor
         self.local_goal_srv = rospy.Service('/autopilot/local_goal', LocalGoal, self.get_local_goal)
+        self.solver = None
+        self.is_updating = False
         self.rate = rospy.Rate(1)
         self.rate.sleep()
+    
+    def load_solver(self, solver):
+        self.solver = solver
+
+    def octomap_update_cb(self, msg):
+        super(LocalGoalNode, self).octomap_update_cb(msg)
+        if self.solver is not None:
+            self.is_updating = True
+            bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
+            bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
+            rospy.loginfo('Updating Phi*...')
+            path, duration = self.solver.update_graph(bbmin, bbmax)
+            rospy.loginfo('Phi* graph updated in {}sec'.format(duration))
+            self.load_local_path(path)
+            self.is_updating = False
 
     def load_local_path(self, path):
         # Visualize the path in Rviz
@@ -37,6 +54,9 @@ class LocalGoalNode(OctomapNode):
         relative to the current position and velocity of the robot.
         """
         while not rospy.is_shutdown():
+            if self.is_updating:
+                self.rate.sleep()
+                continue
             msg_pt, msg_dir, proj = self.find_local_goal(self.pos, self.vel)
 
             self.goal_point_pub.publish(msg_pt)
