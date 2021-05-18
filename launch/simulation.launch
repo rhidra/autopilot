@@ -97,19 +97,25 @@
     <param name="/trajectory_sampler/generate_edt" value="False"/>
     <param name="/logger/generate_edt" value="False"/>
 
+    <!-- Set Octomap update config -->
+    <param name="/local_planner/update_octomap" value="True"/>
+    <param name="/trajectory_sampler/update_octomap" value="False"/>
+    <param name="/logger/update_octomap" value="False"/>
+
     <!-- Tf parameter: Time to fly one primitive -->
     <param name="/local_planner/tf" value="1.2"/>
 
     <!-- Global planner -->
-    <node pkg="autopilot" type="incr_global_planner.py" name="global_planner" args="" output="screen">
+    <node pkg="autopilot" type="incr_global_planner.py" name="global_planner" args="-d" output="screen">
         <param name="generate_edt" value="True"/>
+        <param name="update_octomap" value="True"/>
     </node>
 
     <!-- Local planner -->
     <node pkg="autopilot" type="local_planner" name="local_planner" output="screen"/>
 
     <!-- Main navigation controller -->
-    <node pkg="autopilot" type="sampler.py" name="sampler" output="screen"/>
+    <!-- <node pkg="autopilot" type="sampler.py" name="sampler" output="screen"/> -->
 
     <!-- Logger -->
     <node pkg="autopilot" type="logger.py" name="logger"/>

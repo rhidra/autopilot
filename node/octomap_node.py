@@ -12,11 +12,13 @@ class OctomapNode(VisualizationNode):
         self.octree = octomap.OcTree(0.1)
         self.collision_check = 0
         self.generateEDT = True
+        self.updateOctomap = True
 
 
     def setup(self):
         super(OctomapNode, self).setup()
         self.generateEDT = rospy.get_param('/{}/generate_edt'.format(self.node_name), True)
+        self.updateOctomap = rospy.get_param('/{}/update_octomap'.format(self.node_name), True)
         self.octomap_sub = rospy.Subscriber('/octomap_binary', Octomap, self.octomap_cb)
         self.octomap_update_sub = rospy.Subscriber('/autopilot/octomap_update', BoundingBox, self.octomap_update_cb)
         self.rate.sleep()
@@ -62,9 +64,10 @@ class OctomapNode(VisualizationNode):
 
 
     def octomap_update_cb(self, msg):
-        t1 = time.time()
-        bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
-        bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
+        if self.updateOctomap:
+            t1 = time.time()
+            bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
+            bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
         x = np.linspace(bbmin[0], bbmax[0], np.abs(bbmax[0]-bbmin[0]) * 20)
         y = np.linspace(bbmin[1], bbmax[1], np.abs(bbmax[1]-bbmin[1]) * 20)
         z = np.linspace(bbmin[2], bbmax[2], np.abs(bbmax[2]-bbmin[2]) * 20)
