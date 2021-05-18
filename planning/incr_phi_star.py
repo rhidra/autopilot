@@ -152,7 +152,7 @@ class PhiStarPathFinder:
                 
                 self.updateVertex(current, node)
             
-            if self.display and i % 10 == 0:
+            if self.display and i % 100 == 0:
                 self.ros_node.visualize_global_path(nodes=self.openset.union(self.closedset), start=self.start.pos, goal=self.goal.pos)
                 self.ros_node.rate.sleep()
 
@@ -168,7 +168,7 @@ class PhiStarPathFinder:
         return path[::-1]
 
 
-    def build_graph(self):
+    def init_graph(self):
         grid_shape = (int((self.world_dim[1] - self.world_dim[0]) // INCREMENT_DISTANCE),
                     int((self.world_dim[3] - self.world_dim[2]) // INCREMENT_DISTANCE),
                     int((self.world_dim[5] - self.world_dim[4]) // INCREMENT_DISTANCE))
@@ -186,16 +186,10 @@ class PhiStarPathFinder:
         self.openset = set()
         self.closedset = set()
 
-        start_time = time.time()
-        path = self.find_path()
-        duration = abs(time.time() - start_time)
-
-        return path, duration
-    
 
     # Incremental execution of the find path algorithm
     # bbmin and bbmax are the bounding box of a newly added obstacle
-    def update_graph(self, bbmin, bbmax):
+    def clean_graph(self, bbmin, bbmax):
         a, b = np.minimum(bbmin, bbmax), np.maximum(bbmin, bbmax)
         cmin = pointToCell(a, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
         cmin = cmin[0]-1-int(UAV_THICKNESS/INCREMENT_DISTANCE), cmin[1]-1-int(UAV_THICKNESS/INCREMENT_DISTANCE), cmin[2]-1-int(UAV_THICKNESS/INCREMENT_DISTANCE)
@@ -207,16 +201,31 @@ class PhiStarPathFinder:
         cmax = max(0, cmax[0]), max(0, cmax[1]), max(0, cmax[2])
         cmax = min(cmax[0], self.grid.shape[0]-1), min(cmax[1], self.grid.shape[1]-1), min(cmax[2], self.grid.shape[2]-1)
 
-        print(a, cmin, b, cmax)
         for i in range(min(cmin[0], cmax[0]), max(cmin[0], cmax[0])+1):
             for j in range(min(cmin[1], cmax[1]), max(cmin[1], cmax[1])+1):
                 for k in range(min(cmin[2], cmax[2]), max(cmin[2], cmax[2])+1):
                     if (self.grid[i,j,k] in self.openset or self.grid[i,j,k] in self.closedset) and self.grid[i,j,k] != self.start:
                         self.clearSubtree(self.grid[i,j,k])
 
-        start_time = time.time()
-        path = self.find_path()
-        duration = abs(time.time() - start_time)
+    
+    def update_graph(self):
+        try:
+            start_time = time.time()
+            path = self.find_path()
+            path[-1][0], path[-1][1], path[-1][2] = self.goal.pos[0], self.goal.pos[1], self.goal.pos[2]
+            duration = time.time() - start_time
+        except NoPathFound as e:
+            # No path found
+            rospy.logerr('No path found')
+            rospy.logerr(e)
+            rospy.set_param('/autopilot/done', 3)
+            exit(1)
+        except AssertionError as e:
+            # The goal is not valid
+            rospy.logerr('Configuration not valid')
+            rospy.logerr(e)
+            rospy.set_param('/autopilot/done', 4)
+            exit(1)
 
         return path, duration
 

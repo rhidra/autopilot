@@ -26,9 +26,21 @@ class LocalGoalNode(OctomapNode):
         self.is_updating = False
         self.rate = rospy.Rate(1)
         self.rate.sleep()
-    
+
+
     def load_solver(self, solver):
         self.solver = solver
+
+
+    # If a solver has been loaded, it will compute an initial solution and spin the rest of the node
+    def spin(self):
+        assert self.solver is not None, 'The solver has not been loaded'
+        self.solver.init_graph()
+        path, processing_time = self.solver.update_graph()
+        rospy.loginfo('Global path found in {}sec'.format(processing_time))
+        self.load_local_path(path)
+        self.send_local_goal()
+    
 
     def octomap_update_cb(self, msg):
         super(LocalGoalNode, self).octomap_update_cb(msg)
@@ -37,10 +49,12 @@ class LocalGoalNode(OctomapNode):
             bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
             bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
             rospy.loginfo('Updating Phi*...')
-            path, duration = self.solver.update_graph(bbmin, bbmax)
+            self.solver.clean_graph(bbmin, bbmax)
+            path, duration = self.solver.update_graph()
             rospy.loginfo('Phi* graph updated in {}sec'.format(duration))
             self.load_local_path(path)
             self.is_updating = False
+
 
     def load_local_path(self, path):
         # Visualize the path in Rviz

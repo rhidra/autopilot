@@ -95,3 +95,74 @@ def arePointsAligned(a, b, c):
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+GOAL_SAFETY_MARGIN = .15
+class NonIncrementalPathFinder:
+    def __init__(self, func, ros_node, start, goal, world_dim, display=True):
+        self.func = func
+        self.ros_node = ros_node
+        self.world_dim = world_dim
+
+        assert world_dim[0] < world_dim[1] and world_dim[2] < world_dim[3] and world_dim[4] < world_dim[5], 'Uncoherent world dimensions'
+        assert world_dim[0] <= start[0] and start[0] <= world_dim[1], 'Start not contained on world dimensions x axis'
+        assert world_dim[2] <= start[1] and start[1] <= world_dim[3], 'Start not contained on world dimensions y axis'
+        assert world_dim[4] <= start[2] and start[2] <= world_dim[5], 'Start not contained on world dimensions z axis'
+        assert world_dim[0] <= goal[0] and goal[0] <= world_dim[1], 'Goal not contained on world dimensions x axis'
+        assert world_dim[2] <= goal[1] and goal[1] <= world_dim[3], 'Goal not contained on world dimensions y axis'
+        assert world_dim[4] <= goal[2] and goal[2] <= world_dim[5], 'Goal not contained on world dimensions z axis'
+        
+        if self.ros_node.get_point_edt(start, UAV_THICKNESS) <= GOAL_SAFETY_MARGIN:
+            start = self.make_valid_point(start)
+        if self.ros_node.get_point_edt(goal, UAV_THICKNESS) <= GOAL_SAFETY_MARGIN:
+            goal = self.make_valid_point(goal)
+        
+        self.start = start
+        self.goal = goal
+        self.display = display
+        self.path = None
+    
+
+    # Move the goal or start position to a more appropriate one, further from the obstacles
+    def make_valid_point(self, point):
+        # Move the goal by this distance
+        for d in np.arange(.1, 2.5, .1):
+            l = []
+            for yaw in np.arange(0, 2 * np.pi, 2*np.pi/100.):
+                new_point = np.array([d * np.cos(yaw) + point[0], d * np.sin(yaw) + point[1], point[2]])
+                c = self.ros_node.get_point_edt(new_point, UAV_THICKNESS)
+                if  c > GOAL_SAFETY_MARGIN and \
+                    self.world_dim[0] <= new_point[0] and new_point[0] <= self.world_dim[1] and \
+                    self.world_dim[2] <= new_point[1] and new_point[1] <= self.world_dim[3] and \
+                    self.world_dim[4] <= new_point[2] and new_point[2] <= self.world_dim[5]:
+                        l.append((new_point, c))
+
+            # If there is no valid new goal in this radius, we go to a further one
+            if len(l) == 0:
+                continue
+
+            try:
+                return min(l, key=lambda e: e[1])[0]
+            except ValueError:
+                continue
+        raise AssertionError('No ideal position found to move the goal or start position')
+
+
+    def init_graph(self):
+        pass
+
+    # For non incremental algorithms, we simply check if the path is still feasible and discard it if not
+    def clean_graph(self, bbmin, bbmax):
+        if self.path is not None:
+            for i in range(len(self.path)-1):
+                a, b = self.path[i], self.path[i+1]
+                if self.ros_node.cast_ray(a, b, radius=UAV_THICKNESS)[0]:
+                    self.path = None
+                    return
+
+
+    def update_graph(self):
+        if self.path is not None:
+            return self.path, 0.
+        path, duration = self.func(self.ros_node, self.start, self.goal, self.world_dim, self.display)
+        self.path = path
+        return path, duration

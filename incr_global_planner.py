@@ -2,7 +2,7 @@
 from node import LocalGoalNode
 import rospy, numpy as np, sys, getopt
 from evaluation import evaluate_path
-from planning import PhiStarPathFinder, NoPathFound
+from planning import PhiStarPathFinder, NoPathFound, NonIncrementalPathFinder, main_theta_star
 
 help = """
 Usage: python phi_star_planner.py -d
@@ -26,28 +26,13 @@ def start(start_pos, goal, display=True):
     # Global Path planning
     rospy.loginfo('Start global path planning...')
 
-    try:
+    if False:
         solver = PhiStarPathFinder(node, start_pos, goal, world_dim=world_dim, display=display)
-        path, processing_time = solver.build_graph()
-        path[-1][0], path[-1][1], path[-1][2] = goal[0], goal[1], goal[2]
-    except NoPathFound as e:
-        # No path found
-        rospy.logerr('No path found')
-        rospy.logerr(e)
-        rospy.set_param('/autopilot/done', 3)
-        exit(1)
-    except AssertionError as e:
-        # The goal is not valid
-        rospy.logerr('Configuration not valid')
-        rospy.logerr(e)
-        rospy.set_param('/autopilot/done', 4)
-        exit(1)
-
-    rospy.loginfo('Global path found in {}sec'.format(processing_time))
-    
+    else:
+        solver = NonIncrementalPathFinder(main_theta_star, node, start_pos, goal, world_dim=world_dim, display=display)
     node.load_solver(solver)
-    node.load_local_path(path)
-    node.send_local_goal()
+    node.spin()
+    
 
 
 def main(argv):
