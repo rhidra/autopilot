@@ -38,6 +38,15 @@ class OctomapNode(VisualizationNode):
         tree.readBinary(s)
         self.octree = tree
 
+        # Artificially add the unexpected obstacle to compare the algorithm execution
+        # bbmin = np.array([-6, 14, 0])
+        # bbmax = np.array([-14, 16, 3])
+        # x = np.linspace(bbmin[0], bbmax[0], np.abs(bbmax[0]-bbmin[0]) * 20)
+        # y = np.linspace(bbmin[1], bbmax[1], np.abs(bbmax[1]-bbmin[1]) * 20)
+        # z = np.linspace(bbmin[2], bbmax[2], np.abs(bbmax[2]-bbmin[2]) * 20)
+        # points = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
+        # self.octree.updateNodes(points, True)
+
         # Euclidean Distance Transform generation
         if self.generateEDT:
             print('Generating EDT...')
