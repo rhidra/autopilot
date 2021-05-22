@@ -51,7 +51,7 @@ class LocalGoalNode(OctomapNode):
             rospy.loginfo('Updating Phi*...')
             self.solver.clean_graph(bbmin, bbmax)
             path, duration = self.solver.update_graph()
-            rospy.loginfo('Phi* graph updated in {}sec'.format(duration))
+            rospy.loginfo('Global path updated in {}sec'.format(duration))
             self.load_local_path(path)
             self.is_updating = False
 
