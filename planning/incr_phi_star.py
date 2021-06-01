@@ -40,8 +40,8 @@ class PhiStarPathFinder:
         if self.ros_node.get_point_edt(goal, UAV_THICKNESS) <= GOAL_SAFETY_MARGIN:
             goal = self.make_valid_point(goal)
         
-        self.start = start
-        self.goal = goal
+        self.start = goal
+        self.goal = start
         self.display = display
 
     # Return all the children (neighbors) of a specific node

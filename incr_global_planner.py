@@ -26,7 +26,7 @@ def start(start_pos, goal, display=True):
     # Global Path planning
     rospy.loginfo('Start global path planning...')
 
-    if False:
+    if True:
         solver = PhiStarPathFinder(node, start_pos, goal, world_dim=world_dim, display=display)
     else:
         solver = NonIncrementalPathFinder(main_theta_star, node, start_pos, goal, world_dim=world_dim, display=display)
