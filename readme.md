@@ -247,18 +247,21 @@ pre-process some data for Rviz and a logger node used in case of monitoring for 
 To launch the global planner, launch the simulation (previous section),
 and run the global planner ROS node with the following command.
 
-Currently, the launch simulation file also starts the global planner, using the Phi* algorithm.
+The global planner are in the `planning` directory.
+It also includes a replanning incremental version of Phi* and Theta*.
+To use the replanner incremental version, run `incr_global_planner.py`, to use
+the normal version, run `global_planner.py`.
 
-You can specify a few different parameters, like if the ROS node should keep 
-running in the background (`-l`), the algorithm used,
-if a debug display should be used (`-d`), or to record data for later analysis.
-You can use the `--help` option to learn more. 
+With the normal version, you can specify a few different parameters, 
+like if the ROS node should keep running in the background (`-l`), 
+the algorithm used (`-p`), if a debug display should be used (`-d`), 
+or to record data for later analysis. You can use the `--help` option to learn more. 
 
 ```shell script
 rosrun autopilot global_planner.py -p <planning_algorithm> -l
 ```
 
-The global planner computes a global path only **once**, then broadcast
+The normal global planner computes a global path only **once**, then broadcast
 continuously a potential _local goal_ position to use as an objective for the
 local planner. The local goal is broadcasted as a
 [PoseStamped](http://docs.ros.org/en/api/geometry_msgs/html/msg/PoseStamped.html)
@@ -266,6 +269,17 @@ on the `/autopilot/local_goal` topic.
 
 It also deploys a service `/autopilot/local_goal` for specific request of a local goal at a different UAV position.
 The message type is defined in `srv/LocalGoal.srv`.
+
+To use the incremental global planner:
+```shell script
+rosrun autopilot incr_global_planner.py
+```
+
+The incremental global planner compute the initial path, then passively broadcast the
+local goal using the `/autopilot/local_goal` service.
+When receiving a map update on `/autopilot/octomap_update`, it updates the octomap
+and trigger a global planner incremental update. The broadcast of the
+local_goal is not interrupted, which allow the UAV to continue moving.
 
 ### Local planner
 
