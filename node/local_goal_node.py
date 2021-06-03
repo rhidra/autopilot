@@ -23,7 +23,6 @@ class LocalGoalNode(OctomapNode):
         self.goal_dir_pub = rospy.Publisher('/autopilot/local_goal/direction', Vector3, queue_size=10) # Local goal extractor
         self.local_goal_srv = rospy.Service('/autopilot/local_goal', LocalGoal, self.get_local_goal)
         self.solver = None
-        self.is_updating = False
         self.rate = rospy.Rate(1)
         self.rate.sleep()
 
@@ -45,7 +44,6 @@ class LocalGoalNode(OctomapNode):
     def octomap_update_cb(self, msg):
         super(LocalGoalNode, self).octomap_update_cb(msg)
         if self.solver is not None:
-            self.is_updating = True
             t0 = rospy.Time.now()
             bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
             bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
@@ -53,7 +51,6 @@ class LocalGoalNode(OctomapNode):
             rospy.loginfo('Cleaning graph:\t{}s'.format((rospy.Time.now() - t0).to_sec()))
 
             t1 = rospy.Time.now()
-            # self.solver.update_goal(self.pos)
             self.solver.update_goal(np.array([25, -20, 1]))
             rospy.loginfo('Update goal:\t\t{}s'.format((rospy.Time.now() - t1).to_sec()))
 
@@ -63,7 +60,6 @@ class LocalGoalNode(OctomapNode):
 
             rospy.loginfo('Global path updated:\t{}s'.format((rospy.Time.now() - t0).to_sec()))
             self.load_local_path(path)
-            self.is_updating = False
 
 
     def load_local_path(self, path):
@@ -77,10 +73,28 @@ class LocalGoalNode(OctomapNode):
         Blocking method which continuously sends the local goal
         relative to the current position and velocity of the robot.
         """
+        lastPos = self.pos
         while not rospy.is_shutdown():
-            if self.is_updating:
+            if np.linalg.norm(self.pos - lastPos) > 5.:
+                lastPos = self.pos
+
+                t0 = rospy.Time.now()
+                self.solver.check_nodes()
+                rospy.loginfo('Cleaning graph:\t{}s'.format((rospy.Time.now() - t0).to_sec()))
+
+                t1 = rospy.Time.now()
+                self.solver.update_goal(self.pos)
+                rospy.loginfo('Update goal:\t\t{}s'.format((rospy.Time.now() - t1).to_sec()))
+
+                t2 = rospy.Time.now()
+                path, _ = self.solver.update_graph()
+                rospy.loginfo('Update graph:\t\t{}s'.format((rospy.Time.now() - t2).to_sec()))
+
+                rospy.loginfo('Global path updated:\t{}s'.format((rospy.Time.now() - t0).to_sec()))
+                self.load_local_path(path)
                 self.rate.sleep()
-                continue
+
+
             msg_pt, msg_dir, proj = self.find_local_goal(self.pos, self.vel)
 
             self.goal_point_pub.publish(msg_pt)
@@ -126,12 +140,12 @@ class LocalGoalNode(OctomapNode):
             return msg_pt, msg_dir
 
         # Forward projection in the path and snapping to the goal
-        if np.linalg.norm(posProj - self.path[-1]) < 1:
-            proj = self.path[-1]
+        if np.linalg.norm(posProj - self.path[0]) < 1:
+            proj = self.path[0]
         else:
-            proj = forwardProject(posProj, segIdx, self.path, distance=self.tf * np.clip(5 * np.linalg.norm(vel), .1, 1))
-            if np.linalg.norm(proj - self.path[-1]) < 1:
-                proj = self.path[-1]
+            proj = forwardProject(posProj, segIdx, self.path, distance=self.tf * np.clip(1.5 * np.linalg.norm(vel), .1, .8))
+            if np.linalg.norm(proj - self.path[0]) < 1:
+                proj = self.path[0]
 
         direction = proj - posProj
         direction = direction / np.linalg.norm(direction)
@@ -190,14 +204,14 @@ def forwardProject(initPt, initIdx, path, distance=2):
     idx = initIdx
     pt = initPt
     while True:
-        if idx + 1 >= len(path):
-            return path[-1]
-        a, b = path[idx], path[idx + 1]
+        if idx - 1 < 0:
+            return path[0]
+        b, a = path[idx], path[idx + 1]
         norm = np.linalg.norm(b - a)
         proj = pt + (b - a) * distance / norm
         diff = np.linalg.norm(a - proj) - norm
         if diff > 0:
-            idx += 1
+            idx -= 1
             pt = b
             distance = diff
         else:

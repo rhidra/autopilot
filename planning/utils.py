@@ -116,8 +116,8 @@ class NonIncrementalPathFinder:
         if self.ros_node.get_point_edt(goal, UAV_THICKNESS) <= GOAL_SAFETY_MARGIN:
             goal = self.make_valid_point(goal)
         
-        self.start = start
-        self.goal = goal
+        self.start = goal
+        self.goal = start
         self.display = display
         self.path = None
     
@@ -144,6 +144,7 @@ class NonIncrementalPathFinder:
                 return min(l, key=lambda e: e[1])[0]
             except ValueError:
                 continue
+        return point
         raise AssertionError('No ideal position found to move the goal or start position')
 
 
@@ -166,3 +167,15 @@ class NonIncrementalPathFinder:
         path, duration = self.func(self.ros_node, self.start, self.goal, self.world_dim, self.display)
         self.path = path
         return path, duration
+
+    def check_nodes(self):
+        self.clean_graph(None, None)
+    
+    def update_goal(self, pos):
+        assert self.world_dim[0] <= pos[0] and pos[0] <= self.world_dim[1], 'Goal not contained on world dimensions x axis'
+        assert self.world_dim[2] <= pos[1] and pos[1] <= self.world_dim[3], 'Goal not contained on world dimensions y axis'
+        assert self.world_dim[4] <= pos[2] and pos[2] <= self.world_dim[5], 'Goal not contained on world dimensions z axis'
+        if self.ros_node.get_point_edt(pos, UAV_THICKNESS) <= GOAL_SAFETY_MARGIN:
+            pos = self.make_valid_point(pos)
+
+        self.goal = pos

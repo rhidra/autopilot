@@ -137,6 +137,10 @@ class PhiStarPathFinder:
         startTime = time.time()
         while self.openset and min(map(lambda o: o.G + H_COST_WEIGHT * o.H, self.openset)) < self.goal.G + H_COST_WEIGHT * self.goal.H and time.time() - startTime <= 60*2:
             i = i + 1
+
+            if dist(self.goal, self.ros_node.pos) > 2.:
+                self.update_goal(self.ros_node.pos)
+
             current = min(self.openset, key=lambda o: o.G + H_COST_WEIGHT * o.H)
 
             self.openset.remove(current)
@@ -274,6 +278,16 @@ class PhiStarPathFinder:
 
         for node in self.openset:
             node.H = dist(node, self.goal, w_z=W_Z)
+    
+
+    # Check all nodes of the graph to see if they are still valid
+    # Execute replanning if some nodes are not valid
+    def check_nodes(self):
+        for node in self.openset.union(self.closedset):
+            if node.parent and (not self.ros_node.hasLimitedVision or dist(node, self.ros_node.pos) < self.ros_node.visionRadius):
+                # If the node is in vision radius
+                if self.ros_node.cast_ray(node.pos, node.parent.pos, radius=UAV_THICKNESS)[0]:
+                    self.clearSubtree(node)
 
 
     # Move the goal or start position to a more appropriate one, further from the obstacles
@@ -298,5 +312,6 @@ class PhiStarPathFinder:
                 return min(l, key=lambda e: e[1])[0]
             except ValueError:
                 continue
-        raise AssertionError('No ideal position found to move the goal or start position')
+        return point
+        # raise AssertionError('No ideal position found to move the goal or start position')
 

@@ -21,6 +21,8 @@ class BaseNode(object):
         self.local_goal_point = None
         self.local_goal_direction = None
         self.start_pos = np.array([0,0,0])
+        self.hasLimitedVision = True
+        self.visionRadius = 15.
 
     def setup(self):
         rospy.init_node(self.node_name, anonymous=True)

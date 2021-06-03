@@ -95,10 +95,13 @@ class OctomapNode(VisualizationNode):
 
 
     def get_point_edt(self, point, radius=.5):
+        pt = np.array([point[0], point[1], point[2]]).astype(np.double)
+        if self.hasLimitedVision and np.linalg.norm(pt - self.pos) > self.visionRadius:
+            return 50.
+
         # Find the closest distance to an obstacle from the point
         # Add offset to account for the UAV radius (0.5m)
-        pt = np.array([point[0], point[1], point[2]]).astype(np.double)
-        d = self.octree.dynamicEDT_getDistance(pt) - radius 
+        d = self.octree.dynamicEDT_getDistance(pt) - radius
         return max(0, d)
 
 
@@ -117,11 +120,11 @@ class OctomapNode(VisualizationNode):
         if self.generateEDT and self.get_point_edt(end, radius=0) < radius:
             return True, end
 
-        hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=distance)
+        # hit = self.octree.castRay(origin, direction, end, ignoreUnknownCells=True, maxRange=distance)
 
-        # The ray hit an obstacle
-        if hit or radius == 0.:
-            return hit, end
+        # # The ray hit an obstacle
+        # if hit or radius == 0.:
+        #     return hit, end
 
         # To check if we are close from an obstacle,
         # we first implement a method were we cast 4 additional rays
@@ -166,9 +169,9 @@ class OctomapNode(VisualizationNode):
             return hit, end
 
         # Samples regularly the ray, every K*radius 
-        N = distance * 3 // radius
+        # N = distance * 3 // radius
         # N = distance // radius
-        # N = distance // (2 * radius)
+        N = distance // (2 * radius)
         # We also remove the starting and end points
         for di in np.linspace(0, 1, N):
             pt = origin + di * distance * direction
