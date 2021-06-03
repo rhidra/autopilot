@@ -40,6 +40,9 @@ class PhiStarPathFinder:
         if self.ros_node.get_point_edt(goal, UAV_THICKNESS) <= GOAL_SAFETY_MARGIN:
             goal = self.make_valid_point(goal)
         
+        # We invert the goal and the start
+        # Before, start = UAV. After, goal = UAV.
+        # This allow for faster replanning when detecting new obstacle in the UAV's neighborhood
         self.start = goal
         self.goal = start
         self.display = display
@@ -152,7 +155,7 @@ class PhiStarPathFinder:
                 
                 self.updateVertex(current, node)
             
-            if self.display and i % 100 == 0:
+            if self.display and i % 50 == 0:
                 self.ros_node.visualize_global_path(nodes=self.openset.union(self.closedset), start=self.start.pos, goal=self.goal.pos)
                 self.ros_node.rate.sleep()
 
@@ -254,11 +257,28 @@ class PhiStarPathFinder:
                     self.updateVertex(neigh, node)
                     if node.G < g_old:
                         self.openset.add(node)
+    
+    def update_goal(self, pos):
+        assert self.world_dim[0] <= pos[0] and pos[0] <= self.world_dim[1], 'Goal not contained on world dimensions x axis'
+        assert self.world_dim[2] <= pos[1] and pos[1] <= self.world_dim[3], 'Goal not contained on world dimensions y axis'
+        assert self.world_dim[4] <= pos[2] and pos[2] <= self.world_dim[5], 'Goal not contained on world dimensions z axis'
+        if self.ros_node.get_point_edt(pos, UAV_THICKNESS) <= GOAL_SAFETY_MARGIN:
+            pos = self.make_valid_point(pos)
+
+        cellg = pointToCell(pos, self.world_dim, self.grid.shape, INCREMENT_DISTANCE)
+        self.goal = self.grid[cellg[0],cellg[1],cellg[2]]
+        if self.goal is None:
+            self.goal = Node(pos)
+            self.grid[cellg[0],cellg[1],cellg[2]] = self.goal
+        self.goal.H = 0
+
+        for node in self.openset:
+            node.H = dist(node, self.goal, w_z=W_Z)
 
 
     # Move the goal or start position to a more appropriate one, further from the obstacles
     def make_valid_point(self, point):
-        # Move the goal by this distance
+        # Move the goal or start by this distance
         for d in np.arange(.1, 2.5, .1):
             l = []
             for yaw in np.arange(0, 2 * np.pi, 2*np.pi/100.):

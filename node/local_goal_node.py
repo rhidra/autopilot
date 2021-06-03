@@ -46,12 +46,22 @@ class LocalGoalNode(OctomapNode):
         super(LocalGoalNode, self).octomap_update_cb(msg)
         if self.solver is not None:
             self.is_updating = True
+            t0 = rospy.Time.now()
             bbmin = np.array([msg.min.x, msg.min.y, msg.min.z])
             bbmax = np.array([msg.max.x, msg.max.y, msg.max.z])
-            rospy.loginfo('Updating Phi*...')
             self.solver.clean_graph(bbmin, bbmax)
-            path, duration = self.solver.update_graph()
-            rospy.loginfo('Global path updated in {}sec'.format(duration))
+            rospy.loginfo('Cleaning graph:\t{}s'.format((rospy.Time.now() - t0).to_sec()))
+
+            t1 = rospy.Time.now()
+            # self.solver.update_goal(self.pos)
+            self.solver.update_goal(np.array([25, -20, 1]))
+            rospy.loginfo('Update goal:\t\t{}s'.format((rospy.Time.now() - t1).to_sec()))
+
+            t2 = rospy.Time.now()
+            path, _ = self.solver.update_graph()
+            rospy.loginfo('Update graph:\t\t{}s'.format((rospy.Time.now() - t2).to_sec()))
+
+            rospy.loginfo('Global path updated:\t{}s'.format((rospy.Time.now() - t0).to_sec()))
             self.load_local_path(path)
             self.is_updating = False
 
