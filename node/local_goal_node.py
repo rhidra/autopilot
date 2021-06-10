@@ -120,7 +120,7 @@ class LocalGoalNode(OctomapNode):
         d = ptSegmentDist(p, a, b)
         segIdx = np.argmin(d)
         segDist, segA, segB = d[segIdx], a[segIdx], b[segIdx]
-
+ 
         # Solve segment - sphere intersection
         # ref: https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
         u = (segB - segA) / np.linalg.norm(segB - segA)
