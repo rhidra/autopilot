@@ -72,10 +72,13 @@ class LocalGoalNode(OctomapNode):
         """
         Blocking method which continuously sends the local goal
         relative to the current position and velocity of the robot.
+        With a limited vision field, it also check the distance to a
+        relative last position, and update the global planner if needed
+        with new vision info.
         """
         lastPos = self.pos
         while not rospy.is_shutdown():
-            if np.linalg.norm(self.pos - lastPos) > 5.:
+            if np.linalg.norm(self.pos - lastPos) > 5. and self.hasLimitedVision:
                 lastPos = self.pos
 
                 t0 = rospy.Time.now()
