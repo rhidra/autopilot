@@ -21,7 +21,7 @@ def children(node, ros_node, world_dim, grid):
             
             if child is None:
                 child = Node(c, Node.OBSTACLE if ros_node.cast_ray(node.pos, c, radius=UAV_THICKNESS)[0] else Node.FREE)
-                grid[grid_c[0]][grid_c[1]][grid_c[2]] = child
+                grid[cell[0]][cell[1]][cell[2]] = child
 
             if child.value == Node.OBSTACLE:
                 continue
@@ -77,7 +77,7 @@ def a_star(ros_node, start, goal, world_dim, grid, display=True):
                 openset.add(node)
 
         if display and i % 10 == 0:
-            ros_node.visualize_path(nodes=openset.union(closedset), start=start, goal=goal)
+            ros_node.visualize_global_path(nodes=openset.union(closedset), start=start, goal=goal)
             ros_node.rate.sleep()
 
     raise ValueError('No Path Found')
