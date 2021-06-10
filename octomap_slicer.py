@@ -18,7 +18,7 @@ def cb(data):
         t = []
         c = []
         for pt, colors in zip(m.points, m.colors):
-            if pt.z < 1.5:
+            if pt.z > 0.15 and pt.z < 1.5:
                 t.append(pt)
                 c.append(colors)
         m.points = t
@@ -26,6 +26,6 @@ def cb(data):
     print('Sending !')
     pub.publish(data)
 
-rospy.init_node('offset_poses', anonymous=True)
+rospy.init_node('octomap_slicer', anonymous=True)
 sub = rospy.Subscriber('/occupied_cells_vis_array', MarkerArray, cb)
 rospy.spin()
