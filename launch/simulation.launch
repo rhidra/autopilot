@@ -106,7 +106,7 @@
     <param name="/local_planner/tf" value="1.2"/>
 
     <!-- Global planner -->
-    <node pkg="autopilot" type="incr_global_planner.py" name="global_planner" args="-d" output="screen">
+    <node pkg="autopilot" type="incr_global_planner.py" name="global_planner" args="" output="screen">
         <param name="generate_edt" value="True"/>
         <param name="update_octomap" value="True"/>
     </node>
