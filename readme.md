@@ -3,6 +3,27 @@ PX4 autopilot
 
 Python autopilot using the PX4 firmware toolchain, Gazebo, ROS, MAVROS and the MAVLink protocol.
 
+**Looking for an engineer ? I am currently looking for a job, [take a look my portfolio !](https://rhidra.github.io/)**
+
+## Intro
+
+This work has been done by Rémy Hidra during his Master of Research at the
+Shanghai Jiao Tong University of China. 
+
+This is build as a ROS package. You can also find a few external experiments and data collection
+in the `analysis` directory. The module feature C++ and Python code.
+It contains mainly:
+- A global planner, using the Phi* path planning algorithm (in Python).
+- A local planner, using a hybrid motion primitives optimization method (in Python and improved in C++).
+- A main navigation controller, to transmit data to MAVROS.
+
+If you are interested in my work, you can check out my [thesis](https://github.com/rhidra/autopilot/raw/master/Thesis.pdf)
+to learn more about the theory and the implementation. The ROS, PX4, MAVROS and most other component
+installation is detailed in this `Readme`.
+
+If you have any other questions, you can contact me by [email](mailto:remy.hidra@gmail.com),
+[linkedin](https://www.linkedin.com/in/rhidra/) or directly on Github.
+
 ## Installation
 
 ### Setting up the toolchain
