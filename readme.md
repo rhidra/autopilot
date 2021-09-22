@@ -3,7 +3,7 @@ PX4 autopilot
 
 Python autopilot using the PX4 firmware toolchain, Gazebo, ROS, MAVROS and the MAVLink protocol.
 
-**Looking for an engineer ? I am currently looking for a job, [take a look my portfolio !](https://rhidra.github.io/)**
+**🚨 Looking for an engineer ? I am currently looking for a job, [take a look my portfolio !](https://rhidra.github.io/) 🙋‍♂️**
 
 ## Intro
 
