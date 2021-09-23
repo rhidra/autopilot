@@ -18,7 +18,7 @@ def cb(data):
         t = []
         c = []
         for pt, colors in zip(m.points, m.colors):
-            if pt.z > 0.15 and pt.z < 1.5:
+            if pt.z > 0.15 and pt.z < 2.0:
                 t.append(pt)
                 c.append(colors)
         m.points = t
