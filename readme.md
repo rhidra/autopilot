@@ -24,7 +24,7 @@ installation is detailed in this `Readme`.
 If you have any other questions, you can contact me by [email](mailto:remy.hidra@gmail.com),
 [linkedin](https://www.linkedin.com/in/rhidra/) or directly on Github.
 
-![Demo GIF](https://gifyu.com/image/PUXD)
+![Demo GIF](https://s9.gifyu.com/images/demob2f957d24db7a370.gif)
 
 ## Installation
 
