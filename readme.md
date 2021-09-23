@@ -24,8 +24,6 @@ installation is detailed in this `Readme`.
 If you have any other questions, you can contact me by [email](mailto:remy.hidra@gmail.com),
 [linkedin](https://www.linkedin.com/in/rhidra/) or directly on Github.
 
-![Demo GIF](https://media3.giphy.com/media/k6etmbLbE3X4JmTQU5/giphy.gif?cid=790b76118e393130dbaa50dc43ab44e2cf8c69cf25328e4c&rid=giphy.gif&ct=g)
-
 ## Installation
 
 ### Setting up the toolchain
